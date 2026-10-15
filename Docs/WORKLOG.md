@@ -69,3 +69,15 @@ WO-04 CHECK git status scope -> PASS (Paper/make_kit.py, Paper/test_make_kit.py;
 WO-04 CHECK codes vs scenario -> PASS (kit_index matches all 8 cards in both stages)
 WO-04 CHECK pages viewed (cover, Texas, P1, permits, procedures, cards x3, ledger, tokens, job sign) -> PASS (facts and checks only; "Wrong delivery"/"Wrong station" are field facts). Cosmetic follow-ups for Bryan: the fine prints as "$10000" (no separator); the Stage 1 manual states the catalog's 2-zone limit while the PM issued all four permits, which is the design's own push tension, not a generator fault.
 WO-04 ACCEPTED 2026-10-15 12:58 commit=bee8df5
+WO-02 CHECK npm test -> PASS (66 tests)
+WO-02 CHECK goldens -> PASS (5 x PASS; worst deltas finish 0.04 d, idle 0.04 d, cost $23.6, peak 2 ft; tolerances 0.1 / 0.1 / $500 / 10)
+WO-02 CHECK determinism -> PASS (two stage1_pm_play transcripts byte-identical)
+WO-02 CHECK stage1 pm_play -> PASS (finishDay 41.41 > 35 and < 46, no loss, idle 23.58 crew-days, spent $229,476, peak 1,987 ft, F1 caught 1/0; collapse event at t 5.00 to Site only; 41 daily reports)
+WO-02 CHECK stage1 no action -> PASS (lost: deadline at t 46; conflict fires at t 5.89)
+WO-02 CHECK stage2 pull_play -> PASS (finish 38.87, idle 11.77 < 23.58, peak 2,180 <= 3,000, fines 0, protected card "Wall movement at 7+20", rework 1.5 d with the pump)
+WO-02 CHECK verdict grep -> PASS (no hits; no 'wrong'/'score' anywhere in src/sim)
+WO-02 CHECK git status scope -> PASS (Monitor/src/sim, Monitor/test only)
+WO-02 CHECK views -> PASS (Plan view has no live positions, bands +-150 ft; Site view has no budget/plan/forecast; no verdict words in either)
+WO-02 REVIEW (independent subagent, rules a-n) -> all CONFORM; ACCEPT WITH NOTES. Outcome-changing gap O10 (F2 at the job start) and minor notes O11, O12 added to DECISIONS.md Open. Minor follow-ups for a later sim pass: arguing resets the held crew's mood; demob fee charged at remob landing not commit; a radioed order shows at Site's station while in transit; double `pay clear_own` before the lend lands creates two loans; the "receiving crew takes the lent machine's rate" clause is not implemented (only reachable by double lending); stop-work also stops a not-yet-started crew at 0 ft; scenario rule switches (orderLagShifts, heldCrewBills, conflictRule, conflictBehaviour, unpermittedBoundary, pumpHalvesRework, likelihoodRollsApply, shiftsPerDay) are not read, behaviour matches their authored values.
+WO-02 NOTE for DECISIONS O9: measured Stage 1 finish under the full rules is Day 41.4 (promise 35, deadline 47); Stage 2 example plan finishes Day 38.9.
+WO-02 ACCEPTED 2026-10-15 13:12 commit=369c38a
