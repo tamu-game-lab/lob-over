@@ -1,0 +1,3572 @@
+=== WO-00 dispatched 20261015-122028
+=== root: /c/Users/bryan/Documents/TAMU/02-Research/Creative Care/Unity/LOB-OVER
+=== flags: --sandbox workspace-write -c approval_policy=never 
+=== note: Re-dispatch after an environment fix (not a rejection). AGENTS.md now has items 5 and 6: the dispatch log under Docs/WORK_ORDERS/logs/ is exempt from your scope check, and in your PowerShell shell call npm.cmd / npx.cmd instead of npm / npx. The tree was clean at dispatch (commit 36acc7d).
+
+Reading additional input from stdin...
+OpenAI Codex v0.162.0-alpha.17.2
+--------
+workdir: C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+model: gpt-6-astra
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a14094-62cc-7881-ab1e-c6b3ad11fd24
+--------
+user
+You are Astra, the implementer on this repository. Read AGENTS.md first and obey it.
+Then read Docs/WORK_ORDERS/WO-00.md and carry out that work order exactly: only the files it allows,
+only the behaviour it specifies, every acceptance check run by you before you finish.
+Do not commit. Do not touch Data/ unless the work order says so. Do not add dependencies.
+If something outside your scope blocks you, stop and report BLOCKED with the exact reason.
+Finish with the STATUS block in the format AGENTS.md gives, as the very last thing you print.
+Orchestrator note for this dispatch: Re-dispatch after an environment fix (not a rejection). AGENTS.md now has items 5 and 6: the dispatch log under Docs/WORK_ORDERS/logs/ is exempt from your scope check, and in your PowerShell shell call npm.cmd / npx.cmd instead of npm / npx. The tree was clean at dispatch (commit 36acc7d).
+warning: Codex is ignoring 2 unrecognized configuration settings. Check for typos or deprecated settings.
+  user (C:\Users\bryan\.codex\config.toml): `features.rmcp_client` is ignored.
+  user (C:\Users\bryan\.codex\config.toml): `mcp_servers.code-review-graph.type` is ignored.
+warning: Codex is ignoring 2 unrecognized configuration settings. Check for typos or deprecated settings.
+  user (C:\Users\bryan\.codex\config.toml): `features.rmcp_client` is ignored.
+  user (C:\Users\bryan\.codex\config.toml): `mcp_servers.code-review-graph.type` is ignored.
+warning: loading hooks from both C:\Users\bryan\.codex\hooks.json and C:\Users\bryan\.codex\config.toml; prefer a single representation for this layer
+warning: clamping SessionEnd hook timeout to 3s in C:\Users\bryan\.codex\hooks.json
+warning: clamping SessionEnd hook timeout to 3s in C:\Users\bryan\.codex\config.toml
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+hook: UserPromptSubmit Completed
+codex
+Step 1 of 3: I’ll read `AGENTS.md` and `WO-00.md`, implement the allowed changes, then run every acceptance check. Initial scope review: about 1 minute.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath AGENTS.md' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 26ms:
+# AGENTS.md â€” rules for the implementer (Codex / Astra)
+
+You are the implementer on LOB, Over, a three-seat cooperative construction-scheduling game (VR inspector, web scheduler, paper spec-keeper). An orchestrator (Claude Code) writes you bounded work orders, verifies the result, and accepts or rejects it. You do not decide design questions; you build exactly what the work order says and report precisely.
+
+## Read first, every time
+
+1. This file.
+2. The work order you were given: `Docs/WORK_ORDERS/WO-xx.md`. It names the files you may touch, the acceptance checks, and what is out of scope.
+3. Only the design files the work order points you to (usually one or two sections of `Docs/DESIGN_v0.md`, `Docs/PROTOCOL.md`, `Docs/SCENARIO_SCHEMA.md`). Do not read the whole design doc unless the work order says so.
+
+## Repository layout (root = the Unity project root)
+
+```
+Assets/ Packages/ ProjectSettings/   Unity (Phase 1; do not touch in Phase 0 work orders)
+Data/        catalog.json, Scenarios/*.json, goldens/*.json   â€” source of truth for sim, kit and voice
+Docs/        DESIGN_v0.md, PROTOCOL.md, SCENARIO_SCHEMA.md, ORCHESTRATOR.md, WORK_ORDERS/, WORKLOG.md, DECISIONS.md
+Monitor/     Node host + JS reference simulation + browser pages (Plan page, 2D Site page, facilitator page)
+Paper/       field manual source and generated printable kit
+Tools/       astra.sh (dispatch), reference/ (Python oracle for goldens), voice/ (Kokoro batch)
+Voice/       generated WAV lines (output)
+```
+
+## Hard rules
+
+- **Scope.** Touch only the files and folders the work order lists under "You may change". If the job needs a change elsewhere, stop and say so in the STATUS block (`BLOCKED`), do not make it.
+- **No design decisions.** If the work order is ambiguous, pick the reading that is simplest to change later, state the choice in `NOTES`, and continue. Never invent game rules, numbers, event behaviours or UI feedback that the work order or the pointed-to design section does not state.
+- **No verdict feedback, ever.** Nothing in any player-facing surface may tell players that a choice was right or wrong: no green/red for decisions, no "correct", no score, no hint text, no "you should have". Boards post facts (a permit number, a day count, a dollar figure). This is the project's core educational rule (design doc, "No verdicts during play"). Typo-level rejection of a code that is not on file is allowed; judgement of whether entering it was wise is not.
+- **Determinism.** The simulation is seeded and must produce identical output for identical input and seed. No `Math.random()` without the seeded RNG, no wall-clock reads inside the simulation, no iteration-order dependence on object keys for anything that affects state.
+- **One truth, filtered per seat.** The host holds one state; each seat gets a filtered view (`Docs/PROTOCOL.md`). Never send the Plan seat live field truth, and never send the Site seat the plan or the money.
+- **No network from your sandbox.** Dependencies are installed by the orchestrator before you run. If a module is missing, say so in `BLOCKED`; do not try to install it or vendor a copy.
+- **Data files are authored, not generated by you.** Do not modify `Data/Scenarios/*.json`, `Data/catalog.json` or `Data/goldens/*.json` unless the work order says so explicitly.
+- **Git.** This is a git repo. Do not commit, branch, stash or reset; the orchestrator commits. Never run git on any other folder (LOB-Game is under Plastic SCM and is read-only reference material).
+- **Keep it plain.** Vanilla JS (ES modules), Node 20+, no framework, no bundler, no TypeScript in Phase 0. Tests with Node's built-in `node:test`. Pages are single HTML files with inline CSS and JS, served by the host.
+- **Code style.** Small modules, pure functions for the simulation (`state, input -> state`), named constants for every number that comes from the design, each constant with a comment naming its source (catalog, workbook, decided rule). Comments say why, not what.
+- **Do not touch** `Assets/`, `Packages/`, `ProjectSettings/`, `.gitignore`, `AGENTS.md`, `CLAUDE.md`, `Docs/ORCHESTRATOR.md`, or anything under `Docs/WORK_ORDERS/logs/`.
+
+## How to work a work order
+
+1. Restate the acceptance checks to yourself; they are what the orchestrator will run.
+2. Build the smallest thing that passes them, then stop. No extra features, no refactors of files outside scope, no "while I was here".
+3. Run every acceptance check yourself. Paste the actual command output (trimmed) into `TESTS`.
+4. If a check cannot pass because of something outside your scope, report `BLOCKED` with the exact reason and the smallest change that would unblock it.
+5. Scope check: `git status --short` must show only your own changes. Ignore `Docs/WORK_ORDERS/logs/` (the dispatch log being written while you run) and `Docs/WORKLOG.md` / `Docs/DECISIONS.md` if the orchestrator left them modified; never clean those up and never treat them as a blocker.
+6. Windows shell: your commands run in PowerShell, where `npm` and `npx` resolve to `.ps1` shims that the execution policy blocks. Call `npm.cmd` and `npx.cmd` instead; the acceptance checks mean exactly that. `node`, `python`, `pip` and `git` work as written.
+
+## STATUS block (always the last thing you print)
+
+```
+STATUS: DONE | PARTIAL | BLOCKED
+WO: WO-xx
+CHANGED:
+  - path/one.js  (new)        one line on what it is
+  - path/two.html (modified)  one line on what changed
+TESTS:
+  - <command>  ->  <pass/fail, key numbers>
+NOTES:
+  - choices you made where the order was silent, each in one line
+  - anything the verifier must know (known gaps, follow-ups, risks)
+```
+
+`DONE` means every acceptance check passed on your machine. `PARTIAL` means some passed and you list which did not and why. `BLOCKED` means you could not proceed; name the blocker. Never claim a check passed that you did not run.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath Docs/WORK_ORDERS/WO-00.md -Encoding utf8' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 48ms:
+# WO-00 — Scaffold `Monitor/`: package, scripts, seeded RNG, test runner
+
+## Goal
+
+`Monitor/` becomes a runnable Node 20 project with the folder layout every later work order expects, a seeded deterministic RNG, a shared constants module that reads `Data/catalog.json`, and a passing `npm test`. Nothing game-specific yet beyond constants.
+
+## Read
+
+- `AGENTS.md`
+- `Docs/PROTOCOL.md` (Transport section only, for the port and paths)
+- `Data/catalog.json`
+
+## You may change
+
+- `Monitor/package.json` (dependencies are already installed by the orchestrator: `ws`, `playwright`; do not add others)
+- `Monitor/src/**`, `Monitor/test/**`, `Monitor/README.md`
+- `Monitor/.gitignore` (node_modules, test-results, out)
+
+## Build
+
+1. `Monitor/package.json`: `"type": "module"`, scripts:
+   - `"test": "node --test"` (Node's default discovery: name every test file `*.test.js`; passing a directory path is not supported on current Node)
+   - `"validate": "node src/scenario/validate.js"` (WO-01 fills it; create the file as a stub that prints usage and exits 2)
+   - `"headless": "node src/sim/headless.js"` (WO-02 fills it; stub as above)
+   - `"host": "node src/host/server.js"` (WO-03 fills it; stub as above)
+   - `"e2e": "node --test e2e/stage1.e2e.js"` (WO-03)
+2. Folders: `src/common/`, `src/scenario/`, `src/sim/`, `src/host/`, `web/`, `test/`, `e2e/`, `out/` (gitignored).
+3. `src/common/rng.js`: a seeded PRNG (mulberry32 or xoshiro128**), `makeRng(seed)` returning `{ next(): float in [0,1), int(lo, hi), pick(array), state() }`; `state()` returns a serializable state so a run can be resumed or compared. Document the algorithm in a comment.
+4. `src/common/catalog.js`: `loadCatalog(path = '<repo>/Data/catalog.json')` that resolves the repo root from the module's location, returns the parsed catalog, and exposes `machine(key)`, `protection(key)`, `city(key)` with a clear error for unknown keys.
+5. `src/common/units.js`: `fmtStation(ft)` (`720 -> "7+20"`, `1500 -> "15+00"`), `parseStation("7+20") -> 720`, `displayDay(t)` (`Math.floor(t) + 1`), `fmtUsd(n)` (`"$278,400"`).
+6. `src/common/log.js`: a tiny logger with levels that writes to stderr, used by every later module (no console.log in library code).
+7. Tests in `test/`: `rng.test.js` (same seed → same first 100 values; different seeds differ; `state()` round-trips), `catalog.test.js` (8 machines, `excavator_standard.rateFtPerDay === 220`, `cities.texas.remobilizationDelayDays === 1`, unknown key throws), `units.test.js` (the examples above).
+8. `Monitor/README.md`: 15 lines: what lives where, the five npm scripts, how to run the host (the command, the three URLs).
+
+## Acceptance checks (the orchestrator runs these from the repo root)
+
+```
+npm --prefix Monitor test                    # all tests pass, at least 3 test files
+node -e "import('./Monitor/src/common/rng.js').then(m=>{const a=m.makeRng(1),b=m.makeRng(1);console.log(a.next()===b.next())})"   # true
+node -e "import('./Monitor/src/common/units.js').then(m=>console.log(m.fmtStation(720), m.parseStation('15+00'), m.fmtUsd(278400)))"   # 7+20 1500 $278,400
+git status --short                           # only files under Monitor/
+```
+
+## Out of scope
+
+No simulation logic, no pages, no WebSocket code, no TypeScript, no bundler, no extra dependencies.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "git status --short; rg --files -g AGENTS.md -g '"'!Library/**'"' -g '"'!Temp/**'"' -g '"'!Monitor/node_modules/**'"'; rg --files Monitor -g '"'!node_modules/**'"' -g '"'!package-lock.json'"'; Get-Content -LiteralPath Monitor/package.json -Encoding utf8; node --version; npm.cmd --version" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$protocolLines = Get-Content -LiteralPath Docs/PROTOCOL.md -Encoding utf8; $transportStart = -1; for ($lineIndex = 0; $lineIndex -lt $protocolLines.Count; $lineIndex++) { if ($protocolLines[$lineIndex] -match '"'"'^## Transport'"') { "'$transportStart = $lineIndex; break } }; if ($transportStart -lt 0) { throw '"'Transport section not found' }; for ("'$lineIndex = $transportStart; $lineIndex -lt $protocolLines.Count; $lineIndex++) { if ($lineIndex -gt $transportStart -and $protocolLines[$lineIndex] -match '"'"'^## '"') { break }; "'$protocolLines[$lineIndex] }; Get-Content -LiteralPath Data/catalog.json -Encoding utf8' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 70ms:
+## Transport
+
+- WebSocket, text frames, one JSON object per frame, UTF-8. Path `/ws`. Default port `7331`. The host also serves static pages over HTTP on the same port: `/plan.html`, `/site.html`, `/facilitator.html`.
+- Every message has `"t"` (type) and `"v": 1`. Unknown types are ignored and logged; unknown fields are ignored.
+- The host sends `state` to every client at 4 Hz while the clock runs, and at once after any command that changed state. Clients never compute game state; they render.
+- Times: `day` is a float in simulated days from the stage start (`0.0` = the morning of Day 1; the display day is `Math.floor(day) + 1`). `speed` is `"full"` (5 s per day), `"slow"` (20 s per day, during an unresolved event), or `"paused"`.
+- Stations: feet from the start of the job as integers; the display form `7+20` means 720 ft. Zones are 1-based.
+
+{
+  "schemaVersion": 1,
+  "_source": "LOB-Game equipment_catalog.json and site_catalog_v2, as recorded in MD Files/_pmo_P1_spec.md, _sim_l0_audit_fleet.md and _sim_l0_audit_protection.md (read October 14, 2026). Reused unchanged; additions are marked _validate.",
+  "machines": {
+    "excavator_small": {
+      "crew": "exc",
+      "label": "Excavator Small",
+      "sizeClass": "small",
+      "rateFtPerDay": 165,
+      "dailyUsd": 900,
+      "priceUsd": 18000,
+      "leadDays": {
+        "normal": 3,
+        "rush": 2
+      }
+    },
+    "excavator_standard": {
+      "crew": "exc",
+      "label": "Excavator Standard",
+      "sizeClass": "standard",
+      "rateFtPerDay": 220,
+      "dailyUsd": 1200,
+      "priceUsd": 30000,
+      "leadDays": {
+        "normal": 5,
+        "rush": 3
+      }
+    },
+    "excavator_large": {
+      "crew": "exc",
+      "label": "Excavator Large",
+      "sizeClass": "large",
+      "rateFtPerDay": 330,
+      "dailyUsd": 1800,
+      "priceUsd": 55000,
+      "leadDays": {
+        "normal": 7,
+        "rush": 4
+      },
+      "_note": "The workbook's P1 calls this size Heavy; same machine."
+    },
+    "crane_standard": {
+      "crew": "pipe",
+      "label": "Crane Standard",
+      "sizeClass": "standard",
+      "rateFtPerDay": 180,
+      "dailyUsd": 1800,
+      "priceUsd": 45000,
+      "leadDays": {
+        "normal": 7,
+        "rush": 4
+      }
+    },
+    "crane_heavy": {
+      "crew": "pipe",
+      "label": "Crane Heavy",
+      "sizeClass": "large",
+      "rateFtPerDay": 270,
+      "dailyUsd": 2800,
+      "priceUsd": 80000,
+      "leadDays": {
+        "normal": 10,
+        "rush": 5
+      }
+    },
+    "backfill_small": {
+      "crew": "back",
+      "label": "Backfill Small",
+      "sizeClass": "small",
+      "rateFtPerDay": 180,
+      "dailyUsd": 1400,
+      "priceUsd": 20000,
+      "leadDays": {
+        "normal": 3,
+        "rush": 2
+      }
+    },
+    "backfill_standard": {
+      "crew": "back",
+      "label": "Backfill Standard",
+      "sizeClass": "standard",
+      "rateFtPerDay": 250,
+      "dailyUsd": 1800,
+      "priceUsd": 30000,
+      "leadDays": {
+        "normal": 5,
+        "rush": 3
+      }
+    },
+    "backfill_large": {
+      "crew": "back",
+      "label": "Backfill Large",
+      "sizeClass": "large",
+      "rateFtPerDay": 375,
+      "dailyUsd": 2600,
+      "priceUsd": 50000,
+      "leadDays": {
+        "normal": 7,
+        "rush": 4
+      }
+    }
+  },
+  "orders": {
+    "mobilizationUsd": 25000,
+    "rushPriceMultiplier": 1.75,
+    "rushExposedToPlayers": false,
+    "releaseRefundFraction": 0.5,
+    "_note": "Rush orders exist in the catalog but are not exposed in the LOB-Game UI; keep them hidden in Phase 0 too."
+  },
+  "protection": {
+    "trench_slope": {
+      "label": "Slope the trench",
+      "priceUsd": 6000,
+      "dailyUsd": 0,
+      "likelihood": 0.45,
+      "severity": 0.7,
+      "refusedInCities": [
+        "new_york",
+        "los_angeles",
+        "bangkok"
+      ]
+    },
+    "trench_box": {
+      "label": "Trench box",
+      "priceUsd": 14000,
+      "dailyUsd": 90,
+      "likelihood": 0.35,
+      "severity": 0.5,
+      "benefitHalvedInRunningSand": true
+    },
+    "trench_shoring": {
+      "label": "Trench shoring",
+      "priceUsd": 32000,
+      "dailyUsd": 180,
+      "likelihood": 0.2,
+      "severity": 0.4
+    },
+    "emergency_shoring": {
+      "label": "Emergency shoring",
+      "priceUsd": 18000,
+      "dailyUsd": 150,
+      "reactOnly": true,
+      "resumeAfterDays": 1
+    },
+    "ground_support": {
+      "label": "Ground support",
+      "priceUsd": 16000,
+      "dailyUsd": 110,
+      "_note": "LOB-Game Training 8 only; not offered in the Texas stages."
+    },
+    "drainage_pump": {
+      "label": "Drainage pump",
+      "priceUsd": 4000,
+      "dailyUsd": 60,
+      "halvesRainRework": true,
+      "_validate": "price and daily cost; the workbook names the pump as an A2 response without a figure"
+    }
+  },
+  "cities": {
+    "texas": {
+      "label": "Texas",
+      "leadDelayDays": 0,
+      "remobilizationDelayDays": 1,
+      "logisticsRating": "Low",
+      "hazard": {
+        "soilCohesion": "V.High",
+        "bedrockDepth": "Low",
+        "groundwaterTable": "High",
+        "precipitationIntensity": "V.High",
+        "temperatureExtremes": "Med",
+        "trafficCongestion": "Med"
+      },
+      "situationsPossible": [
+        "E1",
+        "P1",
+        "P2",
+        "P3",
+        "B1",
+        "A1",
+        "A2"
+      ],
+      "openTrenchLimitZones": 2,
+      "_validate": "open-trench limit for a Texas city; examples elsewhere are 300 ft (Sacramento County, end of day) and 200 ft (Framingham)",
+      "signature": "Soft saturated clay over a shallow water table. No rock at all.",
+      "_hazard_source": "Hazard Matrix sheet; V.High = severe hazard (soil cohesion V.High means dangerously weak ground; bedrock depth Low means rock too deep to matter)",
+      "_situations_validate": "no E2: bedrock depth Low means no rock"
+    },
+    "florida": {
+      "label": "Florida",
+      "leadDelayDays": 0,
+      "remobilizationDelayDays": 1,
+      "logisticsRating": "Low",
+      "hazard": {
+        "soilCohesion": "V.High",
+        "bedrockDepth": "Med",
+        "groundwaterTable": "V.High",
+        "precipitationIntensity": "High",
+        "temperatureExtremes": "Low",
+        "trafficCongestion": "Low"
+      },
+      "situationsPossible": [
+        "E1",
+        "P1",
+        "P2",
+        "P3",
+        "B1",
+        "A1",
+        "A2"
+      ],
+      "runningSand": true,
+      "openTrenchLimitZones": 1,
+      "_validate": "lead delay, remobilization delay, open-trench limit and the situation list are game hypotheses; the hazard row is the workbook's",
+      "signature": "Running sand below the water table. Everything is a dewatering problem.",
+      "_hazard_source": "Hazard Matrix sheet; V.High = severe hazard (soil cohesion V.High means dangerously weak ground; bedrock depth Low means rock too deep to matter)"
+    },
+    "las_vegas": {
+      "label": "Las Vegas",
+      "leadDelayDays": 1,
+      "remobilizationDelayDays": 2,
+      "logisticsRating": "Medium",
+      "hazard": {
+        "soilCohesion": "Med",
+        "bedrockDepth": "V.High",
+        "groundwaterTable": "Low",
+        "precipitationIntensity": "Low",
+        "temperatureExtremes": "V.High",
+        "trafficCongestion": "Low"
+      },
+      "situationsPossible": [
+        "E1",
+        "E2",
+        "P2",
+        "P3",
+        "B1",
+        "A2"
+      ],
+      "openTrenchLimitZones": 2,
+      "_validate": "lead delay, remobilization delay, open-trench limit and the situation list are game hypotheses; the hazard row is the workbook's",
+      "signature": "Caliche hardpan and extreme heat. Bone-dry, no water hazards at all.",
+      "_hazard_source": "Hazard Matrix sheet; V.High = severe hazard (soil cohesion V.High means dangerously weak ground; bedrock depth Low means rock too deep to matter)",
+      "_situations_validate": "A2 here is extreme heat, not rain; no A1 (no water)"
+    },
+    "los_angeles": {
+      "label": "Los Angeles",
+      "leadDelayDays": 2,
+      "remobilizationDelayDays": 3,
+      "logisticsRating": "High",
+      "hazard": {
+        "soilCohesion": "Med",
+        "bedrockDepth": "Med",
+        "groundwaterTable": "Low",
+        "precipitationIntensity": "Low",
+        "temperatureExtremes": "Med",
+        "trafficCongestion": "V.High"
+      },
+      "situationsPossible": [
+        "E1",
+        "P1",
+        "P2",
+        "P3",
+        "B1"
+      ],
+      "slopeRefused": true,
+      "limitedShiftHours": true,
+      "openTrenchLimitZones": 1,
+      "_validate": "lead delay, remobilization delay, open-trench limit and the situation list are game hypotheses; the hazard row is the workbook's",
+      "signature": "Logistics level. Kind ground, brutal traffic, deep water table.",
+      "_hazard_source": "Hazard Matrix sheet; V.High = severe hazard (soil cohesion V.High means dangerously weak ground; bedrock depth Low means rock too deep to matter)"
+    },
+    "new_york": {
+      "label": "New York",
+      "leadDelayDays": 2,
+      "remobilizationDelayDays": 3,
+      "logisticsRating": "High",
+      "slopeRefused": true,
+      "_note": "Catalog city, not a Stage 3 candidate.",
+      "hazard": {
+        "soilCohesion": "Low",
+        "bedrockDepth": "V.High",
+        "groundwaterTable": "Low",
+        "precipitationIntensity": "Med",
+        "temperatureExtremes": "Med",
+        "trafficCongestion": "V.High"
+      },
+      "signature": "Shallow schist and extreme congestion. Stable ground, hostile surface.",
+      "_hazard_source": "Hazard Matrix sheet; V.High = severe hazard (soil cohesion V.High means dangerously weak ground; bedrock depth Low means rock too deep to matter)"
+    },
+    "bangkok": {
+      "label": "Bangkok",
+      "leadDelayDays": 2,
+      "remobilizationDelayDays": 3,
+      "logisticsRating": "High",
+      "slopeRefused": true,
+      "_note": "Catalog city, not a Stage 3 candidate.",
+      "hazard": {
+        "soilCohesion": "V.High",
+        "bedrockDepth": "Low",
+        "groundwaterTable": "V.High",
+        "precipitationIntensity": "V.High",
+        "temperatureExtremes": "Med",
+        "trafficCongestion": "V.High"
+      },
+      "signature": "Soft marine clay, subsidence, monsoon, congestion. Hardest level.",
+      "_hazard_source": "Hazard Matrix sheet; V.High = severe hazard (soil cohesion V.High means dangerously weak ground; bedrock depth Low means rock too deep to matter)"
+    },
+    "chicago": {
+      "label": "Chicago",
+      "_note": "Catalog city from the Hazard Matrix, not a Stage 3 candidate.",
+      "hazard": {
+        "soilCohesion": "Med",
+        "bedrockDepth": "High",
+        "groundwaterTable": "Med",
+        "precipitationIntensity": "Med",
+        "temperatureExtremes": "V.High",
+        "trafficCongestion": "High"
+      },
+      "signature": "Dolomite plus hard freeze. Rock and thermometer decide this level.",
+      "_hazard_source": "Hazard Matrix sheet; V.High = severe hazard (soil cohesion V.High means dangerously weak ground; bedrock depth Low means rock too deep to matter)"
+    },
+    "seoul": {
+      "label": "Seoul",
+      "_note": "Catalog city from the Hazard Matrix, not a Stage 3 candidate.",
+      "hazard": {
+        "soilCohesion": "Med",
+        "bedrockDepth": "V.High",
+        "groundwaterTable": "Med",
+        "precipitationIntensity": "V.High",
+        "temperatureExtremes": "High",
+        "trafficCongestion": "High"
+      },
+      "signature": "Granite plus monsoon plus winter freeze. Won on the calendar.",
+      "_hazard_source": "Hazard Matrix sheet; V.High = severe hazard (soil cohesion V.High means dangerously weak ground; bedrock depth Low means rock too deep to matter)"
+    }
+  },
+  "money": {
+    "overheadRate": 0.3,
+    "deadlineSlackDays": 12,
+    "budgetFormula": "promisedFinishDay * dailyFleetUsd * 1.3 + 60000",
+    "_source": "LOB-Game Sandbox: deadline = default plan finish + 12 days; budget = finish x daily fleet cost x 1.3 + $60,000"
+  },
+  "workbookDurations": {
+    "_source": "LOB Disruption Event Library Final7, Response Option sheet (Base Rate Drop, Duration). rateDrop is the fraction LOST: the crew works at (1 - rateDrop). Where the Situations sheet disagrees (E1 1 day, P3 1-2 days, B1 2 days) the game uses the Response Option sheet's value.",
+    "E1": {
+      "name": "Buried utility or existing pipeline strike",
+      "hits": "exc",
+      "rateDrop": 0.4,
+      "durationDays": 3
+    },
+    "E2": {
+      "name": "Unforeseen ground conditions, hard rock refusal",
+      "hits": "exc",
+      "rateDrop": 0.6,
+      "durationDays": 2
+    },
+    "P1": {
+      "name": "Trench collapse / cave-in",
+      "hits": "pipe",
+      "rateDrop": 1.0,
+      "durationDaysByExcavator": {
+        "small": 3,
+        "standard": 2,
+        "large": 1
+      },
+      "lenderLosesSameDays": true,
+      "_validate": "the sheet's Day column reads 2/1/0 for option A (own machine) and 3/2/1 for option C (hired); the game uses 3/2/1 clearing days for both, lender loses the same days"
+    },
+    "P2": {
+      "name": "Late pipe delivery / supply chain lag",
+      "hits": "pipe",
+      "rateDrop": 0.5,
+      "durationDays": 3
+    },
+    "P3": {
+      "name": "Pipe dropped during lifting / rigging failure",
+      "hits": "pipe",
+      "rateDrop": 0.8,
+      "durationDays": 2
+    },
+    "B1": {
+      "name": "Poor backfill compaction density / QC test failure",
+      "hits": "back",
+      "rateDrop": 0.3,
+      "durationDays": 3
+    },
+    "A1": {
+      "name": "Trench movement and water-driven settlement",
+      "hits": "all",
+      "rateDrop": 0.3,
+      "durationDays": 2
+    },
+    "A2": {
+      "name": "Extreme weather",
+      "hits": "all",
+      "rateDrop": 0.5,
+      "durationDays": 2
+    }
+  }
+}
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+ succeeded in 1975ms:
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+?? Docs/WORK_ORDERS/logs/WO-00.20261015-122028.log
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:21
++ git status --short; rg --files -g AGENTS.md -g '!Library/**' -g '!Tem ...
++                     ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:107
++ ... '!Library/**' -g '!Temp/**' -g '!Monitor/node_modules/**'; rg --files ...
++                                                                ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+{
+  "name": "monitor",
+  "version": "1.0.0",
+  "description": "Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
+  }
+}
+v24.14.1
+11.19.1
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-ChildItem -LiteralPath Monitor -Force | Select-Object Mode,Name; $pendingDirectories = [System.Collections.Generic.Stack[string]]::new(); $pendingDirectories.Push((Join-Path (Get-Location) '"'Monitor')); while ("'$pendingDirectories.Count -gt 0) { $currentDirectory = $pendingDirectories.Pop(); foreach ($entry in Get-ChildItem -LiteralPath $currentDirectory -Force) { if ($entry.PSIsContainer) { if ($entry.Name -ne '"'node_modules') { "'$pendingDirectories.Push($entry.FullName) } } elseif ($entry.Name -ne '"'package-lock.json') { "'$entry.FullName } } }; git ls-files Monitor' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 156ms:
+
+Monitor/README.md
+Monitor/package-lock.json
+Monitor/package.json
+Mode   Name             
+----   ----             
+d----- node_modules     
+-a---- package-lock.json
+-a---- package.json     
+-a---- README.md        
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\package.json
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\README.md
+
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+Step 1 of 3 done: the scope is clear, and only the exempt dispatch log is untracked. I’ll add the scaffold and tests next, about 5 minutes. RNG snapshots will be numeric values reusable as seeds; `int(lo, hi)` will include both bounds.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath Monitor/README.md -Encoding utf8; Test-Path -LiteralPath Monitor/node_modules/ws/package.json; Test-Path -LiteralPath Monitor/node_modules/playwright/package.json' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 72ms:
+# Monitor
+
+Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.
+True
+True
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+apply patch
+patch: completed
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\.gitignore
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\README.md
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\package.json
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\src\common\catalog.js
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\src\common\log.js
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\src\common\rng.js
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\src\common\units.js
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\src\host\server.js
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\src\scenario\validate.js
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\src\sim\headless.js
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\test\catalog.test.js
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\test\rng.test.js
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\test\units.test.js
+diff --git a/Monitor/.gitignore b/Monitor/.gitignore
+new file mode 100644
+index 0000000000000000000000000000000000000000..0265e214518aa4d32929bb4edb6562cf0c1915fd
+--- /dev/null
++++ b/Monitor/.gitignore
+@@ -0,0 +1,3 @@
++node_modules/
++test-results/
++out/
+diff --git a/Monitor/README.md b/Monitor/README.md
+index 30d696e4cb890b4b84d7af6283eda24fcd3696d1..09e82699e09ccb231c088f2e3717e3650d01c6a3
+--- a/Monitor/README.md
++++ b/Monitor/README.md
+@@ -1,3 +1,15 @@
+ # Monitor
+-
+-Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.
++Node 20+ ES modules; run the commands below from the repository root.
++`src/common/`: seeded RNG, catalog access, units, and stderr logger.
++`makeRng(seed)` uses uint32 seeds; `int(lo, hi)` includes both bounds; resume with `makeRng(rng.state())`.
++`loadCatalog(path?)` returns parsed data; named `machine`, `protection`, and `city` helpers use the default catalog.
++`src/scenario/`, `src/sim/`, `src/host/`: validation, simulation, and host entry points.
++`web/`: future browser pages; `test/`: unit tests; `e2e/`: future browser tests; `out/`: ignored output.
++`npm.cmd --prefix Monitor test`: run all discovered `*.test.js` tests.
++`npm.cmd --prefix Monitor run validate -- <scenario.json>`: validation stub, exits 2 until WO-01.
++`npm.cmd --prefix Monitor run headless`: simulation stub, exits 2 until WO-02.
++`npm.cmd --prefix Monitor run host`: host stub, exits 2 until WO-03; use this command to start the future host.
++`npm.cmd --prefix Monitor run e2e`: reserved for `e2e/stage1.e2e.js` in WO-03.
++Plan URL once WO-03 is implemented: http://localhost:7331/plan.html
++Site URL once WO-03 is implemented: http://localhost:7331/site.html
++Facilitator URL once WO-03 is implemented: http://localhost:7331/facilitator.html
+diff --git a/Monitor/package.json b/Monitor/package.json
+index 01baec227b350a5f2069d7dbd46443335c89fd58..1d3a21b9c8b0e8228464b8787c9835e8081eea5d
+--- a/Monitor/package.json
++++ b/Monitor/package.json
+@@ -4,12 +4,16 @@
+   "description": "Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.",
+   "main": "index.js",
+   "scripts": {
+-    "test": "echo \"Error: no test specified\" && exit 1"
++    "test": "node --test",
++    "validate": "node src/scenario/validate.js",
++    "headless": "node src/sim/headless.js",
++    "host": "node src/host/server.js",
++    "e2e": "node --test e2e/stage1.e2e.js"
+   },
+   "keywords": [],
+   "author": "",
+   "license": "ISC",
+-  "type": "commonjs",
++  "type": "module",
+   "dependencies": {
+     "ws": "^8.22.0"
+   },
+diff --git a/Monitor/src/common/catalog.js b/Monitor/src/common/catalog.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..c158b5fdf393456edc142798cdb782ab79f8b031
+--- /dev/null
++++ b/Monitor/src/common/catalog.js
+@@ -0,0 +1,31 @@
++import { readFileSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++
++// Resolve from this module so commands work from either Monitor or the repo root.
++const DEFAULT_CATALOG_PATH = fileURLToPath(new URL('../../../Data/catalog.json', import.meta.url));
++
++export function loadCatalog(path = DEFAULT_CATALOG_PATH) {
++  return JSON.parse(readFileSync(path, 'utf8'));
++}
++
++// Data/catalog.json remains the source of every shared game constant.
++const catalog = loadCatalog();
++
++function lookup(entries, kind, key) {
++  if (!Object.hasOwn(entries, key)) {
++    throw new Error(`Unknown ${kind} key: "${key}"`);
++  }
++  return entries[key];
++}
++
++export function machine(key) {
++  return lookup(catalog.machines, 'machine', key);
++}
++
++export function protection(key) {
++  return lookup(catalog.protection, 'protection', key);
++}
++
++export function city(key) {
++  return lookup(catalog.cities, 'city', key);
++}
+diff --git a/Monitor/src/common/log.js b/Monitor/src/common/log.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..43b58207ce21716a68f0f54e1d5287e5460b4afa
+--- /dev/null
++++ b/Monitor/src/common/log.js
+@@ -0,0 +1,18 @@
++import { format } from 'node:util';
++
++const LEVELS = ['debug', 'info', 'warn', 'error'];
++
++export function createLogger(level = 'info') {
++  const threshold = LEVELS.indexOf(level);
++  if (threshold === -1) {
++    throw new Error(`Unknown log level: "${level}"`);
++  }
++  return Object.fromEntries(LEVELS.map((name, index) => [name, (...args) => {
++    if (index >= threshold) {
++      // Keep stdout available for machine-readable command output.
++      process.stderr.write(`[${name}] ${format(...args)}\n`);
++    }
++  }]));
++}
++
++export const log = createLogger();
+diff --git a/Monitor/src/common/rng.js b/Monitor/src/common/rng.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..f20598cb81a8a871642db090f106ca7f65aeb09a
+--- /dev/null
++++ b/Monitor/src/common/rng.js
+@@ -0,0 +1,34 @@
++// Mulberry32 uses one unsigned 32-bit state word. Pass state() back to makeRng
++// to resume immediately after the last draw, including after JSON serialization.
++export function makeRng(seed) {
++  if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) {
++    throw new RangeError('RNG seed must be an unsigned 32-bit integer');
++  }
++  let current = seed;
++
++  function next() {
++    current = (current + 0x6d2b79f5) >>> 0;
++    let value = current;
++    value = Math.imul(value ^ (value >>> 15), value | 1);
++    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
++    return ((value ^ (value >>> 14)) >>> 0) / 0x100000000;
++  }
++
++  // Both endpoints are inclusive so pick can address every array element.
++  function int(lo, hi) {
++    if (!Number.isSafeInteger(lo) || !Number.isSafeInteger(hi)
++        || lo > hi || !Number.isSafeInteger(hi - lo + 1)) {
++      throw new RangeError('RNG integer bounds must be ordered safe integers');
++    }
++    return lo + Math.floor(next() * (hi - lo + 1));
++  }
++
++  function pick(array) {
++    if (!Array.isArray(array) || array.length === 0) {
++      throw new RangeError('RNG pick requires a non-empty array');
++    }
++    return array[int(0, array.length - 1)];
++  }
++
++  return { next, int, pick, state: () => current };
++}
+diff --git a/Monitor/src/common/units.js b/Monitor/src/common/units.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..906d4ae83b73dbc9fcd9a7d069d4c96282137d66
+--- /dev/null
++++ b/Monitor/src/common/units.js
+@@ -0,0 +1,42 @@
++// Docs/PROTOCOL.md, Transport: station 7+20 represents 720 integer feet.
++const FEET_PER_STATION = 100;
++const STATION_REMAINDER_DIGITS = 2;
++// Docs/PROTOCOL.md, Transport: simulated day 0 starts display Day 1.
++const DISPLAY_DAY_OFFSET = 1;
++
++const usdFormatter = new Intl.NumberFormat('en-US', {
++  style: 'currency',
++  currency: 'USD',
++  // WO-00 specifies whole-dollar display, for example $278,400.
++  minimumFractionDigits: 0,
++  maximumFractionDigits: 0,
++});
++
++export function fmtStation(ft) {
++  if (!Number.isSafeInteger(ft) || ft < 0) {
++    throw new RangeError('Station feet must be a non-negative safe integer');
++  }
++  const station = Math.floor(ft / FEET_PER_STATION);
++  const remainder = String(ft % FEET_PER_STATION).padStart(STATION_REMAINDER_DIGITS, '0');
++  return `${station}+${remainder}`;
++}
++
++export function parseStation(station) {
++  if (typeof station !== 'string' || !/^\d+\+\d{2}$/.test(station)) {
++    throw new Error('Station must use the format 7+20');
++  }
++  const [whole, remainder] = station.split('+').map(Number);
++  const ft = whole * FEET_PER_STATION + remainder;
++  if (!Number.isSafeInteger(ft)) {
++    throw new RangeError('Station feet must be a safe integer');
++  }
++  return ft;
++}
++
++export function displayDay(t) {
++  return Math.floor(t) + DISPLAY_DAY_OFFSET;
++}
++
++export function fmtUsd(n) {
++  return usdFormatter.format(n);
++}
+diff --git a/Monitor/src/host/server.js b/Monitor/src/host/server.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..932b8ee8202dd44dfc52ed04e38178d21c8095ff
+--- /dev/null
++++ b/Monitor/src/host/server.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run host');
++log.warn('The host is a stub until WO-03.');
++process.exitCode = 2;
+diff --git a/Monitor/src/scenario/validate.js b/Monitor/src/scenario/validate.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..650bac0f26f55ca621584e6eb94b43af01e5eacf
+--- /dev/null
++++ b/Monitor/src/scenario/validate.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run validate -- <scenario.json>');
++log.warn('Scenario validation is a stub until WO-01.');
++process.exitCode = 2;
+diff --git a/Monitor/src/sim/headless.js b/Monitor/src/sim/headless.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d8a98aa91f81a56b6553e5e79acdfde0ba3a33d
+--- /dev/null
++++ b/Monitor/src/sim/headless.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run headless');
++log.warn('Headless simulation is a stub until WO-02.');
++process.exitCode = 2;
+diff --git a/Monitor/test/catalog.test.js b/Monitor/test/catalog.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..bf67f8d0cea13835a1f3a8c9d181f8ac587496d2
+--- /dev/null
++++ b/Monitor/test/catalog.test.js
+@@ -0,0 +1,31 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { fileURLToPath } from 'node:url';
++import { loadCatalog, machine, protection, city } from '../src/common/catalog.js';
++
++test('default catalog contains the authored machines and Texas delay', () => {
++  const catalog = loadCatalog();
++  assert.equal(Object.keys(catalog.machines).length, 8);
++  assert.equal(catalog.machines.excavator_standard.rateFtPerDay, 220);
++  assert.equal(catalog.cities.texas.remobilizationDelayDays, 1);
++});
++
++test('catalog also loads from an explicit path', () => {
++  const path = fileURLToPath(new URL('../../Data/catalog.json', import.meta.url));
++  assert.deepEqual(loadCatalog(path), loadCatalog());
++});
++
++test('named helpers return the matching catalog entries', () => {
++  const catalog = loadCatalog();
++  assert.deepEqual(machine('excavator_standard'), catalog.machines.excavator_standard);
++  assert.deepEqual(protection('trench_box'), catalog.protection.trench_box);
++  assert.deepEqual(city('texas'), catalog.cities.texas);
++});
++
++test('all helpers reject unknown and inherited keys clearly', () => {
++  for (const [kind, lookup] of [['machine', machine], ['protection', protection], ['city', city]]) {
++    for (const key of ['missing', 'toString', '__proto__']) {
++      assert.throws(() => lookup(key), { message: `Unknown ${kind} key: "${key}"` });
++    }
++  }
++});
+diff --git a/Monitor/test/rng.test.js b/Monitor/test/rng.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..5f91bff8c7035ed8b4f5f860e50dfcc293f24463
+--- /dev/null
++++ b/Monitor/test/rng.test.js
+@@ -0,0 +1,51 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { makeRng } from '../src/common/rng.js';
++
++test('same seed produces the same first 100 values in [0, 1)', () => {
++  const a = makeRng(1);
++  const b = makeRng(1);
++  for (let i = 0; i < 100; i++) {
++    const value = a.next();
++    assert.equal(value, b.next());
++    assert.ok(value >= 0 && value < 1);
++  }
++});
++
++test('different seeds produce different sequences', () => {
++  const a = makeRng(1);
++  const b = makeRng(2);
++  assert.notDeepEqual(Array.from({ length: 100 }, () => a.next()),
++    Array.from({ length: 100 }, () => b.next()));
++});
++
++test('JSON state round-trip resumes the sequence after mixed draws', () => {
++  const original = makeRng(0xffffffff);
++  original.next();
++  original.int(1, 6);
++  original.pick(['a', 'b', 'c']);
++  const saved = JSON.parse(JSON.stringify(original.state()));
++  const resumed = makeRng(saved);
++  assert.equal(resumed.state(), saved);
++  for (let i = 0; i < 100; i++) {
++    assert.equal(original.next(), resumed.next());
++    assert.equal(original.state(), resumed.state());
++  }
++});
++
++test('integer draws include both bounds and pick returns array members', () => {
++  const rng = makeRng(7);
++  const seen = new Set();
++  const choices = ['a', 'b', 'c'];
++  for (let i = 0; i < 100; i++) {
++    const value = rng.int(-1, 1);
++    assert.ok(Number.isInteger(value) && value >= -1 && value <= 1);
++    seen.add(value);
++    assert.ok(choices.includes(rng.pick(choices)));
++  }
++  assert.deepEqual(seen, new Set([-1, 0, 1]));
++  assert.equal(rng.int(4, 4), 4);
++  assert.equal(rng.pick(['only']), 'only');
++  assert.throws(() => rng.pick([]), /non-empty array/);
++  assert.throws(() => rng.int(2, 1), /bounds/);
++});
+diff --git a/Monitor/test/units.test.js b/Monitor/test/units.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..c9288278b357c834564981bcd99a0a59fc50326f
+--- /dev/null
++++ b/Monitor/test/units.test.js
+@@ -0,0 +1,22 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { fmtStation, parseStation, displayDay, fmtUsd } from '../src/common/units.js';
++
++test('station examples format and parse in integer feet', () => {
++  for (const [ft, station] of [[0, '0+00'], [5, '0+05'], [720, '7+20'], [1500, '15+00']]) {
++    assert.equal(fmtStation(ft), station);
++    assert.equal(parseStation(station), ft);
++  }
++});
++
++test('display days advance only at integer day boundaries', () => {
++  assert.equal(displayDay(0), 1);
++  assert.equal(displayDay(0.999), 1);
++  assert.equal(displayDay(1), 2);
++  assert.equal(displayDay(2.5), 3);
++});
++
++test('USD example uses dollars and comma grouping', () => {
++  assert.equal(fmtUsd(278400), '$278,400');
++  assert.equal(fmtUsd(0), '$0');
++});
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+diff --git a/Monitor/.gitignore b/Monitor/.gitignore
+new file mode 100644
+index 0000000000000000000000000000000000000000..0265e214518aa4d32929bb4edb6562cf0c1915fd
+--- /dev/null
++++ b/Monitor/.gitignore
+@@ -0,0 +1,3 @@
++node_modules/
++test-results/
++out/
+diff --git a/Monitor/README.md b/Monitor/README.md
+index 30d696e4cb890b4b84d7af6283eda24fcd3696d1..09e82699e09ccb231c088f2e3717e3650d01c6a3
+--- a/Monitor/README.md
++++ b/Monitor/README.md
+@@ -1,3 +1,15 @@
+ # Monitor
+-
+-Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.
++Node 20+ ES modules; run the commands below from the repository root.
++`src/common/`: seeded RNG, catalog access, units, and stderr logger.
++`makeRng(seed)` uses uint32 seeds; `int(lo, hi)` includes both bounds; resume with `makeRng(rng.state())`.
++`loadCatalog(path?)` returns parsed data; named `machine`, `protection`, and `city` helpers use the default catalog.
++`src/scenario/`, `src/sim/`, `src/host/`: validation, simulation, and host entry points.
++`web/`: future browser pages; `test/`: unit tests; `e2e/`: future browser tests; `out/`: ignored output.
++`npm.cmd --prefix Monitor test`: run all discovered `*.test.js` tests.
++`npm.cmd --prefix Monitor run validate -- <scenario.json>`: validation stub, exits 2 until WO-01.
++`npm.cmd --prefix Monitor run headless`: simulation stub, exits 2 until WO-02.
++`npm.cmd --prefix Monitor run host`: host stub, exits 2 until WO-03; use this command to start the future host.
++`npm.cmd --prefix Monitor run e2e`: reserved for `e2e/stage1.e2e.js` in WO-03.
++Plan URL once WO-03 is implemented: http://localhost:7331/plan.html
++Site URL once WO-03 is implemented: http://localhost:7331/site.html
++Facilitator URL once WO-03 is implemented: http://localhost:7331/facilitator.html
+diff --git a/Monitor/package.json b/Monitor/package.json
+index 01baec227b350a5f2069d7dbd46443335c89fd58..1d3a21b9c8b0e8228464b8787c9835e8081eea5d
+--- a/Monitor/package.json
++++ b/Monitor/package.json
+@@ -4,12 +4,16 @@
+   "description": "Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.",
+   "main": "index.js",
+   "scripts": {
+-    "test": "echo \"Error: no test specified\" && exit 1"
++    "test": "node --test",
++    "validate": "node src/scenario/validate.js",
++    "headless": "node src/sim/headless.js",
++    "host": "node src/host/server.js",
++    "e2e": "node --test e2e/stage1.e2e.js"
+   },
+   "keywords": [],
+   "author": "",
+   "license": "ISC",
+-  "type": "commonjs",
++  "type": "module",
+   "dependencies": {
+     "ws": "^8.22.0"
+   },
+diff --git a/Monitor/src/common/catalog.js b/Monitor/src/common/catalog.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..c158b5fdf393456edc142798cdb782ab79f8b031
+--- /dev/null
++++ b/Monitor/src/common/catalog.js
+@@ -0,0 +1,31 @@
++import { readFileSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++
++// Resolve from this module so commands work from either Monitor or the repo root.
++const DEFAULT_CATALOG_PATH = fileURLToPath(new URL('../../../Data/catalog.json', import.meta.url));
++
++export function loadCatalog(path = DEFAULT_CATALOG_PATH) {
++  return JSON.parse(readFileSync(path, 'utf8'));
++}
++
++// Data/catalog.json remains the source of every shared game constant.
++const catalog = loadCatalog();
++
++function lookup(entries, kind, key) {
++  if (!Object.hasOwn(entries, key)) {
++    throw new Error(`Unknown ${kind} key: "${key}"`);
++  }
++  return entries[key];
++}
++
++export function machine(key) {
++  return lookup(catalog.machines, 'machine', key);
++}
++
++export function protection(key) {
++  return lookup(catalog.protection, 'protection', key);
++}
++
++export function city(key) {
++  return lookup(catalog.cities, 'city', key);
++}
+diff --git a/Monitor/src/common/log.js b/Monitor/src/common/log.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..43b58207ce21716a68f0f54e1d5287e5460b4afa
+--- /dev/null
++++ b/Monitor/src/common/log.js
+@@ -0,0 +1,18 @@
++import { format } from 'node:util';
++
++const LEVELS = ['debug', 'info', 'warn', 'error'];
++
++export function createLogger(level = 'info') {
++  const threshold = LEVELS.indexOf(level);
++  if (threshold === -1) {
++    throw new Error(`Unknown log level: "${level}"`);
++  }
++  return Object.fromEntries(LEVELS.map((name, index) => [name, (...args) => {
++    if (index >= threshold) {
++      // Keep stdout available for machine-readable command output.
++      process.stderr.write(`[${name}] ${format(...args)}\n`);
++    }
++  }]));
++}
++
++export const log = createLogger();
+diff --git a/Monitor/src/common/rng.js b/Monitor/src/common/rng.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..f20598cb81a8a871642db090f106ca7f65aeb09a
+--- /dev/null
++++ b/Monitor/src/common/rng.js
+@@ -0,0 +1,34 @@
++// Mulberry32 uses one unsigned 32-bit state word. Pass state() back to makeRng
++// to resume immediately after the last draw, including after JSON serialization.
++export function makeRng(seed) {
++  if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) {
++    throw new RangeError('RNG seed must be an unsigned 32-bit integer');
++  }
++  let current = seed;
++
++  function next() {
++    current = (current + 0x6d2b79f5) >>> 0;
++    let value = current;
++    value = Math.imul(value ^ (value >>> 15), value | 1);
++    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
++    return ((value ^ (value >>> 14)) >>> 0) / 0x100000000;
++  }
++
++  // Both endpoints are inclusive so pick can address every array element.
++  function int(lo, hi) {
++    if (!Number.isSafeInteger(lo) || !Number.isSafeInteger(hi)
++        || lo > hi || !Number.isSafeInteger(hi - lo + 1)) {
++      throw new RangeError('RNG integer bounds must be ordered safe integers');
++    }
++    return lo + Math.floor(next() * (hi - lo + 1));
++  }
++
++  function pick(array) {
++    if (!Array.isArray(array) || array.length === 0) {
++      throw new RangeError('RNG pick requires a non-empty array');
++    }
++    return array[int(0, array.length - 1)];
++  }
++
++  return { next, int, pick, state: () => current };
++}
+diff --git a/Monitor/src/common/units.js b/Monitor/src/common/units.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..906d4ae83b73dbc9fcd9a7d069d4c96282137d66
+--- /dev/null
++++ b/Monitor/src/common/units.js
+@@ -0,0 +1,42 @@
++// Docs/PROTOCOL.md, Transport: station 7+20 represents 720 integer feet.
++const FEET_PER_STATION = 100;
++const STATION_REMAINDER_DIGITS = 2;
++// Docs/PROTOCOL.md, Transport: simulated day 0 starts display Day 1.
++const DISPLAY_DAY_OFFSET = 1;
++
++const usdFormatter = new Intl.NumberFormat('en-US', {
++  style: 'currency',
++  currency: 'USD',
++  // WO-00 specifies whole-dollar display, for example $278,400.
++  minimumFractionDigits: 0,
++  maximumFractionDigits: 0,
++});
++
++export function fmtStation(ft) {
++  if (!Number.isSafeInteger(ft) || ft < 0) {
++    throw new RangeError('Station feet must be a non-negative safe integer');
++  }
++  const station = Math.floor(ft / FEET_PER_STATION);
++  const remainder = String(ft % FEET_PER_STATION).padStart(STATION_REMAINDER_DIGITS, '0');
++  return `${station}+${remainder}`;
++}
++
++export function parseStation(station) {
++  if (typeof station !== 'string' || !/^\d+\+\d{2}$/.test(station)) {
++    throw new Error('Station must use the format 7+20');
++  }
++  const [whole, remainder] = station.split('+').map(Number);
++  const ft = whole * FEET_PER_STATION + remainder;
++  if (!Number.isSafeInteger(ft)) {
++    throw new RangeError('Station feet must be a safe integer');
++  }
++  return ft;
++}
++
++export function displayDay(t) {
++  return Math.floor(t) + DISPLAY_DAY_OFFSET;
++}
++
++export function fmtUsd(n) {
++  return usdFormatter.format(n);
++}
+diff --git a/Monitor/src/host/server.js b/Monitor/src/host/server.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..932b8ee8202dd44dfc52ed04e38178d21c8095ff
+--- /dev/null
++++ b/Monitor/src/host/server.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run host');
++log.warn('The host is a stub until WO-03.');
++process.exitCode = 2;
+diff --git a/Monitor/src/scenario/validate.js b/Monitor/src/scenario/validate.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..650bac0f26f55ca621584e6eb94b43af01e5eacf
+--- /dev/null
++++ b/Monitor/src/scenario/validate.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run validate -- <scenario.json>');
++log.warn('Scenario validation is a stub until WO-01.');
++process.exitCode = 2;
+diff --git a/Monitor/src/sim/headless.js b/Monitor/src/sim/headless.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d8a98aa91f81a56b6553e5e79acdfde0ba3a33d
+--- /dev/null
++++ b/Monitor/src/sim/headless.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run headless');
++log.warn('Headless simulation is a stub until WO-02.');
++process.exitCode = 2;
+diff --git a/Monitor/test/catalog.test.js b/Monitor/test/catalog.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..bf67f8d0cea13835a1f3a8c9d181f8ac587496d2
+--- /dev/null
++++ b/Monitor/test/catalog.test.js
+@@ -0,0 +1,31 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { fileURLToPath } from 'node:url';
++import { loadCatalog, machine, protection, city } from '../src/common/catalog.js';
++
++test('default catalog contains the authored machines and Texas delay', () => {
++  const catalog = loadCatalog();
++  assert.equal(Object.keys(catalog.machines).length, 8);
++  assert.equal(catalog.machines.excavator_standard.rateFtPerDay, 220);
++  assert.equal(catalog.cities.texas.remobilizationDelayDays, 1);
++});
++
++test('catalog also loads from an explicit path', () => {
++  const path = fileURLToPath(new URL('../../Data/catalog.json', import.meta.url));
++  assert.deepEqual(loadCatalog(path), loadCatalog());
++});
++
++test('named helpers return the matching catalog entries', () => {
++  const catalog = loadCatalog();
++  assert.deepEqual(machine('excavator_standard'), catalog.machines.excavator_standard);
++  assert.deepEqual(protection('trench_box'), catalog.protection.trench_box);
++  assert.deepEqual(city('texas'), catalog.cities.texas);
++});
++
++test('all helpers reject unknown and inherited keys clearly', () => {
++  for (const [kind, lookup] of [['machine', machine], ['protection', protection], ['city', city]]) {
++    for (const key of ['missing', 'toString', '__proto__']) {
++      assert.throws(() => lookup(key), { message: `Unknown ${kind} key: "${key}"` });
++    }
++  }
++});
+diff --git a/Monitor/test/rng.test.js b/Monitor/test/rng.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..5f91bff8c7035ed8b4f5f860e50dfcc293f24463
+--- /dev/null
++++ b/Monitor/test/rng.test.js
+@@ -0,0 +1,51 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { makeRng } from '../src/common/rng.js';
++
++test('same seed produces the same first 100 values in [0, 1)', () => {
++  const a = makeRng(1);
++  const b = makeRng(1);
++  for (let i = 0; i < 100; i++) {
++    const value = a.next();
++    assert.equal(value, b.next());
++    assert.ok(value >= 0 && value < 1);
++  }
++});
++
++test('different seeds produce different sequences', () => {
++  const a = makeRng(1);
++  const b = makeRng(2);
++  assert.notDeepEqual(Array.from({ length: 100 }, () => a.next()),
++    Array.from({ length: 100 }, () => b.next()));
++});
++
++test('JSON state round-trip resumes the sequence after mixed draws', () => {
++  const original = makeRng(0xffffffff);
++  original.next();
++  original.int(1, 6);
++  original.pick(['a', 'b', 'c']);
++  const saved = JSON.parse(JSON.stringify(original.state()));
++  const resumed = makeRng(saved);
++  assert.equal(resumed.state(), saved);
++  for (let i = 0; i < 100; i++) {
++    assert.equal(original.next(), resumed.next());
++    assert.equal(original.state(), resumed.state());
++  }
++});
++
++test('integer draws include both bounds and pick returns array members', () => {
++  const rng = makeRng(7);
++  const seen = new Set();
++  const choices = ['a', 'b', 'c'];
++  for (let i = 0; i < 100; i++) {
++    const value = rng.int(-1, 1);
++    assert.ok(Number.isInteger(value) && value >= -1 && value <= 1);
++    seen.add(value);
++    assert.ok(choices.includes(rng.pick(choices)));
++  }
++  assert.deepEqual(seen, new Set([-1, 0, 1]));
++  assert.equal(rng.int(4, 4), 4);
++  assert.equal(rng.pick(['only']), 'only');
++  assert.throws(() => rng.pick([]), /non-empty array/);
++  assert.throws(() => rng.int(2, 1), /bounds/);
++});
+diff --git a/Monitor/test/units.test.js b/Monitor/test/units.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..c9288278b357c834564981bcd99a0a59fc50326f
+--- /dev/null
++++ b/Monitor/test/units.test.js
+@@ -0,0 +1,22 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { fmtStation, parseStation, displayDay, fmtUsd } from '../src/common/units.js';
++
++test('station examples format and parse in integer feet', () => {
++  for (const [ft, station] of [[0, '0+00'], [5, '0+05'], [720, '7+20'], [1500, '15+00']]) {
++    assert.equal(fmtStation(ft), station);
++    assert.equal(parseStation(station), ft);
++  }
++});
++
++test('display days advance only at integer day boundaries', () => {
++  assert.equal(displayDay(0), 1);
++  assert.equal(displayDay(0.999), 1);
++  assert.equal(displayDay(1), 2);
++  assert.equal(displayDay(2.5), 3);
++});
++
++test('USD example uses dollars and comma grouping', () => {
++  assert.equal(fmtUsd(278400), '$278,400');
++  assert.equal(fmtUsd(0), '$0');
++});
+
+codex
+Step 2 of 3: the modules, stubs, and tests are written. The README marks the host URLs as future WO-03 endpoints. I’ll now check the required folders and run the acceptance commands; estimate: 2 minutes.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'New-Item -ItemType Directory -Force -Path Monitor/src/common,Monitor/src/scenario,Monitor/src/sim,Monitor/src/host,Monitor/web,Monitor/test,Monitor/e2e,Monitor/out | Select-Object FullName; git diff --stat; git diff --check; (Get-Content -LiteralPath Monitor/README.md).Count' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 184ms:
+
+ Monitor/README.md    | 16 ++++++++++++++--
+ Monitor/package.json |  8 ++++++--
+ 2 files changed, 20 insertions(+), 4 deletions(-)
+FullName                                                                                   
+--------                                                                                   
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\src\common  
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\src\scenario
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\src\sim     
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\src\host    
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\web         
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\test        
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\e2e         
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\out         
+15
+
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+diff --git a/Monitor/.gitignore b/Monitor/.gitignore
+new file mode 100644
+index 0000000000000000000000000000000000000000..0265e214518aa4d32929bb4edb6562cf0c1915fd
+--- /dev/null
++++ b/Monitor/.gitignore
+@@ -0,0 +1,3 @@
++node_modules/
++test-results/
++out/
+diff --git a/Monitor/README.md b/Monitor/README.md
+index 30d696e4cb890b4b84d7af6283eda24fcd3696d1..09e82699e09ccb231c088f2e3717e3650d01c6a3
+--- a/Monitor/README.md
++++ b/Monitor/README.md
+@@ -1,3 +1,15 @@
+ # Monitor
+-
+-Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.
++Node 20+ ES modules; run the commands below from the repository root.
++`src/common/`: seeded RNG, catalog access, units, and stderr logger.
++`makeRng(seed)` uses uint32 seeds; `int(lo, hi)` includes both bounds; resume with `makeRng(rng.state())`.
++`loadCatalog(path?)` returns parsed data; named `machine`, `protection`, and `city` helpers use the default catalog.
++`src/scenario/`, `src/sim/`, `src/host/`: validation, simulation, and host entry points.
++`web/`: future browser pages; `test/`: unit tests; `e2e/`: future browser tests; `out/`: ignored output.
++`npm.cmd --prefix Monitor test`: run all discovered `*.test.js` tests.
++`npm.cmd --prefix Monitor run validate -- <scenario.json>`: validation stub, exits 2 until WO-01.
++`npm.cmd --prefix Monitor run headless`: simulation stub, exits 2 until WO-02.
++`npm.cmd --prefix Monitor run host`: host stub, exits 2 until WO-03; use this command to start the future host.
++`npm.cmd --prefix Monitor run e2e`: reserved for `e2e/stage1.e2e.js` in WO-03.
++Plan URL once WO-03 is implemented: http://localhost:7331/plan.html
++Site URL once WO-03 is implemented: http://localhost:7331/site.html
++Facilitator URL once WO-03 is implemented: http://localhost:7331/facilitator.html
+diff --git a/Monitor/package.json b/Monitor/package.json
+index 01baec227b350a5f2069d7dbd46443335c89fd58..1d3a21b9c8b0e8228464b8787c9835e8081eea5d
+--- a/Monitor/package.json
++++ b/Monitor/package.json
+@@ -4,12 +4,16 @@
+   "description": "Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.",
+   "main": "index.js",
+   "scripts": {
+-    "test": "echo \"Error: no test specified\" && exit 1"
++    "test": "node --test",
++    "validate": "node src/scenario/validate.js",
++    "headless": "node src/sim/headless.js",
++    "host": "node src/host/server.js",
++    "e2e": "node --test e2e/stage1.e2e.js"
+   },
+   "keywords": [],
+   "author": "",
+   "license": "ISC",
+-  "type": "commonjs",
++  "type": "module",
+   "dependencies": {
+     "ws": "^8.22.0"
+   },
+diff --git a/Monitor/src/common/catalog.js b/Monitor/src/common/catalog.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..c158b5fdf393456edc142798cdb782ab79f8b031
+--- /dev/null
++++ b/Monitor/src/common/catalog.js
+@@ -0,0 +1,31 @@
++import { readFileSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++
++// Resolve from this module so commands work from either Monitor or the repo root.
++const DEFAULT_CATALOG_PATH = fileURLToPath(new URL('../../../Data/catalog.json', import.meta.url));
++
++export function loadCatalog(path = DEFAULT_CATALOG_PATH) {
++  return JSON.parse(readFileSync(path, 'utf8'));
++}
++
++// Data/catalog.json remains the source of every shared game constant.
++const catalog = loadCatalog();
++
++function lookup(entries, kind, key) {
++  if (!Object.hasOwn(entries, key)) {
++    throw new Error(`Unknown ${kind} key: "${key}"`);
++  }
++  return entries[key];
++}
++
++export function machine(key) {
++  return lookup(catalog.machines, 'machine', key);
++}
++
++export function protection(key) {
++  return lookup(catalog.protection, 'protection', key);
++}
++
++export function city(key) {
++  return lookup(catalog.cities, 'city', key);
++}
+diff --git a/Monitor/src/common/log.js b/Monitor/src/common/log.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..43b58207ce21716a68f0f54e1d5287e5460b4afa
+--- /dev/null
++++ b/Monitor/src/common/log.js
+@@ -0,0 +1,18 @@
++import { format } from 'node:util';
++
++const LEVELS = ['debug', 'info', 'warn', 'error'];
++
++export function createLogger(level = 'info') {
++  const threshold = LEVELS.indexOf(level);
++  if (threshold === -1) {
++    throw new Error(`Unknown log level: "${level}"`);
++  }
++  return Object.fromEntries(LEVELS.map((name, index) => [name, (...args) => {
++    if (index >= threshold) {
++      // Keep stdout available for machine-readable command output.
++      process.stderr.write(`[${name}] ${format(...args)}\n`);
++    }
++  }]));
++}
++
++export const log = createLogger();
+diff --git a/Monitor/src/common/rng.js b/Monitor/src/common/rng.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..f20598cb81a8a871642db090f106ca7f65aeb09a
+--- /dev/null
++++ b/Monitor/src/common/rng.js
+@@ -0,0 +1,34 @@
++// Mulberry32 uses one unsigned 32-bit state word. Pass state() back to makeRng
++// to resume immediately after the last draw, including after JSON serialization.
++export function makeRng(seed) {
++  if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) {
++    throw new RangeError('RNG seed must be an unsigned 32-bit integer');
++  }
++  let current = seed;
++
++  function next() {
++    current = (current + 0x6d2b79f5) >>> 0;
++    let value = current;
++    value = Math.imul(value ^ (value >>> 15), value | 1);
++    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
++    return ((value ^ (value >>> 14)) >>> 0) / 0x100000000;
++  }
++
++  // Both endpoints are inclusive so pick can address every array element.
++  function int(lo, hi) {
++    if (!Number.isSafeInteger(lo) || !Number.isSafeInteger(hi)
++        || lo > hi || !Number.isSafeInteger(hi - lo + 1)) {
++      throw new RangeError('RNG integer bounds must be ordered safe integers');
++    }
++    return lo + Math.floor(next() * (hi - lo + 1));
++  }
++
++  function pick(array) {
++    if (!Array.isArray(array) || array.length === 0) {
++      throw new RangeError('RNG pick requires a non-empty array');
++    }
++    return array[int(0, array.length - 1)];
++  }
++
++  return { next, int, pick, state: () => current };
++}
+diff --git a/Monitor/src/common/units.js b/Monitor/src/common/units.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..906d4ae83b73dbc9fcd9a7d069d4c96282137d66
+--- /dev/null
++++ b/Monitor/src/common/units.js
+@@ -0,0 +1,42 @@
++// Docs/PROTOCOL.md, Transport: station 7+20 represents 720 integer feet.
++const FEET_PER_STATION = 100;
++const STATION_REMAINDER_DIGITS = 2;
++// Docs/PROTOCOL.md, Transport: simulated day 0 starts display Day 1.
++const DISPLAY_DAY_OFFSET = 1;
++
++const usdFormatter = new Intl.NumberFormat('en-US', {
++  style: 'currency',
++  currency: 'USD',
++  // WO-00 specifies whole-dollar display, for example $278,400.
++  minimumFractionDigits: 0,
++  maximumFractionDigits: 0,
++});
++
++export function fmtStation(ft) {
++  if (!Number.isSafeInteger(ft) || ft < 0) {
++    throw new RangeError('Station feet must be a non-negative safe integer');
++  }
++  const station = Math.floor(ft / FEET_PER_STATION);
++  const remainder = String(ft % FEET_PER_STATION).padStart(STATION_REMAINDER_DIGITS, '0');
++  return `${station}+${remainder}`;
++}
++
++export function parseStation(station) {
++  if (typeof station !== 'string' || !/^\d+\+\d{2}$/.test(station)) {
++    throw new Error('Station must use the format 7+20');
++  }
++  const [whole, remainder] = station.split('+').map(Number);
++  const ft = whole * FEET_PER_STATION + remainder;
++  if (!Number.isSafeInteger(ft)) {
++    throw new RangeError('Station feet must be a safe integer');
++  }
++  return ft;
++}
++
++export function displayDay(t) {
++  return Math.floor(t) + DISPLAY_DAY_OFFSET;
++}
++
++export function fmtUsd(n) {
++  return usdFormatter.format(n);
++}
+diff --git a/Monitor/src/host/server.js b/Monitor/src/host/server.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..932b8ee8202dd44dfc52ed04e38178d21c8095ff
+--- /dev/null
++++ b/Monitor/src/host/server.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run host');
++log.warn('The host is a stub until WO-03.');
++process.exitCode = 2;
+diff --git a/Monitor/src/scenario/validate.js b/Monitor/src/scenario/validate.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..650bac0f26f55ca621584e6eb94b43af01e5eacf
+--- /dev/null
++++ b/Monitor/src/scenario/validate.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run validate -- <scenario.json>');
++log.warn('Scenario validation is a stub until WO-01.');
++process.exitCode = 2;
+diff --git a/Monitor/src/sim/headless.js b/Monitor/src/sim/headless.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d8a98aa91f81a56b6553e5e79acdfde0ba3a33d
+--- /dev/null
++++ b/Monitor/src/sim/headless.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run headless');
++log.warn('Headless simulation is a stub until WO-02.');
++process.exitCode = 2;
+diff --git a/Monitor/test/catalog.test.js b/Monitor/test/catalog.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..bf67f8d0cea13835a1f3a8c9d181f8ac587496d2
+--- /dev/null
++++ b/Monitor/test/catalog.test.js
+@@ -0,0 +1,31 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { fileURLToPath } from 'node:url';
++import { loadCatalog, machine, protection, city } from '../src/common/catalog.js';
++
++test('default catalog contains the authored machines and Texas delay', () => {
++  const catalog = loadCatalog();
++  assert.equal(Object.keys(catalog.machines).length, 8);
++  assert.equal(catalog.machines.excavator_standard.rateFtPerDay, 220);
++  assert.equal(catalog.cities.texas.remobilizationDelayDays, 1);
++});
++
++test('catalog also loads from an explicit path', () => {
++  const path = fileURLToPath(new URL('../../Data/catalog.json', import.meta.url));
++  assert.deepEqual(loadCatalog(path), loadCatalog());
++});
++
++test('named helpers return the matching catalog entries', () => {
++  const catalog = loadCatalog();
++  assert.deepEqual(machine('excavator_standard'), catalog.machines.excavator_standard);
++  assert.deepEqual(protection('trench_box'), catalog.protection.trench_box);
++  assert.deepEqual(city('texas'), catalog.cities.texas);
++});
++
++test('all helpers reject unknown and inherited keys clearly', () => {
++  for (const [kind, lookup] of [['machine', machine], ['protection', protection], ['city', city]]) {
++    for (const key of ['missing', 'toString', '__proto__']) {
++      assert.throws(() => lookup(key), { message: `Unknown ${kind} key: "${key}"` });
++    }
++  }
++});
+diff --git a/Monitor/test/rng.test.js b/Monitor/test/rng.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..5f91bff8c7035ed8b4f5f860e50dfcc293f24463
+--- /dev/null
++++ b/Monitor/test/rng.test.js
+@@ -0,0 +1,51 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { makeRng } from '../src/common/rng.js';
++
++test('same seed produces the same first 100 values in [0, 1)', () => {
++  const a = makeRng(1);
++  const b = makeRng(1);
++  for (let i = 0; i < 100; i++) {
++    const value = a.next();
++    assert.equal(value, b.next());
++    assert.ok(value >= 0 && value < 1);
++  }
++});
++
++test('different seeds produce different sequences', () => {
++  const a = makeRng(1);
++  const b = makeRng(2);
++  assert.notDeepEqual(Array.from({ length: 100 }, () => a.next()),
++    Array.from({ length: 100 }, () => b.next()));
++});
++
++test('JSON state round-trip resumes the sequence after mixed draws', () => {
++  const original = makeRng(0xffffffff);
++  original.next();
++  original.int(1, 6);
++  original.pick(['a', 'b', 'c']);
++  const saved = JSON.parse(JSON.stringify(original.state()));
++  const resumed = makeRng(saved);
++  assert.equal(resumed.state(), saved);
++  for (let i = 0; i < 100; i++) {
++    assert.equal(original.next(), resumed.next());
++    assert.equal(original.state(), resumed.state());
++  }
++});
++
++test('integer draws include both bounds and pick returns array members', () => {
++  const rng = makeRng(7);
++  const seen = new Set();
++  const choices = ['a', 'b', 'c'];
++  for (let i = 0; i < 100; i++) {
++    const value = rng.int(-1, 1);
++    assert.ok(Number.isInteger(value) && value >= -1 && value <= 1);
++    seen.add(value);
++    assert.ok(choices.includes(rng.pick(choices)));
++  }
++  assert.deepEqual(seen, new Set([-1, 0, 1]));
++  assert.equal(rng.int(4, 4), 4);
++  assert.equal(rng.pick(['only']), 'only');
++  assert.throws(() => rng.pick([]), /non-empty array/);
++  assert.throws(() => rng.int(2, 1), /bounds/);
++});
+diff --git a/Monitor/test/units.test.js b/Monitor/test/units.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..c9288278b357c834564981bcd99a0a59fc50326f
+--- /dev/null
++++ b/Monitor/test/units.test.js
+@@ -0,0 +1,22 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { fmtStation, parseStation, displayDay, fmtUsd } from '../src/common/units.js';
++
++test('station examples format and parse in integer feet', () => {
++  for (const [ft, station] of [[0, '0+00'], [5, '0+05'], [720, '7+20'], [1500, '15+00']]) {
++    assert.equal(fmtStation(ft), station);
++    assert.equal(parseStation(station), ft);
++  }
++});
++
++test('display days advance only at integer day boundaries', () => {
++  assert.equal(displayDay(0), 1);
++  assert.equal(displayDay(0.999), 1);
++  assert.equal(displayDay(1), 2);
++  assert.equal(displayDay(2.5), 3);
++});
++
++test('USD example uses dollars and comma grouping', () => {
++  assert.equal(fmtUsd(278400), '$278,400');
++  assert.equal(fmtUsd(0), '$0');
++});
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'git status --short' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "node -e \"import('./Monitor/src/common/rng.js').then(m=>{const a=m.makeRng(1),b=m.makeRng(1);console.log(a.next()===b.next())})\"" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'npm.cmd --prefix Monitor test' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "node -e \"import('./Monitor/src/common/units.js').then(m=>console.log(m.fmtStation(720), m.parseStation('15+00'), m.fmtUsd(278400)))\"" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 42ms:
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+ M Monitor/README.md
+ M Monitor/package.json
+?? Docs/WORK_ORDERS/logs/WO-00.20261015-122028.log
+?? Monitor/.gitignore
+?? Monitor/src/
+?? Monitor/test/
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 69ms:
+true
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 112ms:
+7+20 1500 $278,400
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+ succeeded in 949ms:
+
+> monitor@1.0.0 test
+> node --test
+
+✔ default catalog contains the authored machines and Texas delay (1.7063ms)
+✔ catalog also loads from an explicit path (1.7824ms)
+✔ named helpers return the matching catalog entries (0.7236ms)
+✔ all helpers reject unknown and inherited keys clearly (0.3245ms)
+✔ same seed produces the same first 100 values in [0, 1) (0.7206ms)
+✔ different seeds produce different sequences (0.7522ms)
+✔ JSON state round-trip resumes the sequence after mixed draws (0.5466ms)
+✔ integer draws include both bounds and pick returns array members (0.4311ms)
+✔ station examples format and parse in integer feet (0.5126ms)
+✔ display days advance only at integer day boundaries (0.0901ms)
+✔ USD example uses dollars and comma grouping (0.3725ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 84.1387
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+diff --git a/Monitor/.gitignore b/Monitor/.gitignore
+new file mode 100644
+index 0000000000000000000000000000000000000000..0265e214518aa4d32929bb4edb6562cf0c1915fd
+--- /dev/null
++++ b/Monitor/.gitignore
+@@ -0,0 +1,3 @@
++node_modules/
++test-results/
++out/
+diff --git a/Monitor/README.md b/Monitor/README.md
+index 30d696e4cb890b4b84d7af6283eda24fcd3696d1..09e82699e09ccb231c088f2e3717e3650d01c6a3
+--- a/Monitor/README.md
++++ b/Monitor/README.md
+@@ -1,3 +1,15 @@
+ # Monitor
+-
+-Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.
++Node 20+ ES modules; run the commands below from the repository root.
++`src/common/`: seeded RNG, catalog access, units, and stderr logger.
++`makeRng(seed)` uses uint32 seeds; `int(lo, hi)` includes both bounds; resume with `makeRng(rng.state())`.
++`loadCatalog(path?)` returns parsed data; named `machine`, `protection`, and `city` helpers use the default catalog.
++`src/scenario/`, `src/sim/`, `src/host/`: validation, simulation, and host entry points.
++`web/`: future browser pages; `test/`: unit tests; `e2e/`: future browser tests; `out/`: ignored output.
++`npm.cmd --prefix Monitor test`: run all discovered `*.test.js` tests.
++`npm.cmd --prefix Monitor run validate -- <scenario.json>`: validation stub, exits 2 until WO-01.
++`npm.cmd --prefix Monitor run headless`: simulation stub, exits 2 until WO-02.
++`npm.cmd --prefix Monitor run host`: host stub, exits 2 until WO-03; use this command to start the future host.
++`npm.cmd --prefix Monitor run e2e`: reserved for `e2e/stage1.e2e.js` in WO-03.
++Plan URL once WO-03 is implemented: http://localhost:7331/plan.html
++Site URL once WO-03 is implemented: http://localhost:7331/site.html
++Facilitator URL once WO-03 is implemented: http://localhost:7331/facilitator.html
+diff --git a/Monitor/package.json b/Monitor/package.json
+index 01baec227b350a5f2069d7dbd46443335c89fd58..1d3a21b9c8b0e8228464b8787c9835e8081eea5d
+--- a/Monitor/package.json
++++ b/Monitor/package.json
+@@ -4,12 +4,16 @@
+   "description": "Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.",
+   "main": "index.js",
+   "scripts": {
+-    "test": "echo \"Error: no test specified\" && exit 1"
++    "test": "node --test",
++    "validate": "node src/scenario/validate.js",
++    "headless": "node src/sim/headless.js",
++    "host": "node src/host/server.js",
++    "e2e": "node --test e2e/stage1.e2e.js"
+   },
+   "keywords": [],
+   "author": "",
+   "license": "ISC",
+-  "type": "commonjs",
++  "type": "module",
+   "dependencies": {
+     "ws": "^8.22.0"
+   },
+diff --git a/Monitor/src/common/catalog.js b/Monitor/src/common/catalog.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..c158b5fdf393456edc142798cdb782ab79f8b031
+--- /dev/null
++++ b/Monitor/src/common/catalog.js
+@@ -0,0 +1,31 @@
++import { readFileSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++
++// Resolve from this module so commands work from either Monitor or the repo root.
++const DEFAULT_CATALOG_PATH = fileURLToPath(new URL('../../../Data/catalog.json', import.meta.url));
++
++export function loadCatalog(path = DEFAULT_CATALOG_PATH) {
++  return JSON.parse(readFileSync(path, 'utf8'));
++}
++
++// Data/catalog.json remains the source of every shared game constant.
++const catalog = loadCatalog();
++
++function lookup(entries, kind, key) {
++  if (!Object.hasOwn(entries, key)) {
++    throw new Error(`Unknown ${kind} key: "${key}"`);
++  }
++  return entries[key];
++}
++
++export function machine(key) {
++  return lookup(catalog.machines, 'machine', key);
++}
++
++export function protection(key) {
++  return lookup(catalog.protection, 'protection', key);
++}
++
++export function city(key) {
++  return lookup(catalog.cities, 'city', key);
++}
+diff --git a/Monitor/src/common/log.js b/Monitor/src/common/log.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..43b58207ce21716a68f0f54e1d5287e5460b4afa
+--- /dev/null
++++ b/Monitor/src/common/log.js
+@@ -0,0 +1,18 @@
++import { format } from 'node:util';
++
++const LEVELS = ['debug', 'info', 'warn', 'error'];
++
++export function createLogger(level = 'info') {
++  const threshold = LEVELS.indexOf(level);
++  if (threshold === -1) {
++    throw new Error(`Unknown log level: "${level}"`);
++  }
++  return Object.fromEntries(LEVELS.map((name, index) => [name, (...args) => {
++    if (index >= threshold) {
++      // Keep stdout available for machine-readable command output.
++      process.stderr.write(`[${name}] ${format(...args)}\n`);
++    }
++  }]));
++}
++
++export const log = createLogger();
+diff --git a/Monitor/src/common/rng.js b/Monitor/src/common/rng.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..f20598cb81a8a871642db090f106ca7f65aeb09a
+--- /dev/null
++++ b/Monitor/src/common/rng.js
+@@ -0,0 +1,34 @@
++// Mulberry32 uses one unsigned 32-bit state word. Pass state() back to makeRng
++// to resume immediately after the last draw, including after JSON serialization.
++export function makeRng(seed) {
++  if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) {
++    throw new RangeError('RNG seed must be an unsigned 32-bit integer');
++  }
++  let current = seed;
++
++  function next() {
++    current = (current + 0x6d2b79f5) >>> 0;
++    let value = current;
++    value = Math.imul(value ^ (value >>> 15), value | 1);
++    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
++    return ((value ^ (value >>> 14)) >>> 0) / 0x100000000;
++  }
++
++  // Both endpoints are inclusive so pick can address every array element.
++  function int(lo, hi) {
++    if (!Number.isSafeInteger(lo) || !Number.isSafeInteger(hi)
++        || lo > hi || !Number.isSafeInteger(hi - lo + 1)) {
++      throw new RangeError('RNG integer bounds must be ordered safe integers');
++    }
++    return lo + Math.floor(next() * (hi - lo + 1));
++  }
++
++  function pick(array) {
++    if (!Array.isArray(array) || array.length === 0) {
++      throw new RangeError('RNG pick requires a non-empty array');
++    }
++    return array[int(0, array.length - 1)];
++  }
++
++  return { next, int, pick, state: () => current };
++}
+diff --git a/Monitor/src/common/units.js b/Monitor/src/common/units.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..906d4ae83b73dbc9fcd9a7d069d4c96282137d66
+--- /dev/null
++++ b/Monitor/src/common/units.js
+@@ -0,0 +1,42 @@
++// Docs/PROTOCOL.md, Transport: station 7+20 represents 720 integer feet.
++const FEET_PER_STATION = 100;
++const STATION_REMAINDER_DIGITS = 2;
++// Docs/PROTOCOL.md, Transport: simulated day 0 starts display Day 1.
++const DISPLAY_DAY_OFFSET = 1;
++
++const usdFormatter = new Intl.NumberFormat('en-US', {
++  style: 'currency',
++  currency: 'USD',
++  // WO-00 specifies whole-dollar display, for example $278,400.
++  minimumFractionDigits: 0,
++  maximumFractionDigits: 0,
++});
++
++export function fmtStation(ft) {
++  if (!Number.isSafeInteger(ft) || ft < 0) {
++    throw new RangeError('Station feet must be a non-negative safe integer');
++  }
++  const station = Math.floor(ft / FEET_PER_STATION);
++  const remainder = String(ft % FEET_PER_STATION).padStart(STATION_REMAINDER_DIGITS, '0');
++  return `${station}+${remainder}`;
++}
++
++export function parseStation(station) {
++  if (typeof station !== 'string' || !/^\d+\+\d{2}$/.test(station)) {
++    throw new Error('Station must use the format 7+20');
++  }
++  const [whole, remainder] = station.split('+').map(Number);
++  const ft = whole * FEET_PER_STATION + remainder;
++  if (!Number.isSafeInteger(ft)) {
++    throw new RangeError('Station feet must be a safe integer');
++  }
++  return ft;
++}
++
++export function displayDay(t) {
++  return Math.floor(t) + DISPLAY_DAY_OFFSET;
++}
++
++export function fmtUsd(n) {
++  return usdFormatter.format(n);
++}
+diff --git a/Monitor/src/host/server.js b/Monitor/src/host/server.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..932b8ee8202dd44dfc52ed04e38178d21c8095ff
+--- /dev/null
++++ b/Monitor/src/host/server.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run host');
++log.warn('The host is a stub until WO-03.');
++process.exitCode = 2;
+diff --git a/Monitor/src/scenario/validate.js b/Monitor/src/scenario/validate.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..650bac0f26f55ca621584e6eb94b43af01e5eacf
+--- /dev/null
++++ b/Monitor/src/scenario/validate.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run validate -- <scenario.json>');
++log.warn('Scenario validation is a stub until WO-01.');
++process.exitCode = 2;
+diff --git a/Monitor/src/sim/headless.js b/Monitor/src/sim/headless.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d8a98aa91f81a56b6553e5e79acdfde0ba3a33d
+--- /dev/null
++++ b/Monitor/src/sim/headless.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run headless');
++log.warn('Headless simulation is a stub until WO-02.');
++process.exitCode = 2;
+diff --git a/Monitor/test/catalog.test.js b/Monitor/test/catalog.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..bf67f8d0cea13835a1f3a8c9d181f8ac587496d2
+--- /dev/null
++++ b/Monitor/test/catalog.test.js
+@@ -0,0 +1,31 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { fileURLToPath } from 'node:url';
++import { loadCatalog, machine, protection, city } from '../src/common/catalog.js';
++
++test('default catalog contains the authored machines and Texas delay', () => {
++  const catalog = loadCatalog();
++  assert.equal(Object.keys(catalog.machines).length, 8);
++  assert.equal(catalog.machines.excavator_standard.rateFtPerDay, 220);
++  assert.equal(catalog.cities.texas.remobilizationDelayDays, 1);
++});
++
++test('catalog also loads from an explicit path', () => {
++  const path = fileURLToPath(new URL('../../Data/catalog.json', import.meta.url));
++  assert.deepEqual(loadCatalog(path), loadCatalog());
++});
++
++test('named helpers return the matching catalog entries', () => {
++  const catalog = loadCatalog();
++  assert.deepEqual(machine('excavator_standard'), catalog.machines.excavator_standard);
++  assert.deepEqual(protection('trench_box'), catalog.protection.trench_box);
++  assert.deepEqual(city('texas'), catalog.cities.texas);
++});
++
++test('all helpers reject unknown and inherited keys clearly', () => {
++  for (const [kind, lookup] of [['machine', machine], ['protection', protection], ['city', city]]) {
++    for (const key of ['missing', 'toString', '__proto__']) {
++      assert.throws(() => lookup(key), { message: `Unknown ${kind} key: "${key}"` });
++    }
++  }
++});
+diff --git a/Monitor/test/rng.test.js b/Monitor/test/rng.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..5f91bff8c7035ed8b4f5f860e50dfcc293f24463
+--- /dev/null
++++ b/Monitor/test/rng.test.js
+@@ -0,0 +1,51 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { makeRng } from '../src/common/rng.js';
++
++test('same seed produces the same first 100 values in [0, 1)', () => {
++  const a = makeRng(1);
++  const b = makeRng(1);
++  for (let i = 0; i < 100; i++) {
++    const value = a.next();
++    assert.equal(value, b.next());
++    assert.ok(value >= 0 && value < 1);
++  }
++});
++
++test('different seeds produce different sequences', () => {
++  const a = makeRng(1);
++  const b = makeRng(2);
++  assert.notDeepEqual(Array.from({ length: 100 }, () => a.next()),
++    Array.from({ length: 100 }, () => b.next()));
++});
++
++test('JSON state round-trip resumes the sequence after mixed draws', () => {
++  const original = makeRng(0xffffffff);
++  original.next();
++  original.int(1, 6);
++  original.pick(['a', 'b', 'c']);
++  const saved = JSON.parse(JSON.stringify(original.state()));
++  const resumed = makeRng(saved);
++  assert.equal(resumed.state(), saved);
++  for (let i = 0; i < 100; i++) {
++    assert.equal(original.next(), resumed.next());
++    assert.equal(original.state(), resumed.state());
++  }
++});
++
++test('integer draws include both bounds and pick returns array members', () => {
++  const rng = makeRng(7);
++  const seen = new Set();
++  const choices = ['a', 'b', 'c'];
++  for (let i = 0; i < 100; i++) {
++    const value = rng.int(-1, 1);
++    assert.ok(Number.isInteger(value) && value >= -1 && value <= 1);
++    seen.add(value);
++    assert.ok(choices.includes(rng.pick(choices)));
++  }
++  assert.deepEqual(seen, new Set([-1, 0, 1]));
++  assert.equal(rng.int(4, 4), 4);
++  assert.equal(rng.pick(['only']), 'only');
++  assert.throws(() => rng.pick([]), /non-empty array/);
++  assert.throws(() => rng.int(2, 1), /bounds/);
++});
+diff --git a/Monitor/test/units.test.js b/Monitor/test/units.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..c9288278b357c834564981bcd99a0a59fc50326f
+--- /dev/null
++++ b/Monitor/test/units.test.js
+@@ -0,0 +1,22 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { fmtStation, parseStation, displayDay, fmtUsd } from '../src/common/units.js';
++
++test('station examples format and parse in integer feet', () => {
++  for (const [ft, station] of [[0, '0+00'], [5, '0+05'], [720, '7+20'], [1500, '15+00']]) {
++    assert.equal(fmtStation(ft), station);
++    assert.equal(parseStation(station), ft);
++  }
++});
++
++test('display days advance only at integer day boundaries', () => {
++  assert.equal(displayDay(0), 1);
++  assert.equal(displayDay(0.999), 1);
++  assert.equal(displayDay(1), 2);
++  assert.equal(displayDay(2.5), 3);
++});
++
++test('USD example uses dollars and comma grouping', () => {
++  assert.equal(fmtUsd(278400), '$278,400');
++  assert.equal(fmtUsd(0), '$0');
++});
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'npm.cmd --prefix Monitor run headless' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "@'
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+const child = spawnSync(process.execPath, ['--input-type=module', '-e', "'`
+  import { createLogger } from '"'./Monitor/src/common/log.js';
+  const log = createLogger('warn');
+  log.debug('hidden');
+  log.info('hidden');
+  log.warn('usage %s', 'message');
+  log.error('failure');
+"'`], { encoding: '"'utf8' });
+assert.equal(child.status, 0, child.stderr);
+assert.equal(child.stdout, '');
+assert.equal(child.stderr, '[warn] usage message\\n[error] failure\\n');
+console.log('PASS: logger filters levels and writes only to stderr');
+'@ | node --input-type=module" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'npm.cmd --prefix Monitor run validate' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'npm.cmd --prefix Monitor run host' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 130ms:
+PASS: logger filters levels and writes only to stderr
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ exited 1 in 369ms:
+
+> monitor@1.0.0 headless
+> node src/sim/headless.js
+
+[info] Usage: npm.cmd --prefix Monitor run headless
+[warn] Headless simulation is a stub until WO-02.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ exited 1 in 373ms:
+
+> monitor@1.0.0 validate
+> node src/scenario/validate.js
+
+[info] Usage: npm.cmd --prefix Monitor run validate -- <scenario.json>
+[warn] Scenario validation is a stub until WO-01.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ exited 1 in 376ms:
+
+> monitor@1.0.0 host
+> node src/host/server.js
+
+[info] Usage: npm.cmd --prefix Monitor run host
+[warn] The host is a stub until WO-03.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+diff --git a/Monitor/.gitignore b/Monitor/.gitignore
+new file mode 100644
+index 0000000000000000000000000000000000000000..0265e214518aa4d32929bb4edb6562cf0c1915fd
+--- /dev/null
++++ b/Monitor/.gitignore
+@@ -0,0 +1,3 @@
++node_modules/
++test-results/
++out/
+diff --git a/Monitor/README.md b/Monitor/README.md
+index 30d696e4cb890b4b84d7af6283eda24fcd3696d1..09e82699e09ccb231c088f2e3717e3650d01c6a3
+--- a/Monitor/README.md
++++ b/Monitor/README.md
+@@ -1,3 +1,15 @@
+ # Monitor
+-
+-Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.
++Node 20+ ES modules; run the commands below from the repository root.
++`src/common/`: seeded RNG, catalog access, units, and stderr logger.
++`makeRng(seed)` uses uint32 seeds; `int(lo, hi)` includes both bounds; resume with `makeRng(rng.state())`.
++`loadCatalog(path?)` returns parsed data; named `machine`, `protection`, and `city` helpers use the default catalog.
++`src/scenario/`, `src/sim/`, `src/host/`: validation, simulation, and host entry points.
++`web/`: future browser pages; `test/`: unit tests; `e2e/`: future browser tests; `out/`: ignored output.
++`npm.cmd --prefix Monitor test`: run all discovered `*.test.js` tests.
++`npm.cmd --prefix Monitor run validate -- <scenario.json>`: validation stub, exits 2 until WO-01.
++`npm.cmd --prefix Monitor run headless`: simulation stub, exits 2 until WO-02.
++`npm.cmd --prefix Monitor run host`: host stub, exits 2 until WO-03; use this command to start the future host.
++`npm.cmd --prefix Monitor run e2e`: reserved for `e2e/stage1.e2e.js` in WO-03.
++Plan URL once WO-03 is implemented: http://localhost:7331/plan.html
++Site URL once WO-03 is implemented: http://localhost:7331/site.html
++Facilitator URL once WO-03 is implemented: http://localhost:7331/facilitator.html
+diff --git a/Monitor/package.json b/Monitor/package.json
+index 01baec227b350a5f2069d7dbd46443335c89fd58..1d3a21b9c8b0e8228464b8787c9835e8081eea5d
+--- a/Monitor/package.json
++++ b/Monitor/package.json
+@@ -4,12 +4,16 @@
+   "description": "Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.",
+   "main": "index.js",
+   "scripts": {
+-    "test": "echo \"Error: no test specified\" && exit 1"
++    "test": "node --test",
++    "validate": "node src/scenario/validate.js",
++    "headless": "node src/sim/headless.js",
++    "host": "node src/host/server.js",
++    "e2e": "node --test e2e/stage1.e2e.js"
+   },
+   "keywords": [],
+   "author": "",
+   "license": "ISC",
+-  "type": "commonjs",
++  "type": "module",
+   "dependencies": {
+     "ws": "^8.22.0"
+   },
+diff --git a/Monitor/src/common/catalog.js b/Monitor/src/common/catalog.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..c158b5fdf393456edc142798cdb782ab79f8b031
+--- /dev/null
++++ b/Monitor/src/common/catalog.js
+@@ -0,0 +1,31 @@
++import { readFileSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++
++// Resolve from this module so commands work from either Monitor or the repo root.
++const DEFAULT_CATALOG_PATH = fileURLToPath(new URL('../../../Data/catalog.json', import.meta.url));
++
++export function loadCatalog(path = DEFAULT_CATALOG_PATH) {
++  return JSON.parse(readFileSync(path, 'utf8'));
++}
++
++// Data/catalog.json remains the source of every shared game constant.
++const catalog = loadCatalog();
++
++function lookup(entries, kind, key) {
++  if (!Object.hasOwn(entries, key)) {
++    throw new Error(`Unknown ${kind} key: "${key}"`);
++  }
++  return entries[key];
++}
++
++export function machine(key) {
++  return lookup(catalog.machines, 'machine', key);
++}
++
++export function protection(key) {
++  return lookup(catalog.protection, 'protection', key);
++}
++
++export function city(key) {
++  return lookup(catalog.cities, 'city', key);
++}
+diff --git a/Monitor/src/common/log.js b/Monitor/src/common/log.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..43b58207ce21716a68f0f54e1d5287e5460b4afa
+--- /dev/null
++++ b/Monitor/src/common/log.js
+@@ -0,0 +1,18 @@
++import { format } from 'node:util';
++
++const LEVELS = ['debug', 'info', 'warn', 'error'];
++
++export function createLogger(level = 'info') {
++  const threshold = LEVELS.indexOf(level);
++  if (threshold === -1) {
++    throw new Error(`Unknown log level: "${level}"`);
++  }
++  return Object.fromEntries(LEVELS.map((name, index) => [name, (...args) => {
++    if (index >= threshold) {
++      // Keep stdout available for machine-readable command output.
++      process.stderr.write(`[${name}] ${format(...args)}\n`);
++    }
++  }]));
++}
++
++export const log = createLogger();
+diff --git a/Monitor/src/common/rng.js b/Monitor/src/common/rng.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..f20598cb81a8a871642db090f106ca7f65aeb09a
+--- /dev/null
++++ b/Monitor/src/common/rng.js
+@@ -0,0 +1,34 @@
++// Mulberry32 uses one unsigned 32-bit state word. Pass state() back to makeRng
++// to resume immediately after the last draw, including after JSON serialization.
++export function makeRng(seed) {
++  if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) {
++    throw new RangeError('RNG seed must be an unsigned 32-bit integer');
++  }
++  let current = seed;
++
++  function next() {
++    current = (current + 0x6d2b79f5) >>> 0;
++    let value = current;
++    value = Math.imul(value ^ (value >>> 15), value | 1);
++    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
++    return ((value ^ (value >>> 14)) >>> 0) / 0x100000000;
++  }
++
++  // Both endpoints are inclusive so pick can address every array element.
++  function int(lo, hi) {
++    if (!Number.isSafeInteger(lo) || !Number.isSafeInteger(hi)
++        || lo > hi || !Number.isSafeInteger(hi - lo + 1)) {
++      throw new RangeError('RNG integer bounds must be ordered safe integers');
++    }
++    return lo + Math.floor(next() * (hi - lo + 1));
++  }
++
++  function pick(array) {
++    if (!Array.isArray(array) || array.length === 0) {
++      throw new RangeError('RNG pick requires a non-empty array');
++    }
++    return array[int(0, array.length - 1)];
++  }
++
++  return { next, int, pick, state: () => current };
++}
+diff --git a/Monitor/src/common/units.js b/Monitor/src/common/units.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..906d4ae83b73dbc9fcd9a7d069d4c96282137d66
+--- /dev/null
++++ b/Monitor/src/common/units.js
+@@ -0,0 +1,42 @@
++// Docs/PROTOCOL.md, Transport: station 7+20 represents 720 integer feet.
++const FEET_PER_STATION = 100;
++const STATION_REMAINDER_DIGITS = 2;
++// Docs/PROTOCOL.md, Transport: simulated day 0 starts display Day 1.
++const DISPLAY_DAY_OFFSET = 1;
++
++const usdFormatter = new Intl.NumberFormat('en-US', {
++  style: 'currency',
++  currency: 'USD',
++  // WO-00 specifies whole-dollar display, for example $278,400.
++  minimumFractionDigits: 0,
++  maximumFractionDigits: 0,
++});
++
++export function fmtStation(ft) {
++  if (!Number.isSafeInteger(ft) || ft < 0) {
++    throw new RangeError('Station feet must be a non-negative safe integer');
++  }
++  const station = Math.floor(ft / FEET_PER_STATION);
++  const remainder = String(ft % FEET_PER_STATION).padStart(STATION_REMAINDER_DIGITS, '0');
++  return `${station}+${remainder}`;
++}
++
++export function parseStation(station) {
++  if (typeof station !== 'string' || !/^\d+\+\d{2}$/.test(station)) {
++    throw new Error('Station must use the format 7+20');
++  }
++  const [whole, remainder] = station.split('+').map(Number);
++  const ft = whole * FEET_PER_STATION + remainder;
++  if (!Number.isSafeInteger(ft)) {
++    throw new RangeError('Station feet must be a safe integer');
++  }
++  return ft;
++}
++
++export function displayDay(t) {
++  return Math.floor(t) + DISPLAY_DAY_OFFSET;
++}
++
++export function fmtUsd(n) {
++  return usdFormatter.format(n);
++}
+diff --git a/Monitor/src/host/server.js b/Monitor/src/host/server.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..932b8ee8202dd44dfc52ed04e38178d21c8095ff
+--- /dev/null
++++ b/Monitor/src/host/server.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run host');
++log.warn('The host is a stub until WO-03.');
++process.exitCode = 2;
+diff --git a/Monitor/src/scenario/validate.js b/Monitor/src/scenario/validate.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..650bac0f26f55ca621584e6eb94b43af01e5eacf
+--- /dev/null
++++ b/Monitor/src/scenario/validate.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run validate -- <scenario.json>');
++log.warn('Scenario validation is a stub until WO-01.');
++process.exitCode = 2;
+diff --git a/Monitor/src/sim/headless.js b/Monitor/src/sim/headless.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d8a98aa91f81a56b6553e5e79acdfde0ba3a33d
+--- /dev/null
++++ b/Monitor/src/sim/headless.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run headless');
++log.warn('Headless simulation is a stub until WO-02.');
++process.exitCode = 2;
+diff --git a/Monitor/test/catalog.test.js b/Monitor/test/catalog.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..bf67f8d0cea13835a1f3a8c9d181f8ac587496d2
+--- /dev/null
++++ b/Monitor/test/catalog.test.js
+@@ -0,0 +1,31 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { fileURLToPath } from 'node:url';
++import { loadCatalog, machine, protection, city } from '../src/common/catalog.js';
++
++test('default catalog contains the authored machines and Texas delay', () => {
++  const catalog = loadCatalog();
++  assert.equal(Object.keys(catalog.machines).length, 8);
++  assert.equal(catalog.machines.excavator_standard.rateFtPerDay, 220);
++  assert.equal(catalog.cities.texas.remobilizationDelayDays, 1);
++});
++
++test('catalog also loads from an explicit path', () => {
++  const path = fileURLToPath(new URL('../../Data/catalog.json', import.meta.url));
++  assert.deepEqual(loadCatalog(path), loadCatalog());
++});
++
++test('named helpers return the matching catalog entries', () => {
++  const catalog = loadCatalog();
++  assert.deepEqual(machine('excavator_standard'), catalog.machines.excavator_standard);
++  assert.deepEqual(protection('trench_box'), catalog.protection.trench_box);
++  assert.deepEqual(city('texas'), catalog.cities.texas);
++});
++
++test('all helpers reject unknown and inherited keys clearly', () => {
++  for (const [kind, lookup] of [['machine', machine], ['protection', protection], ['city', city]]) {
++    for (const key of ['missing', 'toString', '__proto__']) {
++      assert.throws(() => lookup(key), { message: `Unknown ${kind} key: "${key}"` });
++    }
++  }
++});
+diff --git a/Monitor/test/rng.test.js b/Monitor/test/rng.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..5f91bff8c7035ed8b4f5f860e50dfcc293f24463
+--- /dev/null
++++ b/Monitor/test/rng.test.js
+@@ -0,0 +1,51 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { makeRng } from '../src/common/rng.js';
++
++test('same seed produces the same first 100 values in [0, 1)', () => {
++  const a = makeRng(1);
++  const b = makeRng(1);
++  for (let i = 0; i < 100; i++) {
++    const value = a.next();
++    assert.equal(value, b.next());
++    assert.ok(value >= 0 && value < 1);
++  }
++});
++
++test('different seeds produce different sequences', () => {
++  const a = makeRng(1);
++  const b = makeRng(2);
++  assert.notDeepEqual(Array.from({ length: 100 }, () => a.next()),
++    Array.from({ length: 100 }, () => b.next()));
++});
++
++test('JSON state round-trip resumes the sequence after mixed draws', () => {
++  const original = makeRng(0xffffffff);
++  original.next();
++  original.int(1, 6);
++  original.pick(['a', 'b', 'c']);
++  const saved = JSON.parse(JSON.stringify(original.state()));
++  const resumed = makeRng(saved);
++  assert.equal(resumed.state(), saved);
++  for (let i = 0; i < 100; i++) {
++    assert.equal(original.next(), resumed.next());
++    assert.equal(original.state(), resumed.state());
++  }
++});
++
++test('integer draws include both bounds and pick returns array members', () => {
++  const rng = makeRng(7);
++  const seen = new Set();
++  const choices = ['a', 'b', 'c'];
++  for (let i = 0; i < 100; i++) {
++    const value = rng.int(-1, 1);
++    assert.ok(Number.isInteger(value) && value >= -1 && value <= 1);
++    seen.add(value);
++    assert.ok(choices.includes(rng.pick(choices)));
++  }
++  assert.deepEqual(seen, new Set([-1, 0, 1]));
++  assert.equal(rng.int(4, 4), 4);
++  assert.equal(rng.pick(['only']), 'only');
++  assert.throws(() => rng.pick([]), /non-empty array/);
++  assert.throws(() => rng.int(2, 1), /bounds/);
++});
+diff --git a/Monitor/test/units.test.js b/Monitor/test/units.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..c9288278b357c834564981bcd99a0a59fc50326f
+--- /dev/null
++++ b/Monitor/test/units.test.js
+@@ -0,0 +1,22 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { fmtStation, parseStation, displayDay, fmtUsd } from '../src/common/units.js';
++
++test('station examples format and parse in integer feet', () => {
++  for (const [ft, station] of [[0, '0+00'], [5, '0+05'], [720, '7+20'], [1500, '15+00']]) {
++    assert.equal(fmtStation(ft), station);
++    assert.equal(parseStation(station), ft);
++  }
++});
++
++test('display days advance only at integer day boundaries', () => {
++  assert.equal(displayDay(0), 1);
++  assert.equal(displayDay(0.999), 1);
++  assert.equal(displayDay(1), 2);
++  assert.equal(displayDay(2.5), 3);
++});
++
++test('USD example uses dollars and comma grouping', () => {
++  assert.equal(fmtUsd(278400), '$278,400');
++  assert.equal(fmtUsd(0), '$0');
++});
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "@'
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+for (const file of ['scenario/validate.js', 'sim/headless.js', 'host/server.js']) {
+  const child = spawnSync(process.execPath, ["'`Monitor/src/${file}`], { encoding: '"'utf8' });
+  assert.equal(child.status, 2, "'`${file}: ${child.stderr}`);
+  assert.equal(child.stdout, '"'');
+  assert.match(child.stderr, /Usage:/);
+  console.log("'`${file}: exit ${child.status}, usage on stderr`);
+}
+'"'@ | node --input-type=module" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 183ms:
+scenario/validate.js: exit 2, usage on stderr
+sim/headless.js: exit 2, usage on stderr
+host/server.js: exit 2, usage on stderr
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+diff --git a/Monitor/.gitignore b/Monitor/.gitignore
+new file mode 100644
+index 0000000000000000000000000000000000000000..0265e214518aa4d32929bb4edb6562cf0c1915fd
+--- /dev/null
++++ b/Monitor/.gitignore
+@@ -0,0 +1,3 @@
++node_modules/
++test-results/
++out/
+diff --git a/Monitor/README.md b/Monitor/README.md
+index 30d696e4cb890b4b84d7af6283eda24fcd3696d1..09e82699e09ccb231c088f2e3717e3650d01c6a3
+--- a/Monitor/README.md
++++ b/Monitor/README.md
+@@ -1,3 +1,15 @@
+ # Monitor
+-
+-Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.
++Node 20+ ES modules; run the commands below from the repository root.
++`src/common/`: seeded RNG, catalog access, units, and stderr logger.
++`makeRng(seed)` uses uint32 seeds; `int(lo, hi)` includes both bounds; resume with `makeRng(rng.state())`.
++`loadCatalog(path?)` returns parsed data; named `machine`, `protection`, and `city` helpers use the default catalog.
++`src/scenario/`, `src/sim/`, `src/host/`: validation, simulation, and host entry points.
++`web/`: future browser pages; `test/`: unit tests; `e2e/`: future browser tests; `out/`: ignored output.
++`npm.cmd --prefix Monitor test`: run all discovered `*.test.js` tests.
++`npm.cmd --prefix Monitor run validate -- <scenario.json>`: validation stub, exits 2 until WO-01.
++`npm.cmd --prefix Monitor run headless`: simulation stub, exits 2 until WO-02.
++`npm.cmd --prefix Monitor run host`: host stub, exits 2 until WO-03; use this command to start the future host.
++`npm.cmd --prefix Monitor run e2e`: reserved for `e2e/stage1.e2e.js` in WO-03.
++Plan URL once WO-03 is implemented: http://localhost:7331/plan.html
++Site URL once WO-03 is implemented: http://localhost:7331/site.html
++Facilitator URL once WO-03 is implemented: http://localhost:7331/facilitator.html
+diff --git a/Monitor/package.json b/Monitor/package.json
+index 01baec227b350a5f2069d7dbd46443335c89fd58..1d3a21b9c8b0e8228464b8787c9835e8081eea5d
+--- a/Monitor/package.json
++++ b/Monitor/package.json
+@@ -4,12 +4,16 @@
+   "description": "Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.",
+   "main": "index.js",
+   "scripts": {
+-    "test": "echo \"Error: no test specified\" && exit 1"
++    "test": "node --test",
++    "validate": "node src/scenario/validate.js",
++    "headless": "node src/sim/headless.js",
++    "host": "node src/host/server.js",
++    "e2e": "node --test e2e/stage1.e2e.js"
+   },
+   "keywords": [],
+   "author": "",
+   "license": "ISC",
+-  "type": "commonjs",
++  "type": "module",
+   "dependencies": {
+     "ws": "^8.22.0"
+   },
+diff --git a/Monitor/src/common/catalog.js b/Monitor/src/common/catalog.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..c158b5fdf393456edc142798cdb782ab79f8b031
+--- /dev/null
++++ b/Monitor/src/common/catalog.js
+@@ -0,0 +1,31 @@
++import { readFileSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++
++// Resolve from this module so commands work from either Monitor or the repo root.
++const DEFAULT_CATALOG_PATH = fileURLToPath(new URL('../../../Data/catalog.json', import.meta.url));
++
++export function loadCatalog(path = DEFAULT_CATALOG_PATH) {
++  return JSON.parse(readFileSync(path, 'utf8'));
++}
++
++// Data/catalog.json remains the source of every shared game constant.
++const catalog = loadCatalog();
++
++function lookup(entries, kind, key) {
++  if (!Object.hasOwn(entries, key)) {
++    throw new Error(`Unknown ${kind} key: "${key}"`);
++  }
++  return entries[key];
++}
++
++export function machine(key) {
++  return lookup(catalog.machines, 'machine', key);
++}
++
++export function protection(key) {
++  return lookup(catalog.protection, 'protection', key);
++}
++
++export function city(key) {
++  return lookup(catalog.cities, 'city', key);
++}
+diff --git a/Monitor/src/common/log.js b/Monitor/src/common/log.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..43b58207ce21716a68f0f54e1d5287e5460b4afa
+--- /dev/null
++++ b/Monitor/src/common/log.js
+@@ -0,0 +1,18 @@
++import { format } from 'node:util';
++
++const LEVELS = ['debug', 'info', 'warn', 'error'];
++
++export function createLogger(level = 'info') {
++  const threshold = LEVELS.indexOf(level);
++  if (threshold === -1) {
++    throw new Error(`Unknown log level: "${level}"`);
++  }
++  return Object.fromEntries(LEVELS.map((name, index) => [name, (...args) => {
++    if (index >= threshold) {
++      // Keep stdout available for machine-readable command output.
++      process.stderr.write(`[${name}] ${format(...args)}\n`);
++    }
++  }]));
++}
++
++export const log = createLogger();
+diff --git a/Monitor/src/common/rng.js b/Monitor/src/common/rng.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..f20598cb81a8a871642db090f106ca7f65aeb09a
+--- /dev/null
++++ b/Monitor/src/common/rng.js
+@@ -0,0 +1,34 @@
++// Mulberry32 uses one unsigned 32-bit state word. Pass state() back to makeRng
++// to resume immediately after the last draw, including after JSON serialization.
++export function makeRng(seed) {
++  if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) {
++    throw new RangeError('RNG seed must be an unsigned 32-bit integer');
++  }
++  let current = seed;
++
++  function next() {
++    current = (current + 0x6d2b79f5) >>> 0;
++    let value = current;
++    value = Math.imul(value ^ (value >>> 15), value | 1);
++    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
++    return ((value ^ (value >>> 14)) >>> 0) / 0x100000000;
++  }
++
++  // Both endpoints are inclusive so pick can address every array element.
++  function int(lo, hi) {
++    if (!Number.isSafeInteger(lo) || !Number.isSafeInteger(hi)
++        || lo > hi || !Number.isSafeInteger(hi - lo + 1)) {
++      throw new RangeError('RNG integer bounds must be ordered safe integers');
++    }
++    return lo + Math.floor(next() * (hi - lo + 1));
++  }
++
++  function pick(array) {
++    if (!Array.isArray(array) || array.length === 0) {
++      throw new RangeError('RNG pick requires a non-empty array');
++    }
++    return array[int(0, array.length - 1)];
++  }
++
++  return { next, int, pick, state: () => current };
++}
+diff --git a/Monitor/src/common/units.js b/Monitor/src/common/units.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..906d4ae83b73dbc9fcd9a7d069d4c96282137d66
+--- /dev/null
++++ b/Monitor/src/common/units.js
+@@ -0,0 +1,42 @@
++// Docs/PROTOCOL.md, Transport: station 7+20 represents 720 integer feet.
++const FEET_PER_STATION = 100;
++const STATION_REMAINDER_DIGITS = 2;
++// Docs/PROTOCOL.md, Transport: simulated day 0 starts display Day 1.
++const DISPLAY_DAY_OFFSET = 1;
++
++const usdFormatter = new Intl.NumberFormat('en-US', {
++  style: 'currency',
++  currency: 'USD',
++  // WO-00 specifies whole-dollar display, for example $278,400.
++  minimumFractionDigits: 0,
++  maximumFractionDigits: 0,
++});
++
++export function fmtStation(ft) {
++  if (!Number.isSafeInteger(ft) || ft < 0) {
++    throw new RangeError('Station feet must be a non-negative safe integer');
++  }
++  const station = Math.floor(ft / FEET_PER_STATION);
++  const remainder = String(ft % FEET_PER_STATION).padStart(STATION_REMAINDER_DIGITS, '0');
++  return `${station}+${remainder}`;
++}
++
++export function parseStation(station) {
++  if (typeof station !== 'string' || !/^\d+\+\d{2}$/.test(station)) {
++    throw new Error('Station must use the format 7+20');
++  }
++  const [whole, remainder] = station.split('+').map(Number);
++  const ft = whole * FEET_PER_STATION + remainder;
++  if (!Number.isSafeInteger(ft)) {
++    throw new RangeError('Station feet must be a safe integer');
++  }
++  return ft;
++}
++
++export function displayDay(t) {
++  return Math.floor(t) + DISPLAY_DAY_OFFSET;
++}
++
++export function fmtUsd(n) {
++  return usdFormatter.format(n);
++}
+diff --git a/Monitor/src/host/server.js b/Monitor/src/host/server.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..932b8ee8202dd44dfc52ed04e38178d21c8095ff
+--- /dev/null
++++ b/Monitor/src/host/server.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run host');
++log.warn('The host is a stub until WO-03.');
++process.exitCode = 2;
+diff --git a/Monitor/src/scenario/validate.js b/Monitor/src/scenario/validate.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..650bac0f26f55ca621584e6eb94b43af01e5eacf
+--- /dev/null
++++ b/Monitor/src/scenario/validate.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run validate -- <scenario.json>');
++log.warn('Scenario validation is a stub until WO-01.');
++process.exitCode = 2;
+diff --git a/Monitor/src/sim/headless.js b/Monitor/src/sim/headless.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d8a98aa91f81a56b6553e5e79acdfde0ba3a33d
+--- /dev/null
++++ b/Monitor/src/sim/headless.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run headless');
++log.warn('Headless simulation is a stub until WO-02.');
++process.exitCode = 2;
+diff --git a/Monitor/test/catalog.test.js b/Monitor/test/catalog.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..bf67f8d0cea13835a1f3a8c9d181f8ac587496d2
+--- /dev/null
++++ b/Monitor/test/catalog.test.js
+@@ -0,0 +1,31 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { fileURLToPath } from 'node:url';
++import { loadCatalog, machine, protection, city } from '../src/common/catalog.js';
++
++test('default catalog contains the authored machines and Texas delay', () => {
++  const catalog = loadCatalog();
++  assert.equal(Object.keys(catalog.machines).length, 8);
++  assert.equal(catalog.machines.excavator_standard.rateFtPerDay, 220);
++  assert.equal(catalog.cities.texas.remobilizationDelayDays, 1);
++});
++
++test('catalog also loads from an explicit path', () => {
++  const path = fileURLToPath(new URL('../../Data/catalog.json', import.meta.url));
++  assert.deepEqual(loadCatalog(path), loadCatalog());
++});
++
++test('named helpers return the matching catalog entries', () => {
++  const catalog = loadCatalog();
++  assert.deepEqual(machine('excavator_standard'), catalog.machines.excavator_standard);
++  assert.deepEqual(protection('trench_box'), catalog.protection.trench_box);
++  assert.deepEqual(city('texas'), catalog.cities.texas);
++});
++
++test('all helpers reject unknown and inherited keys clearly', () => {
++  for (const [kind, lookup] of [['machine', machine], ['protection', protection], ['city', city]]) {
++    for (const key of ['missing', 'toString', '__proto__']) {
++      assert.throws(() => lookup(key), { message: `Unknown ${kind} key: "${key}"` });
++    }
++  }
++});
+diff --git a/Monitor/test/rng.test.js b/Monitor/test/rng.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..5f91bff8c7035ed8b4f5f860e50dfcc293f24463
+--- /dev/null
++++ b/Monitor/test/rng.test.js
+@@ -0,0 +1,51 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { makeRng } from '../src/common/rng.js';
++
++test('same seed produces the same first 100 values in [0, 1)', () => {
++  const a = makeRng(1);
++  const b = makeRng(1);
++  for (let i = 0; i < 100; i++) {
++    const value = a.next();
++    assert.equal(value, b.next());
++    assert.ok(value >= 0 && value < 1);
++  }
++});
++
++test('different seeds produce different sequences', () => {
++  const a = makeRng(1);
++  const b = makeRng(2);
++  assert.notDeepEqual(Array.from({ length: 100 }, () => a.next()),
++    Array.from({ length: 100 }, () => b.next()));
++});
++
++test('JSON state round-trip resumes the sequence after mixed draws', () => {
++  const original = makeRng(0xffffffff);
++  original.next();
++  original.int(1, 6);
++  original.pick(['a', 'b', 'c']);
++  const saved = JSON.parse(JSON.stringify(original.state()));
++  const resumed = makeRng(saved);
++  assert.equal(resumed.state(), saved);
++  for (let i = 0; i < 100; i++) {
++    assert.equal(original.next(), resumed.next());
++    assert.equal(original.state(), resumed.state());
++  }
++});
++
++test('integer draws include both bounds and pick returns array members', () => {
++  const rng = makeRng(7);
++  const seen = new Set();
++  const choices = ['a', 'b', 'c'];
++  for (let i = 0; i < 100; i++) {
++    const value = rng.int(-1, 1);
++    assert.ok(Number.isInteger(value) && value >= -1 && value <= 1);
++    seen.add(value);
++    assert.ok(choices.includes(rng.pick(choices)));
++  }
++  assert.deepEqual(seen, new Set([-1, 0, 1]));
++  assert.equal(rng.int(4, 4), 4);
++  assert.equal(rng.pick(['only']), 'only');
++  assert.throws(() => rng.pick([]), /non-empty array/);
++  assert.throws(() => rng.int(2, 1), /bounds/);
++});
+diff --git a/Monitor/test/units.test.js b/Monitor/test/units.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..c9288278b357c834564981bcd99a0a59fc50326f
+--- /dev/null
++++ b/Monitor/test/units.test.js
+@@ -0,0 +1,22 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { fmtStation, parseStation, displayDay, fmtUsd } from '../src/common/units.js';
++
++test('station examples format and parse in integer feet', () => {
++  for (const [ft, station] of [[0, '0+00'], [5, '0+05'], [720, '7+20'], [1500, '15+00']]) {
++    assert.equal(fmtStation(ft), station);
++    assert.equal(parseStation(station), ft);
++  }
++});
++
++test('display days advance only at integer day boundaries', () => {
++  assert.equal(displayDay(0), 1);
++  assert.equal(displayDay(0.999), 1);
++  assert.equal(displayDay(1), 2);
++  assert.equal(displayDay(2.5), 3);
++});
++
++test('USD example uses dollars and comma grouping', () => {
++  assert.equal(fmtUsd(278400), '$278,400');
++  assert.equal(fmtUsd(0), '$0');
++});
+
+codex
+```text
+STATUS: DONE
+WO: WO-00
+CHANGED:
+  - Monitor/package.json (modified), Monitor/.gitignore (new): ES modules, five scripts, output ignores.
+  - Monitor/src/common/{rng,catalog,units,log}.js (new): deterministic RNG, catalog access, formatting, stderr logger.
+  - Monitor/src/{scenario/validate,sim/headless,host/server}.js (new): usage stubs exiting 2.
+  - Monitor/test/{rng,catalog,units}.test.js (new): three test files.
+  - Monitor/README.md (modified): exactly 15 lines covering layout, scripts, and future URLs.
+TESTS:
+  - npm.cmd --prefix Monitor test
+    ℹ tests 11
+    ℹ pass 11
+    ℹ fail 0
+  - node -e "import('./Monitor/src/common/rng.js').then(m=>{const a=m.makeRng(1),b=m.makeRng(1);console.log(a.next()===b.next())})"
+    true
+  - node -e "import('./Monitor/src/common/units.js').then(m=>console.log(m.fmtStation(720), m.parseStation('15+00'), m.fmtUsd(278400)))"
+    7+20 1500 $278,400
+  - git status --short
+     M Monitor/README.md
+     M Monitor/package.json
+    ?? Docs/WORK_ORDERS/logs/WO-00.20261015-122028.log
+    ?? Monitor/.gitignore
+    ?? Monitor/src/
+    ?? Monitor/test/
+    PASS: only Monitor changes plus the exempt dispatch log.
+  - node --input-type=module (inline smoke checks)
+    scenario/validate.js: exit 2, usage on stderr
+    sim/headless.js: exit 2, usage on stderr
+    host/server.js: exit 2, usage on stderr
+    PASS: logger filters levels and writes only to stderr
+NOTES:
+  - Step 3 of 3 done; all acceptance checks passed on Node v24.14.1.
+  - RNG uses uint32 seeds/snapshots and inclusive integer bounds; catalog helpers use the default catalog.
+  - Required empty web/, e2e/, and out/ directories exist locally; Git does not track empty directories.
+  - No commits, dependency additions, or Data changes.
+  - Next action: review Monitor/README.md (1 minute).
+```
+diff --git a/Monitor/.gitignore b/Monitor/.gitignore
+new file mode 100644
+index 0000000000000000000000000000000000000000..0265e214518aa4d32929bb4edb6562cf0c1915fd
+--- /dev/null
++++ b/Monitor/.gitignore
+@@ -0,0 +1,3 @@
++node_modules/
++test-results/
++out/
+diff --git a/Monitor/README.md b/Monitor/README.md
+index 30d696e4cb890b4b84d7af6283eda24fcd3696d1..09e82699e09ccb231c088f2e3717e3650d01c6a3
+--- a/Monitor/README.md
++++ b/Monitor/README.md
+@@ -1,3 +1,15 @@
+ # Monitor
+-
+-Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.
++Node 20+ ES modules; run the commands below from the repository root.
++`src/common/`: seeded RNG, catalog access, units, and stderr logger.
++`makeRng(seed)` uses uint32 seeds; `int(lo, hi)` includes both bounds; resume with `makeRng(rng.state())`.
++`loadCatalog(path?)` returns parsed data; named `machine`, `protection`, and `city` helpers use the default catalog.
++`src/scenario/`, `src/sim/`, `src/host/`: validation, simulation, and host entry points.
++`web/`: future browser pages; `test/`: unit tests; `e2e/`: future browser tests; `out/`: ignored output.
++`npm.cmd --prefix Monitor test`: run all discovered `*.test.js` tests.
++`npm.cmd --prefix Monitor run validate -- <scenario.json>`: validation stub, exits 2 until WO-01.
++`npm.cmd --prefix Monitor run headless`: simulation stub, exits 2 until WO-02.
++`npm.cmd --prefix Monitor run host`: host stub, exits 2 until WO-03; use this command to start the future host.
++`npm.cmd --prefix Monitor run e2e`: reserved for `e2e/stage1.e2e.js` in WO-03.
++Plan URL once WO-03 is implemented: http://localhost:7331/plan.html
++Site URL once WO-03 is implemented: http://localhost:7331/site.html
++Facilitator URL once WO-03 is implemented: http://localhost:7331/facilitator.html
+diff --git a/Monitor/package.json b/Monitor/package.json
+index 01baec227b350a5f2069d7dbd46443335c89fd58..1d3a21b9c8b0e8228464b8787c9835e8081eea5d
+--- a/Monitor/package.json
++++ b/Monitor/package.json
+@@ -4,12 +4,16 @@
+   "description": "Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.",
+   "main": "index.js",
+   "scripts": {
+-    "test": "echo \"Error: no test specified\" && exit 1"
++    "test": "node --test",
++    "validate": "node src/scenario/validate.js",
++    "headless": "node src/sim/headless.js",
++    "host": "node src/host/server.js",
++    "e2e": "node --test e2e/stage1.e2e.js"
+   },
+   "keywords": [],
+   "author": "",
+   "license": "ISC",
+-  "type": "commonjs",
++  "type": "module",
+   "dependencies": {
+     "ws": "^8.22.0"
+   },
+diff --git a/Monitor/src/common/catalog.js b/Monitor/src/common/catalog.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..c158b5fdf393456edc142798cdb782ab79f8b031
+--- /dev/null
++++ b/Monitor/src/common/catalog.js
+@@ -0,0 +1,31 @@
++import { readFileSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++
++// Resolve from this module so commands work from either Monitor or the repo root.
++const DEFAULT_CATALOG_PATH = fileURLToPath(new URL('../../../Data/catalog.json', import.meta.url));
++
++export function loadCatalog(path = DEFAULT_CATALOG_PATH) {
++  return JSON.parse(readFileSync(path, 'utf8'));
++}
++
++// Data/catalog.json remains the source of every shared game constant.
++const catalog = loadCatalog();
++
++function lookup(entries, kind, key) {
++  if (!Object.hasOwn(entries, key)) {
++    throw new Error(`Unknown ${kind} key: "${key}"`);
++  }
++  return entries[key];
++}
++
++export function machine(key) {
++  return lookup(catalog.machines, 'machine', key);
++}
++
++export function protection(key) {
++  return lookup(catalog.protection, 'protection', key);
++}
++
++export function city(key) {
++  return lookup(catalog.cities, 'city', key);
++}
+diff --git a/Monitor/src/common/log.js b/Monitor/src/common/log.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..43b58207ce21716a68f0f54e1d5287e5460b4afa
+--- /dev/null
++++ b/Monitor/src/common/log.js
+@@ -0,0 +1,18 @@
++import { format } from 'node:util';
++
++const LEVELS = ['debug', 'info', 'warn', 'error'];
++
++export function createLogger(level = 'info') {
++  const threshold = LEVELS.indexOf(level);
++  if (threshold === -1) {
++    throw new Error(`Unknown log level: "${level}"`);
++  }
++  return Object.fromEntries(LEVELS.map((name, index) => [name, (...args) => {
++    if (index >= threshold) {
++      // Keep stdout available for machine-readable command output.
++      process.stderr.write(`[${name}] ${format(...args)}\n`);
++    }
++  }]));
++}
++
++export const log = createLogger();
+diff --git a/Monitor/src/common/rng.js b/Monitor/src/common/rng.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..f20598cb81a8a871642db090f106ca7f65aeb09a
+--- /dev/null
++++ b/Monitor/src/common/rng.js
+@@ -0,0 +1,34 @@
++// Mulberry32 uses one unsigned 32-bit state word. Pass state() back to makeRng
++// to resume immediately after the last draw, including after JSON serialization.
++export function makeRng(seed) {
++  if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) {
++    throw new RangeError('RNG seed must be an unsigned 32-bit integer');
++  }
++  let current = seed;
++
++  function next() {
++    current = (current + 0x6d2b79f5) >>> 0;
++    let value = current;
++    value = Math.imul(value ^ (value >>> 15), value | 1);
++    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
++    return ((value ^ (value >>> 14)) >>> 0) / 0x100000000;
++  }
++
++  // Both endpoints are inclusive so pick can address every array element.
++  function int(lo, hi) {
++    if (!Number.isSafeInteger(lo) || !Number.isSafeInteger(hi)
++        || lo > hi || !Number.isSafeInteger(hi - lo + 1)) {
++      throw new RangeError('RNG integer bounds must be ordered safe integers');
++    }
++    return lo + Math.floor(next() * (hi - lo + 1));
++  }
++
++  function pick(array) {
++    if (!Array.isArray(array) || array.length === 0) {
++      throw new RangeError('RNG pick requires a non-empty array');
++    }
++    return array[int(0, array.length - 1)];
++  }
++
++  return { next, int, pick, state: () => current };
++}
+diff --git a/Monitor/src/common/units.js b/Monitor/src/common/units.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..906d4ae83b73dbc9fcd9a7d069d4c96282137d66
+--- /dev/null
++++ b/Monitor/src/common/units.js
+@@ -0,0 +1,42 @@
++// Docs/PROTOCOL.md, Transport: station 7+20 represents 720 integer feet.
++const FEET_PER_STATION = 100;
++const STATION_REMAINDER_DIGITS = 2;
++// Docs/PROTOCOL.md, Transport: simulated day 0 starts display Day 1.
++const DISPLAY_DAY_OFFSET = 1;
++
++const usdFormatter = new Intl.NumberFormat('en-US', {
++  style: 'currency',
++  currency: 'USD',
++  // WO-00 specifies whole-dollar display, for example $278,400.
++  minimumFractionDigits: 0,
++  maximumFractionDigits: 0,
++});
++
++export function fmtStation(ft) {
++  if (!Number.isSafeInteger(ft) || ft < 0) {
++    throw new RangeError('Station feet must be a non-negative safe integer');
++  }
++  const station = Math.floor(ft / FEET_PER_STATION);
++  const remainder = String(ft % FEET_PER_STATION).padStart(STATION_REMAINDER_DIGITS, '0');
++  return `${station}+${remainder}`;
++}
++
++export function parseStation(station) {
++  if (typeof station !== 'string' || !/^\d+\+\d{2}$/.test(station)) {
++    throw new Error('Station must use the format 7+20');
++  }
++  const [whole, remainder] = station.split('+').map(Number);
++  const ft = whole * FEET_PER_STATION + remainder;
++  if (!Number.isSafeInteger(ft)) {
++    throw new RangeError('Station feet must be a safe integer');
++  }
++  return ft;
++}
++
++export function displayDay(t) {
++  return Math.floor(t) + DISPLAY_DAY_OFFSET;
++}
++
++export function fmtUsd(n) {
++  return usdFormatter.format(n);
++}
+diff --git a/Monitor/src/host/server.js b/Monitor/src/host/server.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..932b8ee8202dd44dfc52ed04e38178d21c8095ff
+--- /dev/null
++++ b/Monitor/src/host/server.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run host');
++log.warn('The host is a stub until WO-03.');
++process.exitCode = 2;
+diff --git a/Monitor/src/scenario/validate.js b/Monitor/src/scenario/validate.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..650bac0f26f55ca621584e6eb94b43af01e5eacf
+--- /dev/null
++++ b/Monitor/src/scenario/validate.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run validate -- <scenario.json>');
++log.warn('Scenario validation is a stub until WO-01.');
++process.exitCode = 2;
+diff --git a/Monitor/src/sim/headless.js b/Monitor/src/sim/headless.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d8a98aa91f81a56b6553e5e79acdfde0ba3a33d
+--- /dev/null
++++ b/Monitor/src/sim/headless.js
+@@ -0,0 +1,5 @@
++import { log } from '../common/log.js';
++
++log.info('Usage: npm.cmd --prefix Monitor run headless');
++log.warn('Headless simulation is a stub until WO-02.');
++process.exitCode = 2;
+diff --git a/Monitor/test/catalog.test.js b/Monitor/test/catalog.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..bf67f8d0cea13835a1f3a8c9d181f8ac587496d2
+--- /dev/null
++++ b/Monitor/test/catalog.test.js
+@@ -0,0 +1,31 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { fileURLToPath } from 'node:url';
++import { loadCatalog, machine, protection, city } from '../src/common/catalog.js';
++
++test('default catalog contains the authored machines and Texas delay', () => {
++  const catalog = loadCatalog();
++  assert.equal(Object.keys(catalog.machines).length, 8);
++  assert.equal(catalog.machines.excavator_standard.rateFtPerDay, 220);
++  assert.equal(catalog.cities.texas.remobilizationDelayDays, 1);
++});
++
++test('catalog also loads from an explicit path', () => {
++  const path = fileURLToPath(new URL('../../Data/catalog.json', import.meta.url));
++  assert.deepEqual(loadCatalog(path), loadCatalog());
++});
++
++test('named helpers return the matching catalog entries', () => {
++  const catalog = loadCatalog();
++  assert.deepEqual(machine('excavator_standard'), catalog.machines.excavator_standard);
++  assert.deepEqual(protection('trench_box'), catalog.protection.trench_box);
++  assert.deepEqual(city('texas'), catalog.cities.texas);
++});
++
++test('all helpers reject unknown and inherited keys clearly', () => {
++  for (const [kind, lookup] of [['machine', machine], ['protection', protection], ['city', city]]) {
++    for (const key of ['missing', 'toString', '__proto__']) {
++      assert.throws(() => lookup(key), { message: `Unknown ${kind} key: "${key}"` });
++    }
++  }
++});
+diff --git a/Monitor/test/rng.test.js b/Monitor/test/rng.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..5f91bff8c7035ed8b4f5f860e50dfcc293f24463
+--- /dev/null
++++ b/Monitor/test/rng.test.js
+@@ -0,0 +1,51 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { makeRng } from '../src/common/rng.js';
++
++test('same seed produces the same first 100 values in [0, 1)', () => {
++  const a = makeRng(1);
++  const b = makeRng(1);
++  for (let i = 0; i < 100; i++) {
++    const value = a.next();
++    assert.equal(value, b.next());
++    assert.ok(value >= 0 && value < 1);
++  }
++});
++
++test('different seeds produce different sequences', () => {
++  const a = makeRng(1);
++  const b = makeRng(2);
++  assert.notDeepEqual(Array.from({ length: 100 }, () => a.next()),
++    Array.from({ length: 100 }, () => b.next()));
++});
++
++test('JSON state round-trip resumes the sequence after mixed draws', () => {
++  const original = makeRng(0xffffffff);
++  original.next();
++  original.int(1, 6);
++  original.pick(['a', 'b', 'c']);
++  const saved = JSON.parse(JSON.stringify(original.state()));
++  const resumed = makeRng(saved);
++  assert.equal(resumed.state(), saved);
++  for (let i = 0; i < 100; i++) {
++    assert.equal(original.next(), resumed.next());
++    assert.equal(original.state(), resumed.state());
++  }
++});
++
++test('integer draws include both bounds and pick returns array members', () => {
++  const rng = makeRng(7);
++  const seen = new Set();
++  const choices = ['a', 'b', 'c'];
++  for (let i = 0; i < 100; i++) {
++    const value = rng.int(-1, 1);
++    assert.ok(Number.isInteger(value) && value >= -1 && value <= 1);
++    seen.add(value);
++    assert.ok(choices.includes(rng.pick(choices)));
++  }
++  assert.deepEqual(seen, new Set([-1, 0, 1]));
++  assert.equal(rng.int(4, 4), 4);
++  assert.equal(rng.pick(['only']), 'only');
++  assert.throws(() => rng.pick([]), /non-empty array/);
++  assert.throws(() => rng.int(2, 1), /bounds/);
++});
+diff --git a/Monitor/test/units.test.js b/Monitor/test/units.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..c9288278b357c834564981bcd99a0a59fc50326f
+--- /dev/null
++++ b/Monitor/test/units.test.js
+@@ -0,0 +1,22 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { fmtStation, parseStation, displayDay, fmtUsd } from '../src/common/units.js';
++
++test('station examples format and parse in integer feet', () => {
++  for (const [ft, station] of [[0, '0+00'], [5, '0+05'], [720, '7+20'], [1500, '15+00']]) {
++    assert.equal(fmtStation(ft), station);
++    assert.equal(parseStation(station), ft);
++  }
++});
++
++test('display days advance only at integer day boundaries', () => {
++  assert.equal(displayDay(0), 1);
++  assert.equal(displayDay(0.999), 1);
++  assert.equal(displayDay(1), 2);
++  assert.equal(displayDay(2.5), 3);
++});
++
++test('USD example uses dollars and comma grouping', () => {
++  assert.equal(fmtUsd(278400), '$278,400');
++  assert.equal(fmtUsd(0), '$0');
++});
+
+hook: Stop
+hook: Stop
+hook: Stop Completed
+hook: Stop Completed
+tokens used
+34,581
+```text
+STATUS: DONE
+WO: WO-00
+CHANGED:
+  - Monitor/package.json (modified), Monitor/.gitignore (new): ES modules, five scripts, output ignores.
+  - Monitor/src/common/{rng,catalog,units,log}.js (new): deterministic RNG, catalog access, formatting, stderr logger.
+  - Monitor/src/{scenario/validate,sim/headless,host/server}.js (new): usage stubs exiting 2.
+  - Monitor/test/{rng,catalog,units}.test.js (new): three test files.
+  - Monitor/README.md (modified): exactly 15 lines covering layout, scripts, and future URLs.
+TESTS:
+  - npm.cmd --prefix Monitor test
+    ℹ tests 11
+    ℹ pass 11
+    ℹ fail 0
+  - node -e "import('./Monitor/src/common/rng.js').then(m=>{const a=m.makeRng(1),b=m.makeRng(1);console.log(a.next()===b.next())})"
+    true
+  - node -e "import('./Monitor/src/common/units.js').then(m=>console.log(m.fmtStation(720), m.parseStation('15+00'), m.fmtUsd(278400)))"
+    7+20 1500 $278,400
+  - git status --short
+     M Monitor/README.md
+     M Monitor/package.json
+    ?? Docs/WORK_ORDERS/logs/WO-00.20261015-122028.log
+    ?? Monitor/.gitignore
+    ?? Monitor/src/
+    ?? Monitor/test/
+    PASS: only Monitor changes plus the exempt dispatch log.
+  - node --input-type=module (inline smoke checks)
+    scenario/validate.js: exit 2, usage on stderr
+    sim/headless.js: exit 2, usage on stderr
+    host/server.js: exit 2, usage on stderr
+    PASS: logger filters levels and writes only to stderr
+NOTES:
+  - Step 3 of 3 done; all acceptance checks passed on Node v24.14.1.
+  - RNG uses uint32 seeds/snapshots and inclusive integer bounds; catalog helpers use the default catalog.
+  - Required empty web/, e2e/, and out/ directories exist locally; Git does not track empty directories.
+  - No commits, dependency additions, or Data changes.
+  - Next action: review Monitor/README.md (1 minute).
+```
+
+=== codex exit code: 0
+=== finished 20261015-122517

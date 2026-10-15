@@ -4,12 +4,16 @@
   "description": "Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test",
+    "validate": "node src/scenario/validate.js",
+    "headless": "node src/sim/headless.js",
+    "host": "node src/host/server.js",
+    "e2e": "node --test e2e/stage1.e2e.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "ws": "^8.22.0"
   },
