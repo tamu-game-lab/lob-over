@@ -1,0 +1,69 @@
+# Unity
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.apk
+*.aab
+*.unitypackage
+*.app
+/Assets/AssetStoreTools*
+/Assets/Plugins/Editor/JetBrains*
+.vs/
+.idea/
+.vscode/
+crashlytics-build.properties
+# copied from /Data at build time (WO-07)
+/Assets/StreamingAssets/Data/
+# copied from /Monitor/web at build time (WO-08)
+/Assets/StreamingAssets/web/
+
+# Node (Monitor)
+Monitor/node_modules/
+Monitor/out/
+Monitor/test-results/
+Monitor/playwright-report/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Kit outputs (regenerated from Data/)
+Paper/out/
+Voice/**/*.wav
+!Voice/**/manifest.json
+
+# Work-order logs are kept; nothing else from local runs
+Docs/WORK_ORDERS/logs/*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local-only (added by the orchestrator at kickoff, 2026-10-15)
+# Plastic SCM workspace metadata that Unity Hub created; git is the VCS here
+/.plastic/
+/ignore.conf
+# Claude Code MCP cache (has its own .gitignore) and per-machine settings
+/.code-review-graph/
+/.claude/settings.local.json
+# The delivered kit archive; its contents are the repo
+/LOB-Over-Kickoff.zip

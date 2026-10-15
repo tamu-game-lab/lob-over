@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash Tools/astra.sh:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(git:*)",
+      "Bash(python:*)",
+      "Bash(pip:*)",
+      "Bash(tail:*)",
+      "Bash(grep:*)",
+      "Bash(cmp:*)",
+      "Bash(diff:*)",
+      "Bash(curl:*)",
+      "Bash(ls:*)",
+      "Bash(sed:*)",
+      "Bash(codex:*)",
+      "Read",
+      "Edit",
+      "Write",
+      "Bash(cd:*)",
+      "Bash(echo:*)",
+      "Bash(sleep:*)",
+      "Bash(kill:*)",
+      "Bash(wc:*)",
+      "Bash(mkdir:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(chmod:*)",
+      "Bash(pwd:*)",
+      "Bash(touch:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(timeout:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(git push:*)",
+      "Bash(git reset --hard:*)"
+    ]
+  }
+}

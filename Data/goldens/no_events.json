@@ -1,0 +1,142 @@
+{
+ "_doc": [
+  "Reference oracle for the no-event push/pull goldens (Phase 0, WO-02).",
+  "Continuous-time crew model, DT = 0.01 day. Conventions the JS and C# simulations must reproduce:",
+  "- Day N in the design means the crew starts at t = N - 1 (Day 1 = t 0). Output 'finishDay' is t at completion.",
+  "- A crew advances at its machine rate, never past its leader (pipe <= excavation, backfill <= pipe), no distance margin.",
+  "- Optional WIP cap: excavation may not lead backfill by more than cap ft (pull by distance).",
+  "- idleDays = days on site - days actually working; on site = from start to that crew's own finish.",
+  "- crewCostUsd = sum(daily machine cost x days on site) x 1.3 overhead; mobilization, events and purchases excluded.",
+  "- peakOpenTrenchFt = max over time of (excavation position - backfill position).",
+  "Tolerances for parity: finish +-0.1 day, idle +-0.1 day, cost +-$500, peak +-10 ft."
+ ],
+ "lengthFt": 6000.0,
+ "dt": 0.01,
+ "cases": {
+  "push_1_2_3": {
+   "input": {
+    "startDay": {
+     "exc": 1,
+     "pipe": 2,
+     "back": 3
+    },
+    "machines": {
+     "exc": "excavator_standard",
+     "pipe": "crane_standard",
+     "back": "backfill_standard"
+    },
+    "capFt": null
+   },
+   "expected": {
+    "finishDay": 34.3,
+    "idleDays": {
+     "exc": 0.0,
+     "pipe": 0.0,
+     "back": 8.3
+    },
+    "crewCostUsd": 196248,
+    "peakOpenTrenchFt": 1271
+   }
+  },
+  "pm_plan_1_2_5": {
+   "input": {
+    "startDay": {
+     "exc": 1,
+     "pipe": 2,
+     "back": 5
+    },
+    "machines": {
+     "exc": "excavator_standard",
+     "pipe": "crane_standard",
+     "back": "backfill_standard"
+    },
+    "capFt": null
+   },
+   "expected": {
+    "finishDay": 34.3,
+    "idleDays": {
+     "exc": 0.0,
+     "pipe": 0.0,
+     "back": 6.3
+    },
+    "crewCostUsd": 191568,
+    "peakOpenTrenchFt": 1271
+   }
+  },
+  "pull_time_1_2_12": {
+   "input": {
+    "startDay": {
+     "exc": 1,
+     "pipe": 2,
+     "back": 12
+    },
+    "machines": {
+     "exc": "excavator_standard",
+     "pipe": "crane_standard",
+     "back": "backfill_standard"
+    },
+    "capFt": null
+   },
+   "expected": {
+    "finishDay": 35.0,
+    "idleDays": {
+     "exc": 0.0,
+     "pipe": 0.0,
+     "back": 0.0
+    },
+    "crewCostUsd": 176756,
+    "peakOpenTrenchFt": 2422
+   }
+  },
+  "pull_slope_small_backfill": {
+   "input": {
+    "startDay": {
+     "exc": 1,
+     "pipe": 2,
+     "back": 3
+    },
+    "machines": {
+     "exc": "excavator_standard",
+     "pipe": "crane_standard",
+     "back": "backfill_small"
+    },
+    "capFt": null
+   },
+   "expected": {
+    "finishDay": 35.3,
+    "idleDays": {
+     "exc": 0.0,
+     "pipe": 0.0,
+     "back": 0.0
+    },
+    "crewCostUsd": 181251,
+    "peakOpenTrenchFt": 1451
+   }
+  },
+  "pull_distance_1000_small_backfill": {
+   "input": {
+    "startDay": {
+     "exc": 1,
+     "pipe": 2,
+     "back": 3
+    },
+    "machines": {
+     "exc": "excavator_standard",
+     "pipe": "crane_standard",
+     "back": "backfill_small"
+    },
+    "capFt": 1000
+   },
+   "expected": {
+    "finishDay": 35.3,
+    "idleDays": {
+     "exc": 2.5,
+     "pipe": 0.0,
+     "back": 0.0
+    },
+    "crewCostUsd": 185167,
+    "peakOpenTrenchFt": 998
+   }
+  }
+ }
+}
