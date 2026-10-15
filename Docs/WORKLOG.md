@@ -91,3 +91,8 @@ WO-03 CHECK git status scope -> PASS (Monitor/src/host, Monitor/web, Monitor/e2e
 WO-03 CHECK screenshots vs sections 2-4 -> PASS (Plan: budget strip, LOB with zones/promise/deadline, stepped report lines with +-150 ft bands, inbox report text, radio log, keypad, draft tools, "office time: 20 s per day" during the event, end-of-stage overlay with change log and run numbers; Site: station strip with permit boards, water/wall marks, crews with mood, truck, inspect/flag/stop/confirm, facts-only cards, trailer board, phone layout; Facilitator: controls, t/day/speed, events, deviation states, both views). No verdict language.
 WO-03 ACCEPTED 2026-10-15 13:52 commit=df498c9
 WO-03 REOPENED 2026-10-15 13:58 at the finish-line smoke: the host paces at 6.20 s per simulated day at full speed (probe over WebSocket, no browsers; chained setTimeout(50 ms) in Monitor/src/host/pacing.js lands at ~62 ms on Windows). Design says 5 s per day (decided). REJECTED round 1: Docs/WORK_ORDERS/WO-03.rejection-1.md (pacing only; everything else stands as committed in df498c9).
+WO-03 DISPATCHED 2026-10-15 13:50 log=Docs/WORK_ORDERS/logs/WO-03.20261015-135022.log (rejection 1 round; Astra STATUS DONE). Note: the REOPENED/REJECTED times above were estimated; the actual rejection was at about 13:49.
+WO-03 CHECK pacing probe -> PASS (5.01 s per day at full, elapsed-time pacer with fixed 0.01-day steps, catch-up capped at 20)
+WO-03 CHECK npm test + e2e -> PASS (74 tests incl. 7 fake-clock pacing tests; e2e 1/1 in 73 s, finishDay 43.08, no loss)
+WO-03 CHECK git status scope -> PASS (Monitor/src/host/pacing.js, pacing.test.js only)
+WO-03 ACCEPTED (round 2) 2026-10-15 14:00 commit=5aca6cd (pages/host/e2e from df498c9 plus this pacing fix)
