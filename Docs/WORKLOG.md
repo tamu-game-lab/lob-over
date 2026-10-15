@@ -51,3 +51,14 @@ WO-01 CHECK bad_checkdigit fixture -> PASS (exit 1, [PERMIT_CHECK_DIGIT] names "
 WO-01 CHECK git status scope -> PASS (Monitor/src/scenario, Monitor/test only)
 WO-01 CHECK extras -> PASS (loader frozen; zoneOf 720->1, 1500->2, 6000->4; 61 stations; dailyFleetUsd 4800; crewRate 220/180/250; checkDigitOk; _ keys kept; a seven-break fixture yields FORBIDDEN_KEY x2 (case-insensitive), MACHINE_UNKNOWN, ZONE_TILING, PLAN_DEADLINE, OPEN_ZONE_LIMIT, LINE_TRIGGER; no-arg usage exits 2)
 WO-01 ACCEPTED 2026-10-15 12:38 commit=822a83b
+WO-02 DISPATCHED 2026-10-15 12:36 log=Docs/WORK_ORDERS/logs/WO-02.20261015-123629.log
+WO-04 DISPATCHED 2026-10-15 12:36 log=Docs/WORK_ORDERS/logs/WO-04.20261015-123636.log (parallel with WO-02 and WO-05, as ORCHESTRATOR.md allows)
+WO-05 DISPATCHED 2026-10-15 12:37 log=Docs/WORK_ORDERS/logs/WO-05.20261015-123712.log (PATH has .venv/Scripts first; HF_HUB_OFFLINE=1)
+NOTE 12:39: Claude Code's background-shell reaper reported all three dispatch shells "stopped because the system is running low on memory" (5.0 GB free of 31.8 GB; five Unity Editor processes hold about 15 GB). The OS processes survived (codex.exe, tee, bash all alive; logs still growing), so the orchestrator is letting them finish and watching the logs; it will not launch new dispatches on its own after that notice. Bryan: close the Unity Editor during orchestrator runs (SETUP_CHECKLIST A, last item), or start Claude Code with CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1.
+WO-05 CHECK stage1 --force -> PASS (12 generated, exit 0, 19 s on CPU, offline)
+WO-05 CHECK stage2 -> PASS (exit 0, 11 files)
+WO-05 CHECK count/rates -> PASS (12 WAVs, 24000 Hz mono, 1.9-13.8 s)
+WO-05 CHECK second run skipped -> PASS (12)
+WO-05 CHECK git status scope -> PASS (Tools/voice, Voice only)
+WO-05 CHECK extras -> PASS (README 10 lines; 5 distinct voices; manifest {text, sha1, voice, seconds}; pm_open_01 longest at 13.8 s; peaks -3 dBFS; radio lines band-passed; no verdict words). Minor: pm_open_01 keeps about 0.4 s of low-level tail instead of 0.15 s; placeholder quality, not a reject.
+WO-05 ACCEPTED 2026-10-15 12:49 commit=55f0ee7
