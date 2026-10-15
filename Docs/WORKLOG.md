@@ -96,3 +96,19 @@ WO-03 CHECK pacing probe -> PASS (5.01 s per day at full, elapsed-time pacer wit
 WO-03 CHECK npm test + e2e -> PASS (74 tests incl. 7 fake-clock pacing tests; e2e 1/1 in 73 s, finishDay 43.08, no loss)
 WO-03 CHECK git status scope -> PASS (Monitor/src/host/pacing.js, pacing.test.js only)
 WO-03 ACCEPTED (round 2) 2026-10-15 14:00 commit=5aca6cd (pages/host/e2e from df498c9 plus this pacing fix)
+
+## Phase 0 complete — 2026-10-15 14:05, commit 5aca6cd (plus this worklog commit)
+
+Finish-line checks (ORCHESTRATOR.md section 3):
+- Table-test smoke: host on 7331, plan/site/facilitator pages open in Chromium, Start pressed, 45 s of wall time at the corrected 5 s per day. Day counter reached display day 7 (t 6.02, speed slow); the Plan page's actual lines stepped once per day (six daily reports in the inbox, the Day 6 report reads "pipe +0 ft (720)" and nothing else); the Site page showed crews at 13+24 working, 7+20 arguing, 4+73 arguing; the collapse card reached the Site page at 25 s while the Plan page had five reports and never showed the word "collapse". Screenshots: Monitor/out/smoke2/ (ignored). The conflict card "Crews stopped" also appeared on Site at about t 5.9, the design's Day 7 argument.
+- Paper/out/stage1_texas and stage2_texas: 5 PDFs each; kit_index.txt matches every permit and inspection card in Data/Scenarios.
+- Voice/stage1_texas: 12 WAVs for the 12 lines; stage2_texas: 11 for 11.
+
+Table test (20 minutes, three laptops, or one laptop plus a phone for the Site page; printed kit):
+1. Close the Unity Editor. From the repo root: `npm --prefix Monitor run host -- Data/Scenarios/stage1_texas.json` (first run on a new PC: `(cd Monitor && npm install && npx playwright install chromium)` is only needed for the e2e, not for play). Allow node through the Windows firewall on port 7331 if the phone cannot connect.
+2. Plan laptop: `http://<PC-IP>:7331/plan.html`. Site laptop or phone: `/site.html`. Facilitator (Bryan, host PC): `/facilitator.html`. Rules seat: print Paper/out/stage1_texas (manual double-sided, cards and tokens on card stock, ledger landscape) and the same for stage2_texas.
+3. Press Start on the facilitator page for Stage 1 (no huddle; the PM's line plays on Plan and Site). After the result card, press Load Stage 2; keep the host paused through the 30 s huddle and have Plan enter zone 1's permit code before Start (DECISIONS O10). Film it.
+4. Regenerate after any text change: kit `python Paper/make_kit.py Data/Scenarios/<stage>.json`; voice `.venv/Scripts/python Tools/voice/make_voice.py Data/Scenarios/<stage>.json` (HF_HUB_OFFLINE=1 is set by the script).
+5. Write what broke into Docs/DECISIONS.md (Open) with the scenario numbers to change; O10 (F2 at the job start), O11 (stop-work lift lag) and O12 (argument at an idle leader) are the known sim questions.
+
+Status: WO-00 ACCEPTED 38e5473, WO-01 ACCEPTED 822a83b, WO-02 ACCEPTED 369c38a, WO-03 ACCEPTED df498c9 + 5aca6cd, WO-04 ACCEPTED bee8df5, WO-05 ACCEPTED 55f0ee7. READY_FOR_TABLE_TEST.
