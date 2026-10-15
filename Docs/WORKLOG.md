@@ -36,3 +36,10 @@ Step 0 (one-time):
 
 WO-00 DISPATCHED 2026-10-15 12:17 log=Docs/WORK_ORDERS/logs/WO-00.20261015-121740.log
 WO-00 BLOCKED (environment, not a rejection round): Astra stopped at the scope check because `Docs/WORKLOG.md` was modified and the live dispatch log was untracked; its PowerShell shell also could not run `npm` (execution policy blocks `npm.ps1`). Fix: AGENTS.md items 5 and 6 (scope-check exemptions; use `npm.cmd`/`npx.cmd`), worklog committed before each dispatch. Bryan: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` would remove the npm.cmd workaround; not done by the orchestrator (a system setting).
+WO-00 DISPATCHED 2026-10-15 12:20 log=Docs/WORK_ORDERS/logs/WO-00.20261015-122028.log (re-dispatch; Astra STATUS DONE)
+WO-00 CHECK npm test -> PASS (11 tests, 3 files: rng, catalog, units)
+WO-00 CHECK rng same-seed -> PASS (true); state() round-trips; int(lo,hi) inclusive; pick ok
+WO-00 CHECK units -> PASS (7+20 1500 $278,400; displayDay(5.25)=6)
+WO-00 CHECK git status scope -> PASS (only Monitor/ plus the dispatch log)
+WO-00 CHECK extras -> PASS (package type module, five scripts; stubs exit 2; README 15 lines; no console.log in src/common; catalog helpers are module-level functions on the default catalog, a fair reading of the order)
+WO-00 ACCEPTED 2026-10-15 12:27 commit=38e5473
