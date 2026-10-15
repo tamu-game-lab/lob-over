@@ -1,0 +1,36 @@
+{
+  "id": "broken_rules",
+  "city": "missing_city",
+  "job": {
+    "lengthFt": 200,
+    "zones": [
+      { "id": 2, "fromFt": 1, "toFt": 150 },
+      { "id": 1, "fromFt": 100, "toFt": 199 }
+    ]
+  },
+  "crews": [{ "id": "exc", "machine": "missing_machine", "startDay": 0 }],
+  "plan": { "promisedFinishDay": 2, "deadlineDay": 2, "budgetUsd": 0 },
+  "permits": {
+    "heldBy": "site",
+    "openZoneLimit": 3,
+    "cards": [{ "zone": 1, "code": "1000-2" }, { "zone": 1, "code": "1000-2" }]
+  },
+  "inspections": { "cards": [{ "zone": 9, "number": "2000-3" }, { "zone": 9, "number": "2000-3" }] },
+  "events": [{
+    "type": "E9",
+    "trigger": { "kind": "unknown", "crew": "missing_crew" },
+    "hits": "missing_crew",
+    "stationFt": 50,
+    "zone": 9,
+    "options": [{ "check": { "seat": "audience" } }],
+    "card": { "whenRight": "forbidden", "WHENWRONG": "forbidden" }
+  }],
+  "deviations": [{ "type": "F6", "when": { "kind": "never" } }],
+  "lines": [
+    { "id": "duplicate", "speaker": "audience", "trigger": "never" },
+    { "id": "duplicate", "speaker": "pm", "trigger": "stageEnd" }
+  ],
+  "inbox": [{ "day": 0 }],
+  "_notes": [{ "CoRrEcT": false, "Verdict": "forbidden", "SCORE": 0, "_x_validate": "Nested fixture review note." }],
+  "_validate": "This fixture deliberately breaks every WO-01 validation rule."
+}

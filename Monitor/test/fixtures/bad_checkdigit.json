@@ -1,0 +1,14 @@
+{
+  "id": "bad_checkdigit",
+  "city": "texas",
+  "job": { "lengthFt": 200, "stationEveryFt": 100, "zones": [{ "id": 1, "fromFt": 0, "toFt": 200 }] },
+  "crews": [{ "id": "exc", "machine": "excavator_standard", "startDay": 1 }],
+  "plan": { "promisedFinishDay": 1, "deadlineDay": 2, "budgetUsd": 1000 },
+  "permits": { "heldBy": "pm", "openZoneLimit": 1, "cards": [{ "zone": 1, "code": "4821-4", "number": "TX-TEST" }] },
+  "inspections": { "cards": [{ "zone": 1, "number": "3417-5" }] },
+  "events": [],
+  "deviations": [],
+  "lines": [],
+  "inbox": [],
+  "_validate": "Fixture only: the permit check digit must be 5."
+}
