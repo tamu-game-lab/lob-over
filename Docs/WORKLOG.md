@@ -62,3 +62,10 @@ WO-05 CHECK second run skipped -> PASS (12)
 WO-05 CHECK git status scope -> PASS (Tools/voice, Voice only)
 WO-05 CHECK extras -> PASS (README 10 lines; 5 distinct voices; manifest {text, sha1, voice, seconds}; pm_open_01 longest at 13.8 s; peaks -3 dBFS; radio lines band-passed; no verdict words). Minor: pm_open_01 keeps about 0.4 s of low-level tail instead of 0.15 s; placeholder quality, not a reject.
 WO-05 ACCEPTED 2026-10-15 12:49 commit=55f0ee7
+WO-04 CHECK make_kit both stages -> PASS (5 PDFs + manual.txt + kit_index.txt each; no unresolved placeholders)
+WO-04 CHECK test_make_kit -> PASS (exit 0; manual 15 pages, cards 2, ledger 2, tokens 1, jobsign 1; 12 tokens)
+WO-04 CHECK permit count / leak grep -> PASS (4; grep-exit=1 for 7+20, event and deviation ids)
+WO-04 CHECK git status scope -> PASS (Paper/make_kit.py, Paper/test_make_kit.py; Paper/out ignored)
+WO-04 CHECK codes vs scenario -> PASS (kit_index matches all 8 cards in both stages)
+WO-04 CHECK pages viewed (cover, Texas, P1, permits, procedures, cards x3, ledger, tokens, job sign) -> PASS (facts and checks only; "Wrong delivery"/"Wrong station" are field facts). Cosmetic follow-ups for Bryan: the fine prints as "$10000" (no separator); the Stage 1 manual states the catalog's 2-zone limit while the PM issued all four permits, which is the design's own push tension, not a generator fault.
+WO-04 ACCEPTED 2026-10-15 12:58 commit=bee8df5
