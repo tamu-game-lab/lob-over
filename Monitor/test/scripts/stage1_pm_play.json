@@ -1,0 +1,267 @@
+[
+  {
+    "t": 0,
+    "seat": "site",
+    "cmd": {
+      "action": "moveTo",
+      "stationFt": 720,
+      "id": "c-1"
+    }
+  },
+  {
+    "t": 0.02,
+    "seat": "site",
+    "cmd": {
+      "action": "dismount",
+      "id": "c-2"
+    }
+  },
+  {
+    "t": 4.9,
+    "seat": "site",
+    "cmd": {
+      "action": "inspect",
+      "target": "wall",
+      "id": "c-3"
+    }
+  },
+  {
+    "t": 4.9,
+    "seat": "site",
+    "cmd": {
+      "action": "inspect",
+      "target": "water",
+      "id": "c-4"
+    }
+  },
+  {
+    "t": 5,
+    "seat": "site",
+    "cmd": {
+      "action": "stopWork",
+      "zone": 1,
+      "id": "c-5"
+    }
+  },
+  {
+    "t": 5.1,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "lend",
+          "machine": "excavator_standard",
+          "toCrew": "pipe",
+          "days": 2
+        },
+        {
+          "op": "hold",
+          "crew": "back",
+          "days": 2
+        }
+      ],
+      "id": "c-6"
+    }
+  },
+  {
+    "t": 6.02,
+    "seat": "site",
+    "cmd": {
+      "action": "mount",
+      "id": "c-7"
+    }
+  },
+  {
+    "t": 6.02,
+    "seat": "site",
+    "cmd": {
+      "action": "moveTo",
+      "stationFt": 1313,
+      "id": "c-8"
+    }
+  },
+  {
+    "t": 6.04,
+    "seat": "site",
+    "cmd": {
+      "action": "dismount",
+      "id": "c-9"
+    }
+  },
+  {
+    "t": 6.04,
+    "seat": "site",
+    "cmd": {
+      "action": "inspect",
+      "target": "machine",
+      "id": "c-10"
+    }
+  },
+  {
+    "t": 6.04,
+    "seat": "site",
+    "cmd": {
+      "action": "confirm",
+      "orderId": "o-1",
+      "outcome": "notDone",
+      "id": "c-11"
+    }
+  },
+  {
+    "t": 6.04,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "radio",
+          "orderId": "o-1"
+        }
+      ],
+      "id": "c-12"
+    }
+  },
+  {
+    "t": 6.04,
+    "seat": "site",
+    "cmd": {
+      "action": "confirm",
+      "orderId": "o-1",
+      "outcome": "done",
+      "id": "c-13"
+    }
+  },
+  {
+    "t": 6.04,
+    "seat": "site",
+    "cmd": {
+      "action": "mount",
+      "id": "c-14"
+    }
+  },
+  {
+    "t": 6.04,
+    "seat": "site",
+    "cmd": {
+      "action": "moveTo",
+      "stationFt": 263,
+      "id": "c-15"
+    }
+  },
+  {
+    "t": 6.07,
+    "seat": "site",
+    "cmd": {
+      "action": "dismount",
+      "id": "c-16"
+    }
+  },
+  {
+    "t": 6.07,
+    "seat": "site",
+    "cmd": {
+      "action": "confirm",
+      "orderId": "o-2",
+      "outcome": "done",
+      "id": "c-17"
+    }
+  },
+  {
+    "t": 6.07,
+    "seat": "site",
+    "cmd": {
+      "action": "inspect",
+      "target": "crew",
+      "id": "c-18"
+    }
+  },
+  {
+    "t": 12.95,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterInspection",
+          "zone": 1,
+          "number": "3417-5"
+        }
+      ],
+      "id": "c-19"
+    }
+  },
+  {
+    "t": 13.4,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "hold",
+          "crew": "back"
+        }
+      ],
+      "id": "c-20"
+    }
+  },
+  {
+    "t": 15.02,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "resume",
+          "crew": "back"
+        }
+      ],
+      "id": "c-21"
+    }
+  },
+  {
+    "t": 24.74,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterInspection",
+          "zone": 2,
+          "number": "6082-6"
+        }
+      ],
+      "id": "c-22"
+    }
+  },
+  {
+    "t": 33.07,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterInspection",
+          "zone": 3,
+          "number": "1935-8"
+        }
+      ],
+      "id": "c-23"
+    }
+  },
+  {
+    "t": 41.41,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "id": "c-24",
+      "ops": [
+        {
+          "op": "enterInspection",
+          "zone": 4,
+          "number": "7254-8"
+        }
+      ]
+    }
+  }
+]

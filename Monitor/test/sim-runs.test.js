@@ -1,0 +1,97 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { loadCatalog } from '../src/common/catalog.js';
+import { createSim } from '../src/sim/sim.js';
+import { runHeadless, roundedJSON } from '../src/sim/headless.js';
+import { runGoldens } from '../src/sim/goldens.js';
+
+const catalog = loadCatalog();
+const read = path => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
+const s1 = read('../../Data/Scenarios/stage1_texas.json');
+const s2 = read('../../Data/Scenarios/stage2_texas.json');
+const script1 = read('./scripts/stage1_pm_play.json');
+const script2 = read('./scripts/stage2_pull_play.json');
+const forbidden = /\b(correct|wrong|score|well done|should have)\b/i;
+const events = run => run.messages.filter(x => x.message.t === 'event');
+const nacks = run => run.messages.filter(x => x.message.t === 'nack');
+const collapse = run => events(run).find(x => x.message.eventId === 'ev_p1');
+
+test('all five independent oracle cases pass every tolerance', () => {
+  const results = runGoldens(read('../../Data/goldens/no_events.json'), catalog);
+  assert.equal(results.length, 5);
+  assert.ok(results.every(r => r.pass), JSON.stringify(results));
+});
+
+test('Stage 1 and 2 scripts complete with the specified comparative facts and zero rejected commands', () => {
+  const first = runHeadless(s1, catalog, script1);
+  const second = runHeadless(s2, catalog, script2);
+  assert.deepEqual(nacks(first), []); assert.deepEqual(nacks(second), []);
+  assert.equal(first.result.lost, undefined); assert.equal(second.result.lost, undefined);
+  assert.ok(first.result.finishDay > s1.plan.promisedFinishDay);
+  assert.ok(first.result.finishDay < s1.plan.deadlineDay - 1);
+  assert.ok(second.result.finishDay < s2.plan.deadlineDay - 1);
+  assert.ok(second.result.idleCrewDays < first.result.idleCrewDays);
+  assert.ok(second.result.peakOpenTrenchFt <= 3000);
+  assert.equal(second.result.finesUsd, 0);
+  assert.ok(Math.abs(collapse(first).t - 5) <= .02);
+  assert.deepEqual(collapse(second).message.card, s2.events[0].cardWhenProtected);
+  assert.equal(first.result.deviationsCaught, 1);
+  assert.ok(second.result.events.some(e => e.option === 'drainage_pump'));
+  for (const run of [first, second]) {
+    for (const snapshot of run.snapshots) {
+      assert.equal(snapshot.t % 1, 0);
+      assert.doesNotMatch(JSON.stringify(snapshot.plan), forbidden);
+      assert.doesNotMatch(JSON.stringify(snapshot.site), forbidden);
+      assert.equal(Object.hasOwn(snapshot.plan, 'crews'), false);
+      assert.equal(Object.hasOwn(snapshot.site, 'budget'), false);
+      assert.equal(Object.hasOwn(snapshot.site, 'plan'), false);
+    }
+    for (const message of run.messages) assert.doesNotMatch(JSON.stringify(message), forbidden);
+    assert.equal(run.result.changeLog.length, (run === first ? script1 : script2).filter(x => x.cmd.action === 'commit').length);
+    for (const points of Object.values(run.result.lines.actual)) assert.ok(points.length > 2);
+  }
+});
+
+test('two headless CLI runs produce byte-for-byte identical rounded transcripts', () => {
+  const root = fileURLToPath(new URL('../../', import.meta.url));
+  const args = ['Monitor/src/sim/headless.js', 'Data/Scenarios/stage1_texas.json',
+    '--script', 'Monitor/test/scripts/stage1_pm_play.json'];
+  const run = () => spawnSync(process.execPath, args, { cwd: root, encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 });
+  const a = run(), b = run();
+  assert.ifError(a.error); assert.ifError(b.error);
+  assert.equal(a.status, 0, a.stderr); assert.equal(b.status, 0, b.stderr);
+  assert.equal(a.stdout, b.stdout);
+  const parsed = JSON.parse(a.stdout);
+  assert.equal(parsed.scenario, s1.id); assert.equal(parsed.seed, s1.seed);
+  assert.equal(a.stdout, roundedJSON(parsed));
+});
+
+test('empty Stage 1 script ends on deadline, without a finish day', () => {
+  const run = runHeadless(s1, catalog, read('./scripts/stage1_noaction.json'));
+  assert.equal(run.result.lost, 'deadline'); assert.equal(run.result.finishDay, undefined);
+  assert.equal(run.safetyStop, undefined);
+});
+
+test('Plan sees only last-report feet and elapsed-rate estimates; Site sees live positions without money', () => {
+  const sim = createSim(s1, catalog); sim.tick(.5);
+  const plan = sim.view('plan'), site = sim.view('site');
+  assert.equal(plan.reportedLines.exc.at(-1).ft, 0);
+  assert.ok(site.crews.find(c => c.id === 'exc').stationFt > 100);
+  assert.equal(plan.uncertainty.exc.estimateFt, 110);
+  assert.equal(plan.uncertainty.exc.toFt, 260);
+  assert.doesNotMatch(JSON.stringify(plan), /"(?:pos|stationFt|actualLines|activeEvent)":/);
+  assert.doesNotMatch(JSON.stringify(site), /"(?:budget|budgetUsd|spentUsd|plannedLines|reportedLines|forecast)":/);
+  sim.tick(.5);
+  const report = sim.view('plan');
+  assert.equal(report.reportedLines.exc.at(-1).ft, 220);
+  assert.equal(report.uncertainty.exc.fromFt, report.uncertainty.exc.toFt);
+});
+
+test('headless safety stop is explicit when facilitator leaves the sim paused', () => {
+  const run = runHeadless(s1, catalog, [{ t: 0, seat: 'facilitator', cmd: { t: 'ctrl', action: 'pause' } }]);
+  assert.equal(run.result, null);
+  assert.equal(run.safetyStop.reason, 'paused without a same-time resume');
+});
