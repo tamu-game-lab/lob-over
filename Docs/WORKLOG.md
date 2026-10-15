@@ -43,3 +43,11 @@ WO-00 CHECK units -> PASS (7+20 1500 $278,400; displayDay(5.25)=6)
 WO-00 CHECK git status scope -> PASS (only Monitor/ plus the dispatch log)
 WO-00 CHECK extras -> PASS (package type module, five scripts; stubs exit 2; README 15 lines; no console.log in src/common; catalog helpers are module-level functions on the default catalog, a fair reading of the order)
 WO-00 ACCEPTED 2026-10-15 12:27 commit=38e5473
+WO-01 DISPATCHED 2026-10-15 12:26 log=Docs/WORK_ORDERS/logs/WO-01.20261015-122634.log (Astra STATUS DONE)
+WO-01 CHECK npm test -> PASS (32 tests)
+WO-01 CHECK validate stage1 -> PASS (exit 0, OK stage1_texas, 4 scenario + 8 catalog _validate items listed)
+WO-01 CHECK validate stage2 -> PASS (exit 0, OK stage2_texas, 2 + 8 items)
+WO-01 CHECK bad_checkdigit fixture -> PASS (exit 1, [PERMIT_CHECK_DIGIT] names "4821-4")
+WO-01 CHECK git status scope -> PASS (Monitor/src/scenario, Monitor/test only)
+WO-01 CHECK extras -> PASS (loader frozen; zoneOf 720->1, 1500->2, 6000->4; 61 stations; dailyFleetUsd 4800; crewRate 220/180/250; checkDigitOk; _ keys kept; a seven-break fixture yields FORBIDDEN_KEY x2 (case-insensitive), MACHINE_UNKNOWN, ZONE_TILING, PLAN_DEADLINE, OPEN_ZONE_LIMIT, LINE_TRIGGER; no-arg usage exits 2)
+WO-01 ACCEPTED 2026-10-15 12:38 commit=822a83b
