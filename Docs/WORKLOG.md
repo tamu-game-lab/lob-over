@@ -19,8 +19,20 @@ WO-xx ACCEPTED <YYYY-MM-DD HH:MM> commit=<hash>   | REJECTED round N: Docs/WORK_
 
 ## Toolchain versions (the orchestrator fills this at step 0)
 
-- node: 
-- npm: 
-- codex: 
-- python: 
-- git: 
+- node: v24.14.1
+- npm: 11.19.1
+- codex: 0.162.1 (npm install; its Windows sandbox setup fails on this PC, see run 1) and 0.162.0-alpha.17.2 (desktop app bundle at `%LOCALAPPDATA%\OpenAI\Codex\bin\9614f1d9b40d9c4f`, used for every dispatch)
+- python: 3.14.3 (`python` on PATH; reportlab 5.0.1, pypdf 6.20.1) plus a 3.13 venv at `.venv/` for Kokoro (spaCy has no 3.14 wheel)
+- git: 2.53.0.windows.2
+
+## 2026-10-15 — orchestrator run 1 (Claude Fable 5.1)
+
+Step 0 (one-time):
+- The folder was not yet a git repo (setup checklist B was not done). `git init -b main` by the orchestrator; local `core.autocrlf=false`, `core.eol=lf` (the kit's `.gitattributes` governs line endings).
+- `.gitignore`: moved the two StreamingAssets trailing comments onto their own lines (a trailing `# ...` is part of a gitignore pattern, so those lines did nothing) and added local-only entries: `.plastic/`, `ignore.conf` (Plastic workspace that Unity Hub created), `.code-review-graph/`, `.claude/settings.local.json`, `LOB-Over-Kickoff.zip`.
+- Installed in `Monitor/`: ws 8.22.0, playwright 1.64.1, Chromium headless shell 156. `pip install reportlab pypdf` ok on 3.14. `pip install kokoro soundfile` FAILED on 3.14 (spaCy builds from source and fails); a Python 3.13 venv at `.venv/` (uv) is being built for WO-05 instead.
+- Kickoff commit: `aa062b5 Kickoff kit` (Unity project + kit + Monitor/package.json from npm init).
+- Codex: `codex exec --help` (0.162.1) has `-C` but no `--full-auto` and no `--ask-for-approval`; CODEX_FLAGS for this session = `--sandbox workspace-write -c approval_policy=never`. With the npm 0.162.1 binary the workspace-write sandbox cannot start a shell ("Failed to create unified exec process: helper_unknown_error: setup refresh had errors"; `~/.codex/.sandbox/sandbox.2026-10-15.log` shows the elevated setup helper failing to update the ACL on `%LOCALAPPDATA%\OpenAI\Codex\runtimes\cua_node\<hash>\bin\node_repl.exe`, "being used by another process"). The no-sandbox fallback (`danger-full-access`) was denied by Claude Code's auto-mode classifier and not retried. The desktop app's bundled binary 0.162.0-alpha.17.2 provisions the same sandbox fine (smoke test `SMOKE_OK aa062b5`), so every dispatch runs with that binary's folder prepended to PATH. Bryan: `codex doctor` suggests adding Defender exclusions for codex.exe and its helpers; that may fix the npm binary.
+
+WO-00 DISPATCHED 2026-10-15 12:17 log=Docs/WORK_ORDERS/logs/WO-00.20261015-121740.log
+WO-00 BLOCKED (environment, not a rejection round): Astra stopped at the scope check because `Docs/WORKLOG.md` was modified and the live dispatch log was untracked; its PowerShell shell also could not run `npm` (execution policy blocks `npm.ps1`). Fix: AGENTS.md items 5 and 6 (scope-check exemptions; use `npm.cmd`/`npx.cmd`), worklog committed before each dispatch. Bryan: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` would remove the npm.cmd workaround; not done by the orchestrator (a system setting).

@@ -40,6 +40,8 @@ Voice/       generated WAV lines (output)
 2. Build the smallest thing that passes them, then stop. No extra features, no refactors of files outside scope, no "while I was here".
 3. Run every acceptance check yourself. Paste the actual command output (trimmed) into `TESTS`.
 4. If a check cannot pass because of something outside your scope, report `BLOCKED` with the exact reason and the smallest change that would unblock it.
+5. Scope check: `git status --short` must show only your own changes. Ignore `Docs/WORK_ORDERS/logs/` (the dispatch log being written while you run) and `Docs/WORKLOG.md` / `Docs/DECISIONS.md` if the orchestrator left them modified; never clean those up and never treat them as a blocker.
+6. Windows shell: your commands run in PowerShell, where `npm` and `npx` resolve to `.ps1` shims that the execution policy blocks. Call `npm.cmd` and `npx.cmd` instead; the acceptance checks mean exactly that. `node`, `python`, `pip` and `git` work as written.
 
 ## STATUS block (always the last thing you print)
 
