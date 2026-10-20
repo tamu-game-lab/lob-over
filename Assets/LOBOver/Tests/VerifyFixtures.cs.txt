@@ -1,0 +1,57 @@
+using System;
+using System.IO;
+using System.Linq;
+using LOBOver.Sim;
+using Newtonsoft.Json.Linq;
+using Simulation = LOBOver.Sim.Sim;
+
+// Compiled as a console program only by CompileOffline.ps1; never part of a Unity assembly.
+internal static class VerifyFixtures
+{
+    private static void Check(bool value, string reason) { if (!value) throw new Exception(reason); }
+    private static void Compare(JToken expected, JToken actual, string path)
+    {
+        if (expected is JObject obj)
+        {
+            Check(actual is JObject, path + " object missing");
+            foreach (var field in obj.Properties()) Compare(field.Value, actual[field.Name], path + "." + field.Name);
+        }
+        else if (expected is JArray array)
+        {
+            Check(actual is JArray other && other.Count == array.Count, path + " array length");
+            for (var i = 0; i < array.Count; i++) Compare(array[i], actual[i], path + "[" + i + "]");
+        }
+        else if (expected.Type == JTokenType.Float || expected.Type == JTokenType.Integer)
+            Check(actual != null && Math.Abs((double)expected - (double)actual) <= 0.00051, path + ": " + expected + " != " + actual);
+        else Check(JToken.DeepEquals(expected, actual), path + ": " + expected + " != " + actual);
+    }
+    public static void Main()
+    {
+        var catalog = Catalog.Load(File.ReadAllText("Data/catalog.json"));
+        var scenario = Scenario.Load(File.ReadAllText("Data/Scenarios/slice_texas.json"), catalog);
+        var sim = Simulation.Create(scenario, catalog);
+        var expected = JObject.Parse(File.ReadAllText("Data/transcripts/slice_play.json"));
+        var commands = JArray.Parse(File.ReadAllText("Monitor/test/scripts/slice_play.json")).OfType<JObject>().OrderBy(e => (double)e["t"]).ToArray();
+        var days = new[] { 1, 4, 5, 9, 16 }; var index = 0; var checkedDays = 0; var argumentChecked = false;
+        const double epsilon = 1e-6;
+        while (sim.T <= 16 + epsilon)
+        {
+            while (index < commands.Length && (double)commands[index]["t"] <= sim.T + epsilon)
+            { var command = commands[index++]; sim.Apply((string)command["seat"], (JObject)command["cmd"]); sim.Drain(); }
+            foreach (var day in days)
+                if (Math.Abs(sim.T - day) < epsilon) { Compare(expected["snapshots"][day]["site"], sim.View("site"), "day " + day); checkedDays++; }
+            if (Math.Abs(sim.T - 4.20) < epsilon)
+            {
+                var view = SiteView.From(sim.View("site")); var pipe = view.crews.Single(c => c.id == "pipe");
+                var back = view.crews.Single(c => c.id == "back"); var exc = view.crews.Single(c => c.id == "exc");
+                Check(pipe.status == "arguing" && back.status == "arguing" && exc.status == "stopped", "argument statuses");
+                Check(Math.Abs(pipe.stationFt - 520) <= 1 && Math.Abs(back.stationFt - 272.5) < 0.001 && Math.Abs(exc.stationFt - 869) < 0.001, "argument positions");
+                Check(view.activeEvent.id == "ev_p1", "argument event"); argumentChecked = true;
+                Console.WriteLine("Argument at t=4.20: pipe " + pipe.stationFt.ToString("0.0") + " arguing; back 272.5 arguing; exc 869 stopped; ev_p1.");
+            }
+            Check(sim.Speed != "paused", "replay paused"); sim.Tick(0.01); sim.Drain();
+        }
+        Check(checkedDays == 5 && argumentChecked, "missing samples");
+        Console.WriteLine("PASS: all Site fields at days 1, 4, 5, 9, 16 match recorded JSON; t=4.20 argument matches Amendment 1 (positions within 1 ft).");
+    }
+}

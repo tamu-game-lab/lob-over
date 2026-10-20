@@ -1,0 +1,62 @@
+param([string]$UnityData = 'C:/Program Files/Unity/Hub/Editor/6000.3.8f1/Editor/Data')
+$ErrorActionPreference = 'Stop'
+$projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '../../..')).Path
+Set-Location -LiteralPath $projectRoot
+$scratch = Join-Path $PSScriptRoot '.offline'
+New-Item -ItemType Directory -Path $scratch -Force | Out-Null
+$generated = [System.Collections.Generic.List[string]]::new()
+function Compile-Assembly([string]$name, [string]$folder, [string[]]$references, [string]$defines = 'UNITY_EDITOR;UNITY_6000_3_OR_NEWER;UNITY_INCLUDE_TESTS') {
+    $output = Join-Path $scratch ($name + '.dll')
+    $response = Join-Path $scratch ($name + '.rsp')
+    $generated.Add($output)
+    $generated.Add($response)
+    $argsForCompiler = @('-nologo', '-target:library', '-langversion:9', '-nostdlib+', ('-define:' + $defines), ('-out:"' + $output + '"'))
+    foreach ($reference in $references) { $argsForCompiler += '-r:"' + $reference + '"' }
+    foreach ($source in (Get-ChildItem -LiteralPath $folder -Recurse -Filter '*.cs')) { $argsForCompiler += '"' + $source.FullName + '"' }
+    $argsForCompiler | Set-Content -LiteralPath $response -Encoding UTF8
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') (Join-Path $UnityData 'DotNetSdkRoslyn/csc.dll') ('@' + $response)
+    if ($LASTEXITCODE -ne 0) { throw "Offline compilation failed: $name" }
+    Write-Output "$name`: 0 errors"
+}
+try {
+    $baseReferences = @((Join-Path $UnityData 'NetStandard/ref/2.1.0/netstandard.dll'))
+    $baseReferences += (Get-ChildItem (Join-Path $UnityData 'NetStandard/compat/2.1.0/shims/netfx') -Filter '*.dll').FullName
+    $jsonDll = (Get-ChildItem 'Library/PackageCache/com.unity.nuget.newtonsoft-json*/Runtime/Newtonsoft.Json.dll').FullName
+    $baseReferences += $jsonDll
+    $engineReferences = (Get-ChildItem (Join-Path $UnityData 'Managed/UnityEngine') -Filter '*.dll').FullName
+    Compile-Assembly 'LOBOver.Sim' 'Assets/LOBOver/Sim' $baseReferences
+    $runtimeReferences = $baseReferences + $engineReferences + @((Join-Path $scratch 'LOBOver.Sim.dll'))
+    Compile-Assembly 'LOBOver.Director' 'Assets/LOBOver/Runtime/Director' $runtimeReferences
+    $worldReferences = $runtimeReferences + @((Join-Path $scratch 'LOBOver.Director.dll'), 'Library/ScriptAssemblies/Unity.TextMeshPro.dll', 'Library/ScriptAssemblies/Unity.InputSystem.dll', 'Library/ScriptAssemblies/UnityEngine.UI.dll')
+    Compile-Assembly 'LOBOver.World' 'Assets/LOBOver/Runtime/World' $worldReferences
+    # Compile the conditional Android reader too, without opening the Editor or changing build settings.
+    Compile-Assembly 'LOBOver.Director.Android' 'Assets/LOBOver/Runtime/Director' $runtimeReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    Compile-Assembly 'LOBOver.World.Android' 'Assets/LOBOver/Runtime/World' $worldReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    $editorReferences = $worldReferences + @((Join-Path $scratch 'LOBOver.World.dll'), 'Library/ScriptAssemblies/Unity.RenderPipelines.Core.Runtime.dll')
+    Compile-Assembly 'LOBOver.Editor' 'Assets/LOBOver/Editor' $editorReferences
+    $testReferences = $editorReferences + @((Join-Path $scratch 'LOBOver.Editor.dll'), 'Library/ScriptAssemblies/UnityEngine.TestRunner.dll', 'Library/ScriptAssemblies/UnityEditor.TestRunner.dll')
+    $testReferences += (Get-ChildItem 'Library/PackageCache/com.unity.ext.nunit*/net40/unity-custom/nunit.framework.dll').FullName
+    Compile-Assembly 'LOBOver.EditModeTests' 'Assets/LOBOver/Tests/EditMode' $testReferences
+    Compile-Assembly 'LOBOver.PlayModeTests' 'Assets/LOBOver/Tests/PlayMode' $testReferences
+    Write-Output 'PASS: 8 offline assembly compilations; Unity import, tests and rendering still require the Editor.'
+    $fixtureProgram = Join-Path $scratch 'VerifyFixtures.dll'
+    $fixtureResponse = Join-Path $scratch 'VerifyFixtures.rsp'
+    $fixtureConfig = Join-Path $scratch 'VerifyFixtures.runtimeconfig.json'
+    $fixtureJson = Join-Path $scratch 'Newtonsoft.Json.dll'
+    foreach ($file in @($fixtureProgram, $fixtureResponse, $fixtureConfig, $fixtureJson)) { $generated.Add($file) }
+    $fixtureArgs = @('-nologo', '-target:exe', '-langversion:9', '-nostdlib+', ('-out:"' + $fixtureProgram + '"'), ('-r:"' + (Join-Path $scratch 'LOBOver.Sim.dll') + '"'))
+    foreach ($reference in $baseReferences) { $fixtureArgs += '-r:"' + $reference + '"' }
+    $fixtureArgs += '"' + (Join-Path $PSScriptRoot 'VerifyFixtures.cs.txt') + '"'
+    $fixtureArgs | Set-Content -LiteralPath $fixtureResponse -Encoding UTF8
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') (Join-Path $UnityData 'DotNetSdkRoslyn/csc.dll') ('@' + $fixtureResponse)
+    if ($LASTEXITCODE -ne 0) { throw 'Fixture verifier did not compile' }
+    Copy-Item -LiteralPath (Join-Path $UnityData 'DotNetSdkRoslyn/csc.runtimeconfig.json') -Destination $fixtureConfig
+    Copy-Item -LiteralPath $jsonDll -Destination $fixtureJson
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') $fixtureProgram
+    if ($LASTEXITCODE -ne 0) { throw 'Fixture replay failed' }
+}
+finally {
+    # Only exact outputs from this invocation are removed; never traverse another workspace.
+    foreach ($file in $generated) { if (Test-Path -LiteralPath $file) { Remove-Item -LiteralPath $file -Force } }
+    if ((Get-ChildItem -LiteralPath $scratch -Force | Measure-Object).Count -eq 0) { Remove-Item -LiteralPath $scratch }
+}

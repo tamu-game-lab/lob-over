@@ -1,0 +1,7 @@
+{
+  "name": "LOBOver.World",
+  "rootNamespace": "LOBOver.World",
+  "references": ["LOBOver.Sim", "LOBOver.Director", "Unity.TextMeshPro", "Unity.InputSystem", "UnityEngine.UI"],
+  "overrideReferences": true,
+  "precompiledReferences": ["Newtonsoft.Json.dll"]
+}

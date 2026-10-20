@@ -1,0 +1,7 @@
+{
+  "name": "LOBOver.Director",
+  "rootNamespace": "LOBOver.Runtime",
+  "references": ["LOBOver.Sim"],
+  "overrideReferences": true,
+  "precompiledReferences": ["Newtonsoft.Json.dll"]
+}

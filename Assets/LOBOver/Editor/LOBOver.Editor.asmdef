@@ -1,0 +1,8 @@
+{
+  "name": "LOBOver.Editor",
+  "rootNamespace": "LOBOver.Editor",
+  "references": ["LOBOver.Sim", "LOBOver.Director", "LOBOver.World", "Unity.TextMeshPro", "UnityEngine.UI", "Unity.RenderPipelines.Core.Runtime"],
+  "includePlatforms": ["Editor"],
+  "overrideReferences": true,
+  "precompiledReferences": ["Newtonsoft.Json.dll"]
+}
