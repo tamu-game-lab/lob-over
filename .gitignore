@@ -78,6 +78,7 @@ Monitor/out/unity/
 Showcase/dist/
 Showcase/.publish/
 Assets/LOBGame/
+Assets/LOBGame.meta
 Assets/StreamingAssets/Data/
 Sim/**/bin/
 Sim/**/obj/
