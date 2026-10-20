@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using LOBOver.Runtime;
 using LOBOver.World;
 using Newtonsoft.Json.Linq;
@@ -68,13 +69,18 @@ namespace LOBOver.Editor
             world.sky = BuildSky(assets, preview.previewCamera.transform);
             // Metadata appears in Edit mode without putting a facilitator view in any player board.
             var source = JObject.Parse(File.ReadAllText("Data/Scenarios/slice_texas.json")); jobSign.Apply((JObject)source["job"]["sign"]);
+            // The XR extension has its own asmdef under the WO-S4-allowed Start folder.
+            var extension = Type.GetType("LOBOver.Start.Editor.XRSceneSetup, LOBOver.XR.Editor", true);
+            extension.GetMethod("Build").Invoke(null, new object[] { world, preview, assets });
             Selection.activeGameObject = world.gameObject;
             if (saveScene)
             {
                 Directory.CreateDirectory("Assets/LOBOver/Scenes");
                 if (!EditorSceneManager.SaveScene(scene, ScenePath)) throw new IOException("Could not save " + ScenePath);
+                EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) }
+                    .Concat(EditorBuildSettings.scenes.Where(s => s.path != ScenePath)).ToArray();
             }
-            AssetDatabase.SaveAssets(); Debug.Log("LOB Over: Site Scene built. Press Play for the slice."); return scene;
+            AssetDatabase.SaveAssets(); Debug.Log("LOB Over: Site Scene built. Press Play, choose a mode, then Start."); return scene;
         }
         private static void BuildGround(WorldAssets assets)
         {

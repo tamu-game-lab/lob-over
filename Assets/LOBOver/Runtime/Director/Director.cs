@@ -25,6 +25,30 @@ namespace LOBOver.Runtime
         public string Speed => simulation == null ? "paused" : simulation.Speed;
         public bool Ready => simulation != null;
         public bool Done => simulation != null && simulation.Done;
+        // WO-S4 Amendment 1: pausing the script leaves its cursor untouched.
+        private bool autoplanEnabled = true;
+        public bool AutoplanEnabled
+        {
+            get => autoplanEnabled;
+            set
+            {
+                if (autoplanEnabled == value) return;
+                autoplanEnabled = value;
+                if (value && simulation != null && autoplan != null)
+                { autoplan.Advance(simulation.T, Apply); Publish(); }
+            }
+        }
+        public double ScenarioSecondsPerDay => secondsFull;
+        public double SecondsPerDay
+        {
+            get => playbackSeconds ?? secondsFull;
+            set
+            {
+                if (double.IsNaN(value) || double.IsInfinity(value) || value <= 0)
+                    throw new ArgumentOutOfRangeException(nameof(value));
+                playbackSeconds = value;
+            }
+        }
         public string LoadError { get; private set; }
         public string TranscriptPath { get; private set; }
         public event Action Loaded;
@@ -41,6 +65,7 @@ namespace LOBOver.Runtime
         private Pacer pacer;
         private Coroutine loading;
         private double secondsFull, secondsSlow;
+        private double? playbackSeconds;
         private JObject transcript;
         private JArray snapshots, messages, commands;
         private int lastSnapshot = -1;
@@ -74,6 +99,7 @@ namespace LOBOver.Runtime
             if (loading != null) StopCoroutine(loading);
             pacer?.Close(); simulation = null; SiteView = null; PlanView = null;
             scenarioId = id; LoadError = null;
+            playbackSeconds = null;
             loading = StartCoroutine(LoadFiles());
         }
         private IEnumerator LoadFiles()
@@ -118,7 +144,7 @@ namespace LOBOver.Runtime
             lastSnapshot = -1; savedResult = false;
             pacer = new Pacer(() => simulation, AfterTick);
             Loaded?.Invoke();
-            autoplan.Advance(simulation.T, Apply);
+            if (AutoplanEnabled) autoplan.Advance(simulation.T, Apply);
             Start();
             Drain(); CaptureDay();
         }
@@ -128,12 +154,15 @@ namespace LOBOver.Runtime
             // Pacer's 5/20-second day cadence is scaled to the scenario's full/slow seconds per day.
             var baselineMs = (Speed == "slow" ? Pacer.SLOW_MS : Pacer.FULL_MS) / Pacer.STEP_DAYS;
             var authoredMs = (Speed == "slow" ? secondsSlow : secondsFull) * 1000;
+            // Preserve the authored full/slow ratio when the presenter changes playback speed.
+            if (playbackSeconds.HasValue) authoredMs *= playbackSeconds.Value / secondsFull;
             pacer.Advance(UnityEngine.Time.unscaledDeltaTime * 1000 * baselineMs / authoredMs);
             Publish();
         }
         private void AfterTick()
         {
-            autoplan.Advance(simulation.T, Apply); Drain(); CaptureDay();
+            if (AutoplanEnabled) autoplan.Advance(simulation.T, Apply);
+            Drain(); CaptureDay();
             if (simulation.Done && !savedResult) { savedResult = true; SaveTranscript(); }
         }
         private void Apply(string seat, JObject command)
@@ -153,6 +182,8 @@ namespace LOBOver.Runtime
             if (simulation == null || command == null) return;
             Apply("site", command); Publish();
         }
+        // presenter-only (MR diorama); the full-scale seat and the JavaScript sim do not have it
+        public JObject InspectAt(string target, double stationFt) => simulation?.InspectAt(target, stationFt);
         public static bool ForSeat(JObject message, string seat) =>
             message["seats"] is JArray seats && seats.Any(value => (string)value == seat);
         private void Drain()

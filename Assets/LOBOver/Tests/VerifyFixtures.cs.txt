@@ -27,6 +27,7 @@ internal static class VerifyFixtures
     }
     public static void Main()
     {
+        VerifyPresenter.Run();
         var catalog = Catalog.Load(File.ReadAllText("Data/catalog.json"));
         var scenario = Scenario.Load(File.ReadAllText("Data/Scenarios/slice_texas.json"), catalog);
         var sim = Simulation.Create(scenario, catalog);

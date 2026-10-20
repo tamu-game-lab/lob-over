@@ -1,0 +1,93 @@
+using System;
+using System.IO;
+using System.Linq;
+using LOBOver.Sim;
+using LOBOver.VR;
+using Newtonsoft.Json.Linq;
+using Simulation = LOBOver.Sim.Sim;
+
+// Offline executable: uses the real Sim and pure input seam, never Unity native methods or a headset.
+internal static class VerifyPresenter
+{
+    private static void Check(bool test, string message) { if (!test) throw new Exception(message); }
+    public static void Run()
+    {
+        var catalog = Catalog.Load(File.ReadAllText("Data/catalog.json"));
+        var targets = new[] { "wall", "water", "pipe", "machine", "protection", "board", "sky", "ticket", "crew" };
+        var count = 0;
+        foreach (var stage in new[] { "slice_texas", "stage1_texas", "stage2_texas" })
+        {
+            var source = File.ReadAllText("Data/Scenarios/" + stage + ".json");
+            var sim = Simulation.Create(Scenario.Load(source, catalog), catalog);
+            var script = stage == "slice_texas" ? "slice_autoplan" : stage == "stage1_texas" ? "stage1_pm_play" : "stage2_pull_play";
+            var plan = new Autoplan(JArray.Parse(File.ReadAllText("Monitor/test/scripts/" + script + ".json")));
+            var length = (double)JObject.Parse(source)["job"]["lengthFt"];
+            while (!sim.Done)
+            {
+                plan.Advance(sim.T, (seat, cmd) => sim.Apply(seat, cmd));
+                var before = sim.Serialize();
+                foreach (var ft in new[] { 0.0, 449, 450, 520, length })
+                    foreach (var target in targets)
+                    {
+                        var result = sim.InspectAt(target, ft);
+                        Check((string)result["target"] == target && result["text"].Type == JTokenType.String, "inspection reply");
+                        result["text"] = "caller mutation"; count++;
+                    }
+                Check(JToken.DeepEquals(before, sim.Serialize()), stage + " read changed state/messages at " + sim.T);
+                var expectedDrain = (JArray)before["messages"];
+                Check(JToken.DeepEquals(expectedDrain, new JArray(sim.Drain())), "InspectAt changed Drain");
+                Check(sim.Speed != "paused", "fixture paused"); sim.Tick(0.25);
+            }
+        }
+        // Query and genuine inspect at identical state must return the same complete message envelope.
+        var probe = Simulation.Create(Scenario.Load(File.ReadAllText("Data/Scenarios/slice_texas.json"), catalog), catalog);
+        probe.Apply("site", new JObject { ["action"] = "moveTo", ["stationFt"] = 520.0 });
+        while ((bool)probe.View("site")["truck"]["moving"]) probe.Tick();
+        probe.Apply("site", new JObject { ["action"] = "dismount" }); probe.Drain();
+        foreach (var target in targets)
+        {
+            var query = probe.InspectAt(target, 520);
+            probe.Apply("site", new JObject { ["action"] = "inspect", ["target"] = target });
+            Check(JToken.DeepEquals(query, probe.Drain().Single()), "inspect envelope differs for " + target);
+        }
+        // F3: create authored wrong-stretch protection before its event. A query must not catch it.
+        var f3 = Simulation.Create(Scenario.Load(File.ReadAllText("Data/Scenarios/stage2_texas.json"), catalog), catalog);
+        var wrong = new JObject { ["action"] = "commit", ["ops"] = new JArray(new JObject { ["op"] = "protect", ["kind"] = "trench_box", ["fromFt"] = 0, ["toFt"] = 100 }) };
+        Check(f3.Apply("plan", wrong).Ok, "F3 fixture protection rejected");
+        f3.Tick(1);
+        Check(((JArray)f3.Serialize()["protections"]).Count == 1, "F3 fixture protection not placed");
+        var f3Before = f3.Serialize();
+        f3.InspectAt("protection", 0);
+        Check(JToken.DeepEquals(f3Before, f3.Serialize()), "presenter caught F3");
+        var deviation = ((JArray)f3.Serialize()["deviations"]).OfType<JObject>().Single(d => (string)d["type"] == "F3");
+        Check(deviation["inspected"] == null || !(bool)deviation["inspected"], "presenter F3 inspected");
+        f3.Apply("site", new JObject { ["action"] = "dismount" });
+        f3.Apply("site", new JObject { ["action"] = "inspect", ["target"] = "protection" });
+        deviation = ((JArray)f3.Serialize()["deviations"]).OfType<JObject>().Single(d => (string)d["type"] == "F3");
+        Check((bool)deviation["inspected"], "control Site inspect did not mark F3");
+        Console.WriteLine("PASS: wrong-stretch F3 stays uninspected by presenter; genuine Site inspect marks it.");
+        CheckInput();
+        Console.WriteLine("PASS: " + count + " presenter queries preserve complete state and Drain across all three stages; all 9 targets match inspect replies; 4 fake-input checks pass.");
+    }
+    private static void CheckInput()
+    {
+        var layer = new InspectorInputLayer(); var input = new FakeInput();
+        var sent = new System.Collections.Generic.List<JObject>(); string text = null;
+        layer.Command += sent.Add; layer.Text += value => text = value;
+        layer.Observe(new TruckView { stationFt = 520, dismounted = true });
+        layer.Tick(input, 1.99f, 1.99f, "wall", "wall", 1, null); Check(sent.Count == 0, "early dwell");
+        layer.Tick(input, 0.01f, 2, "wall", "wall", 1, null); Check(sent.Count == 1, "missing dwell");
+        layer.Tick(input, 2, 4, "wall", "wall", 1, null); Check(sent.Count == 1, "repeat dwell");
+        layer.Tick(input, 0, 4, null, null, 1, null);
+        layer.Tick(input, 2, 5.99f, "wall", "wall", 1, null); Check(sent.Count == 1, "cooldown");
+        layer.Tick(input, 0.01f, 6, "wall", "wall", 1, null); Check(sent.Count == 2, "expired cooldown");
+        sent.Clear(); layer.Observe(new TruckView { stationFt = 520 }); input.Button = InspectorButton.Flag;
+        layer.Tick(input, 0, 0, null, null, 1, null); Check(sent.Count == 0 && text == "dismount first", "mounted refusal");
+        layer.Observe(new TruckView { stationFt = 520, dismounted = true });
+        layer.Tick(input, 0, 0, null, null, 1, null);
+        Check(sent.Count == 1 && (string)sent[0]["action"] == "flag" && (double)sent[0]["stationFt"] == 520 && (string)sent[0]["note"] == "", "flag command");
+        layer.Observe(new TruckView { stationFt = 0 }); layer.Ride(520); Check(layer.CabStation == 0, "ride teleported early");
+        layer.Observe(new TruckView { stationFt = 270, moving = true }); Check(layer.CabStation == 0, "ride vection");
+        layer.Observe(new TruckView { stationFt = 520 }); Check(layer.CabStation == 520, "arrival");
+    }
+}

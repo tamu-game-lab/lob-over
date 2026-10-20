@@ -6,6 +6,7 @@ NuGet.Config disables network sources; restore uses already cached package versi
 In the dispatch sandbox set $env:NUGET_PACKAGES = 'C:\Users\bryan\.nuget\packages'.
 The netstandard2.1 project links the C# 9 files in Assets/LOBOver/Sim.
 Unity compiles those same files via LOBOver.Sim.asmdef, without engine references.
+InspectAt(target, stationFt) is a read-only presenter-only MR diorama query; it has no seat, message, state or deviation effects.
 The asmdef references Newtonsoft.Json.dll from com.unity.nuget.newtonsoft-json 3.2.1.
 Pacer.Advance takes elapsed milliseconds; Sync after commands; Autoplan skips Site.
 Regenerate RNG: node Sim/LOBOver.Sim.Tests/fixtures/generate-rng.mjs

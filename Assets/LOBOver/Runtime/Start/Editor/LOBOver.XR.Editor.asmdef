@@ -1,0 +1,7 @@
+{
+  "name": "LOBOver.XR.Editor",
+  "references": ["LOBOver.Editor", "LOBOver.Start", "LOBOver.MR", "LOBOver.VR", "LOBOver.World", "LOBOver.Director", "LOBOver.Sim", "Oculus.VR", "Unity.TextMeshPro", "Unity.XR.Management", "Unity.XR.Management.Editor", "Unity.XR.OpenXR", "Unity.XR.OpenXR.Editor", "Unity.XR.OpenXR.Features.MetaQuestSupport"],
+  "includePlatforms": ["Editor"],
+  "overrideReferences": true,
+  "precompiledReferences": ["Newtonsoft.Json.dll"]
+}

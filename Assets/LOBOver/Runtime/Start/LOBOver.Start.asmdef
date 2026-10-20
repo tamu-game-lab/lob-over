@@ -1,0 +1,17 @@
+{
+  "name": "LOBOver.Start",
+  "references": [
+    "LOBOver.Director",
+    "LOBOver.World",
+    "LOBOver.Sim",
+    "LOBOver.VR",
+    "LOBOver.MR",
+    "Oculus.VR",
+    "Unity.TextMeshPro",
+    "UnityEngine.UI"
+  ],
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "Newtonsoft.Json.dll"
+  ]
+}

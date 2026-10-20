@@ -217,6 +217,8 @@ namespace LOBOver.Sim
             return new ApplyResult(state.t);
         }
         public JObject View(string seat) => Views.View(state, seat);
+        // presenter-only (MR diorama); the full-scale seat and the JavaScript sim do not have it
+        public JObject InspectAt(string target, double stationFt) => Views.InspectAt(state, target, stationFt);
         public List<JObject> Drain()
         {
             var messages = state.messages.Select(m => m.Copy()).ToList();

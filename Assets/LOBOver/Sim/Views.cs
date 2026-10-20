@@ -46,6 +46,19 @@ namespace LOBOver.Sim
             else if (c.status == "idle") text = "Idle, waiting on " + (leader?.name ?? c.name) + ".";
             return text + " " + MOODS[(int)c.mood];
         }
+        // presenter-only (MR diorama); the full-scale seat and the JavaScript sim do not have it
+        internal static JObject InspectAt(State s, string target, double stationFt)
+        {
+            if (!double.IsFinite(stationFt) || stationFt < 0 || stationFt > s.Length)
+                throw new ArgumentOutOfRangeException(nameof(stationFt), "invalid station");
+            // A private draft supplies the observer position without executing a Site command.
+            // In particular, this never marks a collapse inspected or triggers F3.
+            var observer = s.Draft();
+            observer.truck = O("stationFt", stationFt, "moving", false, "dismounted", true);
+            var text = InspectionText(observer, target);
+            if (text == null) throw new ArgumentException("unknown inspection target", nameof(target));
+            return O("t", "inspection", "v", 1, "day", s.t, "target", target, "text", text, "seats", new[] { "site" });
+        }
         internal static string InspectionText(State s, string target)
         {
             var ft = StakeAt(s, s.truck.N("stationFt")); var c = CrewAt(s); var p = ProtectionAt(s, ft);

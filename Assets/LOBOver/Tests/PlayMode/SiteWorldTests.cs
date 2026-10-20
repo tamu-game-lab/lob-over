@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using LOBOver.Runtime;
 using LOBOver.Sim;
+using LOBOver.Start;
 using LOBOver.World;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -37,7 +38,10 @@ namespace LOBOver.Tests
         private static void DisableAutoplay(Scene scene, LoadSceneMode mode)
         {
             Object.FindFirstObjectByType<Director>().gameObject.SetActive(false);
-            Object.FindFirstObjectByType<DesktopPreview>().gameObject.SetActive(false);
+            var start = Object.FindFirstObjectByType<StartPanel>();
+            start.enabled = false; start.fullScaleRoot.SetActive(true);
+            start.rig.gameObject.SetActive(false); start.pointer.gameObject.SetActive(false);
+            Object.FindFirstObjectByType<DesktopPreview>(FindObjectsInactive.Include).gameObject.SetActive(false);
         }
         [TearDown]
         public void TearDown() { SceneManager.sceneLoaded -= DisableAutoplay; }
