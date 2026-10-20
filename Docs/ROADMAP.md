@@ -1,5 +1,7 @@
 # ROADMAP.md — from the table test to the Quest
 
+**Revised October 20, 2026 (second revision).** The next deliverable is the stakeholder showcase: `Docs/SHOWCASE.md` is the plan, WO-05a and WO-S1 to WO-S4 the work orders, `Docs/ORCHESTRATOR_SHOWCASE.md` the procedure. It includes the C# simulation (WO-S2), so the Unity host of the old table below is no longer needed for the demo; the LAN study setup (Node host, three devices) keeps working as built in Phase 0. The old table below is kept for reference only.
+
 Phase 0 (WO-00 to WO-05) ends at `READY_FOR_TABLE_TEST`: three browser seats, one Node host, the printed kit, placeholder voice. Bryan runs the table test (three laptops or one laptop plus a phone, the printed kit, two stages, about 25 minutes with the huddle and debrief), fixes the scenario numbers and manual text that the test exposes, and only then does Unity work start. Everything below is written so it can be split into work orders the same way.
 
 ## Phase 0.5 — after the table test (one short run)

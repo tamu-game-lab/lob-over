@@ -1,0 +1,429 @@
+{
+  "schemaVersion": 1,
+  "id": "slice_texas",
+  "title": "Slice — one of everything in three minutes",
+  "subtitle": "Texas, 3,000 ft, two zones. Collapse, argument, permit, inspection, rain, finish.",
+  "city": "texas",
+  "seed": 20261020,
+  "mode": "push",
+  "_note": "Playtest slice: the Stage 1 world cut in half so every mechanic fires once inside about three minutes of wall clock. Same catalog, same rules. The clock runs faster than the stages (4 s per day, 15 s during an event); change time.* back to 5/20 for the real stages.",
+  "job": {
+    "lengthFt": 3000,
+    "stationEveryFt": 100,
+    "zones": [
+      {
+        "id": 1,
+        "fromFt": 0,
+        "toFt": 1500
+      },
+      {
+        "id": 2,
+        "fromFt": 1500,
+        "toFt": 3000
+      }
+    ],
+    "sign": {
+      "cityCode": "TX",
+      "pipe": "12 in PVC DR18 water main",
+      "contractDays": 30
+    }
+  },
+  "time": {
+    "secondsPerDayFull": 4,
+    "secondsPerDaySlow": 15,
+    "slowUntil": "commit",
+    "shiftsPerDay": 1
+  },
+  "crews": [
+    {
+      "id": "exc",
+      "name": "Excavation",
+      "machine": "excavator_standard",
+      "startDay": 1,
+      "locked": false
+    },
+    {
+      "id": "pipe",
+      "name": "Pipe laying",
+      "machine": "crane_standard",
+      "startDay": 2,
+      "locked": false
+    },
+    {
+      "id": "back",
+      "name": "Backfill",
+      "machine": "backfill_standard",
+      "startDay": 4,
+      "locked": false
+    }
+  ],
+  "plan": {
+    "locked": false,
+    "huddleSeconds": 30,
+    "preparationAllowed": true,
+    "promisedFinishDay": 18,
+    "deadlineDay": 30,
+    "budgetUsd": 172320,
+    "_derivation": "no-event push finish t 17.7 (pipe 1 + 3000/180); budget 18 x $4,800 x 1.3 + $60,000; deadline 18 + 12"
+  },
+  "permits": {
+    "heldBy": "rules",
+    "openZoneLimit": 2,
+    "cards": [
+      {
+        "zone": 1,
+        "number": "TX-0311",
+        "code": "5174-7"
+      },
+      {
+        "zone": 2,
+        "number": "TX-0312",
+        "code": "2936-0"
+      }
+    ],
+    "_note": "Rules holds both cards. Plan enters zone 1 during the huddle (host paused) and zone 2 before excavation reaches 15+00, about Day 9 after the collapse."
+  },
+  "inspections": {
+    "required": true,
+    "checklist": [
+      "Tracer wire placed",
+      "Bedding placed and graded",
+      "Compaction test passed (result in Plan's inbox)"
+    ],
+    "cards": [
+      {
+        "zone": 1,
+        "number": "8403-5"
+      },
+      {
+        "zone": 2,
+        "number": "6251-4"
+      }
+    ]
+  },
+  "rules": {
+    "orderLagShifts": 1,
+    "stopWorkReachHours": 1,
+    "heldCrewBills": true,
+    "moodStepDays": 1,
+    "overheadRate": 0.3,
+    "mobilizationUsd": 25000,
+    "demobFeeUsd": 5000,
+    "conflictRule": "crossWithinNextDay",
+    "conflictBehaviour": "stopAndArgue",
+    "rainReworkDaysPer500Ft": 1,
+    "pumpHalvesRework": true,
+    "permitFineUsd": 10000,
+    "unpermittedBoundary": "idleAndBill",
+    "uncertaintyBandFt": 150,
+    "likelihoodRollsApply": false
+  },
+  "ground": {
+    "soil": "wet clay",
+    "cohesion": "V.High",
+    "groundwater": "High",
+    "rain": "V.High",
+    "defaultIndicator": {
+      "wall": "Stiff clay, vertical cut holding. Spoil pile set back about 2 ft.",
+      "water": "Damp bottom, no standing water."
+    },
+    "segments": [
+      {
+        "fromFt": 400,
+        "toFt": 700,
+        "type": "C",
+        "seepage": true,
+        "indicator": {
+          "wall": "Clay softening toward the toe; a thumb goes in. Small slabs have let go near the bottom.",
+          "water": "Water seeping from the lower wall; a puddle is forming along the toe."
+        }
+      }
+    ]
+  },
+  "events": [
+    {
+      "id": "ev_p1",
+      "type": "P1",
+      "trigger": {
+        "kind": "crewReaches",
+        "crew": "pipe",
+        "ft": 520
+      },
+      "stationFt": 520,
+      "zone": 1,
+      "hits": "pipe",
+      "rateDrop": 1,
+      "durationDaysByExcavator": {
+        "small": 3,
+        "standard": 2,
+        "large": 1
+      },
+      "lenderLosesSameDays": true,
+      "severityByProtection": {
+        "trench_box": 0.5,
+        "trench_shoring": 0.4,
+        "trench_slope": 0.7
+      },
+      "visibleTo": [
+        "site"
+      ],
+      "card": {
+        "title": "Trench wall collapse at 5+20",
+        "facts": [
+          "The lower wall has slumped into the pipe crew's working section.",
+          "Pipe crew is out of the trench.",
+          "Standing water in the bottom."
+        ]
+      },
+      "cardWhenProtected": {
+        "title": "Wall movement at 5+20",
+        "facts": [
+          "Clay has slumped against the trench box; the box held.",
+          "Pipe crew is out of the trench while the toe is cleaned up.",
+          "Water in the bottom."
+        ]
+      },
+      "options": [
+        {
+          "key": "clear_own",
+          "label": "Clear with your own excavator",
+          "cost": {
+            "usd": 0,
+            "perDayUsd": 0
+          },
+          "effect": {
+            "lend": {
+              "machineOf": "exc",
+              "toCrew": "pipe"
+            },
+            "clearsInDaysBySize": true
+          },
+          "check": {
+            "seat": "site",
+            "text": "Read the plate on the excavator on site (Small, Standard, Large). Plan reads excavation's lead over pipe on the LOB; the lender loses the clearing days."
+          }
+        },
+        {
+          "key": "emergency_shoring",
+          "label": "Emergency shoring",
+          "cost": {
+            "usd": 18000,
+            "perDayUsd": 150
+          },
+          "effect": {
+            "resumeAfterDays": 1
+          },
+          "check": {
+            "seat": "plan",
+            "text": "Budget: $18,000 now plus $150 a day for the rest of the job."
+          }
+        },
+        {
+          "key": "hire_excavator",
+          "label": "Hire an outside excavator",
+          "cost": {
+            "usd": "catalog price + $25,000 mobilization",
+            "perDayUsd": "catalog daily"
+          },
+          "effect": {
+            "order": {
+              "crew": "exc"
+            },
+            "clearsInDaysBySize": true,
+            "afterLeadDays": true
+          },
+          "check": {
+            "seat": "rules",
+            "text": "Lead days for this city on the Texas page, added to the clearing days. Plan checks the budget."
+          }
+        }
+      ]
+    },
+    {
+      "id": "ev_a2",
+      "type": "A2",
+      "trigger": {
+        "kind": "day",
+        "day": 9
+      },
+      "stationFt": null,
+      "zone": null,
+      "hits": "all",
+      "rateDrop": 0.5,
+      "durationDays": 2,
+      "visibleTo": [
+        "site"
+      ],
+      "forecast": {
+        "inboxDay": 8,
+        "text": "NWS: 70% chance of heavy rain tomorrow afternoon through the following day.",
+        "skyFromDay": 8
+      },
+      "rework": {
+        "kind": "openTrench",
+        "daysPer500Ft": 1,
+        "pumpHalves": true
+      },
+      "card": {
+        "title": "Heavy rain",
+        "facts": [
+          "Every crew at half speed for two days.",
+          "Open trench is taking water."
+        ]
+      },
+      "options": [
+        {
+          "key": "drainage_pump",
+          "label": "Rent a drainage pump now",
+          "cost": {
+            "usd": 4000,
+            "perDayUsd": 60
+          },
+          "effect": {
+            "rainRateRestore": [
+              "exc",
+              "back"
+            ],
+            "reworkMultiplier": 0.5
+          },
+          "check": {
+            "seat": "site",
+            "text": "How many stations are open between the excavator and the backfill crew? Count the open-trench tokens; the rework is a day per 500 ft."
+          }
+        }
+      ]
+    }
+  ],
+  "deviations": [
+    {
+      "id": "f1_first_radio_order",
+      "type": "F1",
+      "when": {
+        "kind": "firstRadioOrder",
+        "ops": [
+          "hold",
+          "lend"
+        ]
+      },
+      "behaviour": "ignoredUntilConfirmedNotDoneAndRadioed",
+      "caughtWhen": "confirmNotDoneBeforeNextReport"
+    },
+    {
+      "id": "f3_box_misplaced",
+      "type": "F3",
+      "when": {
+        "kind": "protectStretchMisses",
+        "eventId": "ev_p1"
+      },
+      "behaviour": "nothingHappens",
+      "caughtWhen": "inspectProtectionAtWrongStretchBeforeEvent"
+    }
+  ],
+  "inbox": [
+    {
+      "day": 1,
+      "from": "PM",
+      "subject": "Short run, same rules",
+      "body": "Three thousand feet, two zones. Dig Day 1, pipe Day 2, backfill Day 4, Standard machines. Promised finish Day 18, deadline Day 30, budget $172,320. The spec-keeper holds both permits; the city allows two zones open. Call the office before you change anything."
+    },
+    {
+      "day": 2,
+      "from": "Supplier",
+      "subject": "Lead times this month",
+      "body": "Excavators: Small 3 days, Standard 5, Large 7. Cranes: Standard 7, Heavy 10. Loaders: Small 3, Standard 5, Large 7. Mobilization $25,000 per order."
+    }
+  ],
+  "lines": [
+    {
+      "id": "pm_open_slice",
+      "speaker": "pm",
+      "trigger": "stageStart",
+      "text": "Short run today. Three thousand feet, two zones, same rules as the big job. Dig Day 1, pipe Day 2, backfill Day 4. We promised Day 18. The spec-keeper has both permits. Call me before you change anything."
+    },
+    {
+      "id": "pm_prep_refused_01",
+      "speaker": "pm",
+      "trigger": "prepRefused",
+      "text": "No. We are not buying steel for a hole that has not failed. Not in the budget."
+    },
+    {
+      "id": "pm_hold_01",
+      "speaker": "pm",
+      "trigger": "holdCommitted",
+      "text": "You are holding a crew that bills eighteen hundred a day. I hope you have a reason."
+    },
+    {
+      "id": "pm_demob_01",
+      "speaker": "pm",
+      "trigger": "demobCommitted",
+      "text": "Sending a crew home mid-job? Getting them back costs us five thousand and days we do not have."
+    },
+    {
+      "id": "pm_end_slice",
+      "speaker": "pm",
+      "trigger": "stageEnd",
+      "text": "That is the short run. Look at where the lines ended up against what we promised."
+    },
+    {
+      "id": "radio_ack_01",
+      "speaker": "radio",
+      "trigger": "orderLanded",
+      "text": "Copy, office. Passing it to the foreman at the next shift."
+    },
+    {
+      "id": "radio_notdone_01",
+      "speaker": "radio",
+      "trigger": "orderNotDone",
+      "text": "Office, inspector reports the crew never got it. Say again?"
+    },
+    {
+      "id": "foreman_pipe_arg_slice",
+      "speaker": "foreman_pipe",
+      "trigger": "conflict",
+      "text": "You are on top of me! I have got a wall down at five-twenty and your loader is pushing dirt onto my bedding."
+    },
+    {
+      "id": "foreman_back_arg_01",
+      "speaker": "foreman_back",
+      "trigger": "conflict",
+      "text": "The schedule had me here. I lay two-fifty a day and you lay one-eighty. Where exactly did they think I would go?"
+    },
+    {
+      "id": "foreman_held_01",
+      "speaker": "foreman_back",
+      "trigger": "heldDay1",
+      "text": "Standing by. Meter is running."
+    },
+    {
+      "id": "foreman_held_02",
+      "speaker": "foreman_back",
+      "trigger": "heldDay2",
+      "text": "Second day on a hold. My guys are getting paid to watch a trench."
+    },
+    {
+      "id": "foreman_held_03",
+      "speaker": "foreman_back",
+      "trigger": "heldDay3",
+      "text": "Three days. Either give me a stretch to fill or send us home."
+    }
+  ],
+  "kit": {
+    "permitCodeDigits": 4,
+    "checkDigit": "digitSumMod10",
+    "openTrenchTokenFt": 500,
+    "manualPages": [
+      "front_rule",
+      "city_texas",
+      "indicators",
+      "P1",
+      "A2",
+      "permits_holdpoints",
+      "lookup",
+      "procedures"
+    ]
+  },
+  "result": {
+    "overlayPreviousStage": null,
+    "showChangeLog": true
+  }
+}

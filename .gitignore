@@ -67,3 +67,18 @@ Thumbs.db
 /.claude/settings.local.json
 # The delivered kit archive; its contents are the repo
 /LOB-Over-Kickoff.zip
+
+# Phase 1
+Tools/import/
+Builds/
+Assets/StreamingAssets/Voice/
+Monitor/out/unity/
+
+# Showcase track
+Showcase/dist/
+Showcase/.publish/
+Assets/LOBGame/
+Assets/StreamingAssets/Data/
+Sim/**/bin/
+Sim/**/obj/
+Data/transcripts/*.tmp

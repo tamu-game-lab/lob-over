@@ -1,0 +1,266 @@
+[
+  {
+    "t": 0,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterPermit",
+          "zone": 1,
+          "code": "5174-7"
+        }
+      ],
+      "id": "c-1"
+    }
+  },
+  {
+    "t": 0,
+    "seat": "site",
+    "cmd": {
+      "action": "moveTo",
+      "stationFt": 520,
+      "id": "c-2"
+    }
+  },
+  {
+    "t": 0.02,
+    "seat": "site",
+    "cmd": {
+      "action": "dismount",
+      "id": "c-3"
+    }
+  },
+  {
+    "t": 3.8,
+    "seat": "site",
+    "cmd": {
+      "action": "inspect",
+      "target": "wall",
+      "id": "c-4"
+    }
+  },
+  {
+    "t": 3.8,
+    "seat": "site",
+    "cmd": {
+      "action": "inspect",
+      "target": "water",
+      "id": "c-5"
+    }
+  },
+  {
+    "t": 3.9,
+    "seat": "site",
+    "cmd": {
+      "action": "stopWork",
+      "zone": 1,
+      "id": "c-6"
+    }
+  },
+  {
+    "t": 4,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "lend",
+          "machine": "excavator_standard",
+          "toCrew": "pipe",
+          "days": 2
+        }
+      ],
+      "id": "c-7"
+    }
+  },
+  {
+    "t": 4.3,
+    "seat": "site",
+    "cmd": {
+      "action": "listen",
+      "id": "c-8"
+    }
+  },
+  {
+    "t": 4.35,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "hold",
+          "crew": "back",
+          "days": 2
+        }
+      ],
+      "id": "c-9"
+    }
+  },
+  {
+    "t": 5.02,
+    "seat": "site",
+    "cmd": {
+      "action": "mount",
+      "id": "c-10"
+    }
+  },
+  {
+    "t": 5.02,
+    "seat": "site",
+    "cmd": {
+      "action": "moveTo",
+      "stationFt": 1100,
+      "id": "c-11"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "site",
+    "cmd": {
+      "action": "dismount",
+      "id": "c-12"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "site",
+    "cmd": {
+      "action": "inspect",
+      "target": "machine",
+      "id": "c-13"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "site",
+    "cmd": {
+      "action": "confirm",
+      "orderId": "o-2",
+      "outcome": "notDone",
+      "id": "c-14"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "radio",
+          "orderId": "o-2"
+        }
+      ],
+      "id": "c-15"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "site",
+    "cmd": {
+      "action": "confirm",
+      "orderId": "o-2",
+      "outcome": "done",
+      "id": "c-16"
+    }
+  },
+  {
+    "t": 5.06,
+    "seat": "site",
+    "cmd": {
+      "action": "mount",
+      "id": "c-17"
+    }
+  },
+  {
+    "t": 5.06,
+    "seat": "site",
+    "cmd": {
+      "action": "moveTo",
+      "stationFt": 270,
+      "id": "c-18"
+    }
+  },
+  {
+    "t": 5.09,
+    "seat": "site",
+    "cmd": {
+      "action": "dismount",
+      "id": "c-19"
+    }
+  },
+  {
+    "t": 5.09,
+    "seat": "site",
+    "cmd": {
+      "action": "confirm",
+      "orderId": "o-3",
+      "outcome": "done",
+      "id": "c-20"
+    }
+  },
+  {
+    "t": 5.09,
+    "seat": "site",
+    "cmd": {
+      "action": "inspect",
+      "target": "crew",
+      "id": "c-21"
+    }
+  },
+  {
+    "t": 7.5,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterPermit",
+          "zone": 2,
+          "code": "2936-0"
+        }
+      ],
+      "id": "c-22"
+    }
+  },
+  {
+    "t": 8.1,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [],
+      "id": "c-23"
+    }
+  },
+  {
+    "t": 15.7,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterInspection",
+          "zone": 1,
+          "number": "8403-5"
+        }
+      ],
+      "id": "c-24"
+    }
+  },
+  {
+    "t": 23,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterInspection",
+          "zone": 2,
+          "number": "6251-4"
+        }
+      ],
+      "id": "c-25"
+    }
+  }
+]
