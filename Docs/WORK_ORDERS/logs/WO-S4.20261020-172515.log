@@ -1,0 +1,2046 @@
+=== WO-S4 dispatched 20261020-172515
+=== root: /c/Users/bryan/Documents/TAMU/02-Research/Creative Care/Unity/LOB-OVER
+=== flags: --sandbox workspace-write -c approval_policy=never 
+=== note: Environment notes: WO-S3 is committed (ebdaaf3) but still awaits Bryan's Editor check, so keep its behaviour intact and the scene builder idempotent; build on it, do not rewrite it. You cannot run the Unity Editor or the Unity MCP and there is no network; write conservative code against Unity 6000.3, URP 17.3, Meta XR SDK 207.0.1 (com.meta.xr.sdk.all) and OpenXR 1.18 as installed; the orchestrator's batchmode compile is not available this run, so extend Assets/LOBOver/Tests/CompileOffline.ps1 to compile your new assemblies (VR, MR, Start, tests) against the Meta XR and OpenXR DLLs under Library/ScriptAssemblies and Library/PackageCache, run it, and paste its summary in TESTS; any 'error CS' later in the Editor is a rejection. Do not touch Assets/LOBGame/**, Monitor/, Showcase/ or Sim/.
+
+Reading additional input from stdin...
+OpenAI Codex v0.163.0-alpha.10.2
+--------
+workdir: C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+model: gpt-6-astra
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a15b6b-36fb-7293-b4b2-e7464be38142
+--------
+user
+You are Astra, the implementer on this repository. Read AGENTS.md first and obey it.
+Then read Docs/WORK_ORDERS/WO-S4.md and carry out that work order exactly: only the files it allows,
+only the behaviour it specifies, every acceptance check run by you before you finish.
+Do not commit. Do not touch Data/ unless the work order says so. Do not add dependencies.
+If something outside your scope blocks you, stop and report BLOCKED with the exact reason.
+Finish with the STATUS block in the format AGENTS.md gives, as the very last thing you print.
+Orchestrator note for this dispatch: Environment notes: WO-S3 is committed (ebdaaf3) but still awaits Bryan's Editor check, so keep its behaviour intact and the scene builder idempotent; build on it, do not rewrite it. You cannot run the Unity Editor or the Unity MCP and there is no network; write conservative code against Unity 6000.3, URP 17.3, Meta XR SDK 207.0.1 (com.meta.xr.sdk.all) and OpenXR 1.18 as installed; the orchestrator's batchmode compile is not available this run, so extend Assets/LOBOver/Tests/CompileOffline.ps1 to compile your new assemblies (VR, MR, Start, tests) against the Meta XR and OpenXR DLLs under Library/ScriptAssemblies and Library/PackageCache, run it, and paste its summary in TESTS; any 'error CS' later in the Editor is a rejection. Do not touch Assets/LOBGame/**, Monitor/, Showcase/ or Sim/.
+2026-10-20T22:25:16.132184Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://mcp.consensus.app/.well-known/oauth-protected-resource\", scope=\"search\"" })
+warning: Codex is ignoring 2 unrecognized configuration settings. Check for typos or deprecated settings.
+  user (C:\Users\bryan\.codex\config.toml): `features.rmcp_client` is ignored.
+  user (C:\Users\bryan\.codex\config.toml): `mcp_servers.code-review-graph.type` is ignored.
+warning: Codex is ignoring 2 unrecognized configuration settings. Check for typos or deprecated settings.
+  user (C:\Users\bryan\.codex\config.toml): `features.rmcp_client` is ignored.
+  user (C:\Users\bryan\.codex\config.toml): `mcp_servers.code-review-graph.type` is ignored.
+warning: loading hooks from both C:\Users\bryan\.codex\hooks.json and C:\Users\bryan\.codex\config.toml; prefer a single representation for this layer
+warning: clamping SessionEnd hook timeout to 3s in C:\Users\bryan\.codex\hooks.json
+warning: clamping SessionEnd hook timeout to 3s in C:\Users\bryan\.codex\config.toml
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+hook: UserPromptSubmit Completed
+codex
+Step 1 of 4: I’ll read `AGENTS.md` and `WO-S4.md`, then check the allowed files and required validation.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath AGENTS.md' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 19ms:
+# AGENTS.md â€” rules for the implementer (Codex / Astra)
+
+You are the implementer on LOB, Over, a three-seat cooperative construction-scheduling game (VR inspector, web scheduler, paper spec-keeper). An orchestrator (Claude Code) writes you bounded work orders, verifies the result, and accepts or rejects it. You do not decide design questions; you build exactly what the work order says and report precisely.
+
+## Read first, every time
+
+1. This file.
+2. The work order you were given: `Docs/WORK_ORDERS/WO-xx.md`. It names the files you may touch, the acceptance checks, and what is out of scope.
+3. Only the design files the work order points you to (usually one or two sections of `Docs/DESIGN_v0.md`, `Docs/PROTOCOL.md`, `Docs/SCENARIO_SCHEMA.md`). Do not read the whole design doc unless the work order says so.
+
+## Repository layout (root = the Unity project root)
+
+```
+Assets/ Packages/ ProjectSettings/   Unity (Phase 1; do not touch in Phase 0 work orders)
+Data/        catalog.json, Scenarios/*.json, goldens/*.json   â€” source of truth for sim, kit and voice
+Docs/        DESIGN_v0.md, PROTOCOL.md, SCENARIO_SCHEMA.md, ORCHESTRATOR.md, WORK_ORDERS/, WORKLOG.md, DECISIONS.md
+Monitor/     Node host + JS reference simulation + browser pages (Plan page, 2D Site page, facilitator page)
+Paper/       field manual source and generated printable kit
+Tools/       astra.sh (dispatch), reference/ (Python oracle for goldens), voice/ (Kokoro batch)
+Voice/       generated WAV lines (output)
+```
+
+## Hard rules
+
+- **Scope.** Touch only the files and folders the work order lists under "You may change". If the job needs a change elsewhere, stop and say so in the STATUS block (`BLOCKED`), do not make it.
+- **No design decisions.** If the work order is ambiguous, pick the reading that is simplest to change later, state the choice in `NOTES`, and continue. Never invent game rules, numbers, event behaviours or UI feedback that the work order or the pointed-to design section does not state.
+- **No verdict feedback, ever.** Nothing in any player-facing surface may tell players that a choice was right or wrong: no green/red for decisions, no "correct", no score, no hint text, no "you should have". Boards post facts (a permit number, a day count, a dollar figure). This is the project's core educational rule (design doc, "No verdicts during play"). Typo-level rejection of a code that is not on file is allowed; judgement of whether entering it was wise is not.
+- **Determinism.** The simulation is seeded and must produce identical output for identical input and seed. No `Math.random()` without the seeded RNG, no wall-clock reads inside the simulation, no iteration-order dependence on object keys for anything that affects state.
+- **One truth, filtered per seat.** The host holds one state; each seat gets a filtered view (`Docs/PROTOCOL.md`). Never send the Plan seat live field truth, and never send the Site seat the plan or the money.
+- **No network from your sandbox.** Dependencies are installed by the orchestrator before you run. If a module is missing, say so in `BLOCKED`; do not try to install it or vendor a copy.
+- **Data files are authored, not generated by you.** Do not modify `Data/Scenarios/*.json`, `Data/catalog.json` or `Data/goldens/*.json` unless the work order says so explicitly.
+- **Git.** This is a git repo. Do not commit, branch, stash or reset; the orchestrator commits. Never run git on any other folder (LOB-Game is under Plastic SCM and is read-only reference material).
+- **Keep it plain.** Vanilla JS (ES modules), Node 20+, no framework, no bundler, no TypeScript in Phase 0. Tests with Node's built-in `node:test`. Pages are single HTML files with inline CSS and JS, served by the host.
+- **Code style.** Small modules, pure functions for the simulation (`state, input -> state`), named constants for every number that comes from the design, each constant with a comment naming its source (catalog, workbook, decided rule). Comments say why, not what.
+- **Do not touch** `Assets/`, `Packages/`, `ProjectSettings/`, `.gitignore`, `AGENTS.md`, `CLAUDE.md`, `Docs/ORCHESTRATOR.md`, or anything under `Docs/WORK_ORDERS/logs/`.
+
+## How to work a work order
+
+1. Restate the acceptance checks to yourself; they are what the orchestrator will run.
+2. Build the smallest thing that passes them, then stop. No extra features, no refactors of files outside scope, no "while I was here".
+3. Run every acceptance check yourself. Paste the actual command output (trimmed) into `TESTS`.
+4. If a check cannot pass because of something outside your scope, report `BLOCKED` with the exact reason and the smallest change that would unblock it.
+5. Scope check: `git status --short` must show only your own changes. Ignore `Docs/WORK_ORDERS/logs/` (the dispatch log being written while you run) and `Docs/WORKLOG.md` / `Docs/DECISIONS.md` if the orchestrator left them modified; never clean those up and never treat them as a blocker.
+6. Windows shell: your commands run in PowerShell, where `npm` and `npx` resolve to `.ps1` shims that the execution policy blocks. Call `npm.cmd` and `npx.cmd` instead; the acceptance checks mean exactly that. `node`, `python`, `pip` and `git` work as written.
+
+## STATUS block (always the last thing you print)
+
+```
+STATUS: DONE | PARTIAL | BLOCKED
+WO: WO-xx
+CHANGED:
+  - path/one.js  (new)        one line on what it is
+  - path/two.html (modified)  one line on what changed
+TESTS:
+  - <command>  ->  <pass/fail, key numbers>
+NOTES:
+  - choices you made where the order was silent, each in one line
+  - anything the verifier must know (known gaps, follow-ups, risks)
+```
+
+`DONE` means every acceptance check passed on your machine. `PARTIAL` means some passed and you list which did not and why. `BLOCKED` means you could not proceed; name the blocker. Never claim a check passed that you did not run.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath Docs/WORK_ORDERS/WO-S4.md' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 28ms:
+# WO-S4 â€” Start panel, VR Site seat, MR Diorama, Android build settings
+
+## Goal
+
+Build and Run from Unity puts an app on the Quest 3S that starts on a panel with three choices: **VR Site** (the inspector seat at full scale, controllers), **MR Diorama** (passthrough, the site as a two-metre model on the table, the LOB chart above it, pointable), **Desktop** (WO-S3's preview, for the Editor). The simulation runs inside the app with Plan on autopilot; the slice is the default, the two Texas stages are selectable. Comfort first.
+
+## Read
+
+- `AGENTS.md`, `Docs/ORCHESTRATOR_SHOWCASE.md`, `Docs/SHOWCASE.md`
+- `Docs/WORK_ORDERS/WO-09.md` sections 1 to 7: the VR Site seat specification applies verbatim with `Director.Send` in place of `SiteClient` calls and the voice from `StreamingAssets/Voice`
+- `Docs/DESIGN_v0.md` "The VR seat"
+- Meta XR SDK in `Packages/com.meta.xr.sdk.*`: `OVRCameraRig`, `OVRManager`, `OVRInput`, `OVRPassthroughLayer`; `Assets/Scenes/SampleScene.unity` has the project's Building Blocks (camera rig, controllers) whose settings you copy; do not add Interaction SDK or hand tracking
+- `ProjectSettings/ProjectSettings.asset`, `Assets/XR/Settings/OpenXRPackageSettings.asset`, `Assets/Oculus/OculusProjectConfig.asset` (set by the Project Setup Tool; read, do not edit)
+
+## You may change
+
+- `Assets/LOBOver/Runtime/VR/**`, `Assets/LOBOver/Runtime/MR/**`, `Assets/LOBOver/Runtime/Start/**`, `Assets/LOBOver/Prefabs/**`, `Assets/LOBOver/Editor/SiteSceneBuilder.cs` (add the rig, truck, start panel, diorama root), `Assets/LOBOver/Editor/BuildChecks.cs`, `Assets/LOBOver/Tests/**`, `ProjectSettings/EditorBuildSettings.asset` (scene list: `Site.unity` first)
+
+## Build
+
+1. **Start panel.** A world-space panel 1.5 m ahead at eye height when the app starts (and in Play mode): three big buttons (VR Site, MR Diorama, Desktop), a scenario row (Slice, Stage 1, Stage 2), an Autoplan toggle (on), a Start button. Pointing a controller ray and pulling the trigger presses; in the Editor the mouse works. Chosen mode and scenario persist in PlayerPrefs. Desktop is hidden on Android.
+2. **VR Site.** WO-09 sections 1 to 7 (truck cab with the rig, fade ride, dismount, gaze inspect with the clipboard, three wrist buttons, cards, voice, comfort), driven by `Director`. Recenter on the start panel's Start.
+3. **MR Diorama.** `OVRPassthroughLayer` as underlay with the camera's background cleared to transparent (the Building Block "Passthrough" settings copied by script); `DioramaRoot` holds a second instance of `SiteWorld` at scale `2.0 m / (lengthFt Ã— 0.3048)` (the slice's 914 m becomes 2 m) with the Plan panel floating 0.4 m above the far end at 0.6 m wide and the trailer board at the near end; placed 0.7 m in front of the user at 0.85 m height on Start, re-placed with the A button, moved by holding the grip and dragging. Pointing the ray at a crew, a cell or a board and pulling the trigger shows that target's `inspect` text on a label above it for 6 s (the diorama is a presenter's view: it may also show Plan's panel, which the full-scale seat never does; comment this in code). Wrist panel: Play/Pause, Speed (slice 4 s per day, half, double), Reset, scenario. Event cards float above the diorama for 10 s; the foremen's argument lines play from the model's position. Crews and machines keep their animations; particles scale with the root.
+4. **Audio.** The same clips as WO-S3; in the diorama, attenuation ranges scaled with the root.
+5. **Build checks.** `LOB Over â†’ Build â†’ Check Android Settings`: Android, ARM64, IL2CPP, min SDK 32, OpenXR loader with the Meta Quest feature group and the Quest 3S target, `Site.unity` first in the scene list, texture compression ASTC; each missing item is one line in the console telling Bryan where to set it; nothing is changed silently. `OVRManager.display.displayFrequency = 72` at start; fixed foveated rendering level 2.
+6. **Tests.** PlayMode `StartPanelTests` (the three modes activate the right roots and nothing else), `DioramaScaleTests` (the root scale makes the slice 2.0 m Â± 0.01 and Stage 1 4.0 m: longer jobs scale to 4 m, the table limit), `InputLayerTests` from WO-09 section 8 with the fake input.
+
+## Acceptance checks
+
+```
+# Orchestrator, Editor closed: batchmode compile -> no "error CS"
+# Bryan, Editor open: Build â†’ Site Scene; Play with Quest Link: start panel usable with the controllers; VR Site: ride to 5+20, dismount, look at the wall, Stop work at the collapse, listen to the argument, Confirm at the excavator; MR Diorama: passthrough shows the room, the site on the table, pointing a crew shows its text, the chart updates by the day; no discomfort. Then Build Profiles â†’ Android â†’ Build and Run; the same on the headset. His reply is the result.
+git status --short     # only Assets/LOBOver/**, ProjectSettings/EditorBuildSettings.asset
+```
+
+## Out of scope
+
+No hand tracking, no scene understanding or table detection, no Plan interaction in the headset, no networking, no store packaging.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'git status --short' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 14ms:
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+ M Docs/WORKLOG.md
+?? Docs/WORK_ORDERS/logs/WO-S4.20261020-172515.log
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath Docs/ORCHESTRATOR_SHOWCASE.md; Get-Content -LiteralPath Docs/SHOWCASE.md' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath Docs/WORK_ORDERS/WO-09.md' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "rg --files -g AGENTS.md -g '*.cs' -g '*.asmdef' -g '*.ps1' Assets/LOBOver; rg -n 'The VR seat|VR seat' Docs/DESIGN_v0.md; Get-Content -LiteralPath Assets/LOBOver/Editor/SiteSceneBuilder.cs; Get-Content -LiteralPath Assets/LOBOver/Tests/CompileOffline.ps1" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 44ms:
+# ORCHESTRATOR_SHOWCASE.md â€” addendum for the showcase track (WO-05a, WO-S1 to WO-S4)
+
+`Docs/ORCHESTRATOR.md` applies unchanged: dispatch with `bash Tools/astra.sh`, verify, accept or reject in at most two rounds, commit, worklog, stop conditions, token discipline. This addendum says how to verify each kind of work in this track. `Docs/ORCHESTRATOR_PHASE1.md` (Unity MCP, batch builds, adb) is retired; do not follow it.
+
+## Step 0 additions
+
+- `dotnet --version` must print 8.x or newer; if not, stop and tell Bryan (step 2 of `Docs/SHOWCASE.md`).
+- After WO-05a is accepted, generate the JavaScript transcripts the C# port is measured against: for each of `slice_play`, `slice_pull_play`, `slice_autoplan`, `stage1_pm_play`, `stage2_pull_play`, `stage1_noaction` run `node Monitor/src/sim/headless.js Data/Scenarios/<stage>.json --script Monitor/test/scripts/<name>.json --out Data/transcripts/<name>.json` (no `--script` for `stage1_noaction`; the stage is the one the script name starts with). Commit `Data/transcripts/`. Regenerate and recommit whenever the JavaScript simulation changes.
+- For the second goal only: run `Tools/import_lobgame_assets.ps1` (PowerShell) yourself before dispatching WO-S3; it copies about 1.7 GB from `..\LOB-Game\Assets` into `Assets\LOBGame\` with the `.meta` files, read-only on the source. Astra never touches LOB-Game. `Assets/LOBGame/` is gitignored; the script is the source of truth.
+
+## Verifying web work (WO-S1)
+
+Playwright against the static server the WO adds (`npm --prefix Monitor run showcase:serve`), never against `file://` (ES modules do not load from files). Open the landing page, start a showcase with the slice and autoplan on, open the Plan and Site tabs in the same browser context, press Start on the host tab, and check the WO's list. Screenshots at 1280Ã—800 and at 390Ã—844 (phone) into `Monitor/out/showcase/`; look at them. After Bryan publishes (his step 4), `curl -s -o /dev/null -w "%{http_code}" https://tamu-game-lab.github.io/lob-over/` is the last check of the first goal; if it is not 200 yet, say so and still print `READY_FOR_PAGES` once WO-S2 is accepted, because publishing is his step.
+
+## Verifying the C# simulation (WO-S2)
+
+`dotnet test Sim/LOBOver.Sim.Tests` from the repo root is the acceptance; read its summary, not its full output. A parity failure is a reject whose note quotes the first failing assertion (which transcript, which day, which field, expected versus actual). Never loosen a tolerance; if a rule is ambiguous in the JavaScript, the JavaScript is the specification.
+
+## Verifying Unity work (WO-S3, WO-S4) without the Unity MCP
+
+1. Compile check, only when the Editor is closed (no `Temp/UnityLockfile` in the project): `"C:\Program Files\Unity\Hub\Editor\6000.3.8f1\Editor\Unity.exe" -batchmode -nographics -quit -projectPath . -logFile Monitor/out/unity-compile.log`, wait for it to exit (up to 15 minutes on the first import of the copied assets), then `grep -c "error CS" Monitor/out/unity-compile.log` must be 0. Any `error CS` line is a reject with that line quoted. If the lockfile exists, skip this and go to 2.
+2. Then stop for Bryan with a message of at most six lines: what to open, which menu item to run, what to press, what he should see in the first 60 seconds, and what to reply. His one-line reply is the check's result; record it in the worklog. If he reports something wrong, that is the rejection note's content, in his words plus the WO section it belongs to.
+3. Never open, edit or review scene or prefab YAML; Astra builds scenes from editor scripts, and the only acceptable scene is one the menu item regenerates.
+
+## Publishing (second goal, before any Unity work)
+
+One public repository holds everything: `https://github.com/tamu-game-lab/lob-over` (Bryan created it with a blank README). Source lives on `main`, the built site on `gh-pages`, Pages serves `https://tamu-game-lab.github.io/lob-over/`. Steps, in order, all run by you (ops, not feature code; `.claude/settings.json` allows `git push`, `powershell`, `gh`, `dotnet`):
+
+1. `git remote get-url origin || git remote add origin https://github.com/tamu-game-lab/lob-over.git`, then `git fetch origin`.
+2. If `git log --oneline origin/main` shows exactly one commit and `git show --stat origin/main` touches only `README.md`, the remote holds nothing of value: `git push --force -u origin main`. Otherwise `git merge --allow-unrelated-histories -X ours origin/main -m "Merge GitHub initial commit"` and `git push -u origin main`. Bryan may have to complete a GitHub sign-in window the first time; wait for it.
+3. Local path fix: the showcase test server and e2e assume the old subpath. In `Monitor/src/showcase/serve.js` change `/lob-over-showcase` to `/lob-over`; in `Monitor/e2e/showcase.e2e.js` change the base to `http://localhost:7340/lob-over/`; grep `Monitor/` for any other `lob-over-showcase`; run `npm --prefix Monitor run e2e`; commit "Showcase: one repository, /lob-over path".
+4. `Sim/NuGet.Config` now points at nuget.org again (it was cleared for Astra's offline sandbox): run `dotnet restore Sim/LOBOver.Sim.Tests` and `dotnet test Sim/LOBOver.Sim.Tests -c Release` once with network; commit if the lock files changed.
+5. Publish: `powershell -ExecutionPolicy Bypass -File Tools/publish_showcase.ps1` (it builds `Showcase/dist`, pushes it to `gh-pages` through a worktree in `Showcase/.publish`, and prints the URL).
+6. Pages: `gh auth status`; if signed in, `gh api --method POST -H "Accept: application/vnd.github+json" /repos/tamu-game-lab/lob-over/pages -f "source[branch]=gh-pages" -f "source[path]=/"`; a 409 means Pages already exists, then `gh api --method PUT ... /repos/tamu-game-lab/lob-over/pages -f "source[branch]=gh-pages" -f "source[path]=/"`. If `gh` is missing or not signed in, print for Bryan: "GitHub â†’ lob-over â†’ Settings â†’ Pages â†’ Build and deployment â†’ Source: Deploy from a branch â†’ Branch: gh-pages, / (root) â†’ Save" and continue; re-check at the end of the run.
+7. `README.md`: add one line under the title, "Play it in the browser: https://tamu-game-lab.github.io/lob-over/ (the field manual PDF is linked on the landing page)"; commit and push.
+8. Verify: poll `curl -s -o /dev/null -w "%{http_code}" https://tamu-game-lab.github.io/lob-over/` every 30 s for up to 10 minutes after Pages is enabled; 200 is the check. Then open the live landing page, host, Plan and Site with Playwright once (same checks as WO-S1, against the live URL) and keep the screenshots in `Monitor/out/showcase-live/`. Record the URL and the gh-pages commit in the worklog.
+
+After every accepted Unity work order in this goal, `git push` as well, so the public repository stays current.
+
+## Finish lines
+
+- First goal: `READY_FOR_PAGES` when WO-05a, WO-S1 and WO-S2 are ACCEPTED.
+- Second goal: `READY_FOR_HEADSET` when the site answers 200 at its Pages URL, WO-S3 and WO-S4 are ACCEPTED with Bryan's Play-mode check recorded, and `main` is pushed. Build and Run is his step.
+# SHOWCASE.md â€” the stakeholder vertical slice
+
+Revised October 20, 2026. This replaces the "VR slice as a client of a local host" track in `Docs/VR_SLICE.md` sections B to E (kept for the study setup later). The showcase has three pieces, each self-contained, none needing a server on a LAN:
+
+1. **A web page on GitHub Pages.** The simulation runs in the browser. One tab is the Plan seat, another the Site seat, a third the facilitator; a phone can join the same run as the Site seat by room code. Plan can run on autopilot, so one presenter can show the whole chain alone. Links to the field manual (PDF) and the design summary sit on the landing page.
+2. **The field manual as a PDF**, generated from the scenario (already done by `Paper/make_kit.py`), published with the page.
+3. **A Quest 3S app you build yourself with Build and Run.** The simulation is embedded (a C# port proven against the JavaScript one), so the headset needs no PC. Two modes on the start panel: **VR Site**, the inspector seat at full scale, and **MR Diorama**, passthrough with the site as a two-metre model on the table in front of you, the LOB chart floating above it, crews moving, the collapse, the argument, the rain, pointable with the controller. The diorama is the stakeholder mode; the VR seat is the study mode.
+
+The three-minute slice (`Data/Scenarios/slice_texas.json`, measured in `Docs/VR_SLICE.md`) is the default scenario in all three; the two Texas stages remain selectable.
+
+## What you do (numbered, in order)
+
+1. PowerShell in `LOB-OVER`, Unity closed: `git add -A; git commit -m "Showcase plan, slice, work orders"`.
+2. `dotnet --version`. If it fails: `winget install Microsoft.DotNet.SDK.8`, reopen PowerShell. (The C# simulation is built and tested with `dotnet`, outside Unity, so the orchestrator can verify it.)
+3. Launch and paste the first goal (below). Walk away; it runs WO-05a, WO-S1, WO-S2 with no Unity. Two to four hours.
+4. When it prints `READY_FOR_PAGES`: one public repository holds everything, `https://github.com/tamu-game-lab/lob-over` (source on `main`, the built site on `gh-pages`). The second goal connects the local repository to it, pushes `main`, publishes `gh-pages` with `Tools\publish_showcase.ps1`, and turns Pages on through `gh` if it is installed and signed in; otherwise it tells you the three clicks (Settings â†’ Pages â†’ Deploy from a branch â†’ `gh-pages` â†’ `/ (root)`). Be at the PC for the first push: Git may open a GitHub sign-in window. The site is `https://tamu-game-lab.github.io/lob-over/`.
+5. Launch the second goal (below). It publishes the site, then copies the LOB-Game art into this project, writes the Unity code and the scene builder, and stops when it needs you. One to two days with your checks in between.
+6. When it says "check in Unity": open LOB-OVER in Unity 6000.3.8f1, menu **LOB Over â†’ Build â†’ Site Scene**, open `Assets/LOBOver/Scenes/Site.unity`, press **Play**. Desktop preview: the chain plays by itself (collapse Day 4, argument Day 5, rain Day 9, finish Day 24); WASD and mouse to look. Report what you saw in one line; the run continues.
+7. When it prints `READY_FOR_HEADSET`: headset plugged in, developer mode on; File â†’ Build Profiles â†’ Android â†’ **Build and Run**. Put on the headset, pick MR Diorama. That is the stakeholder demo. Pick VR Site for the inspector seat.
+8. Each later change to a scenario, the manual or the voice lines: `python Paper\make_kit.py Data\Scenarios\slice_texas.json`, `.venv\Scripts\python Tools\voice\make_voice.py Data\Scenarios\slice_texas.json`, `Tools\publish_showcase.ps1`, and Build and Run again. Nothing else.
+
+## The two goals
+
+First (web and simulation, Unity closed):
+
+```
+/goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md and follow them. Dispatch WO-05a, then WO-S1, then WO-S2 through bash Tools/astra.sh; verify each with its acceptance checks; accept or reject (max two rounds); commit each; keep Docs/WORKLOG.md current. Done when all three are ACCEPTED and READY_FOR_PAGES is printed, or a stop condition is reported to me.
+```
+
+Second (publish, then Unity; Unity may be open or closed, the orchestrator checks):
+
+```
+/goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md and follow them, including the addendum's "Publishing" section: connect origin to https://github.com/tamu-game-lab/lob-over.git, push main, publish gh-pages with Tools/publish_showcase.ps1, enable Pages through gh if available, put the Pages link in README.md, and verify the site answers. Then run Tools/import_lobgame_assets.ps1 and dispatch WO-S3 then WO-S4 through bash Tools/astra.sh; verify what can be verified without Unity, then stop and ask me to check in Unity exactly as the addendum says; accept or reject (max two rounds); commit and push each; keep Docs/WORKLOG.md current. Done when the site is live, both WOs are ACCEPTED and READY_FOR_HEADSET is printed, or a stop condition is reported to me.
+```
+
+## What is in and what is out
+
+In: the three seats' views and verbs as designed; the slice and both Texas stages; the no-verdict rule; the manual PDF; the result card; voice placeholders; LOB-Game's machines, workers, pipe, site materials and sounds; passthrough diorama; the inspector seat.
+
+Out, until after the showcase: the Node host for LAN study sessions (still works, unchanged), the paper kit at the table (the PDF stands in), hand tracking, Stage 3 cities, recorded voice, a shared Plan seat on a second PC (the room code covers a phone Site seat; a second Plan device is Phase 2).
+
+## Work orders
+
+| WO | What exists when it is accepted | Verified by |
+| --- | --- | --- |
+| WO-05a | The simulation fixes already decided (O10, O11, O13) | `npm test`, headless runs |
+| WO-S1 | The web showcase: in-browser host, three seats in tabs, room code for a phone, autoplan, landing page, manual PDF, `Showcase/dist/`, publish script | Playwright against a static server; the Pages URL after you publish |
+| WO-S2 | The C# simulation as a plain .NET library with xunit parity tests against the JavaScript transcripts, consumed by Unity through an asmdef | `dotnet test` |
+| WO-S3 | The site in Unity from LOB-Game's assets, driven by the embedded simulation and an autoplan director; desktop preview with keyboard verbs | compile check; you in Play mode |
+| WO-S4 | Start panel with the three modes; VR Site seat; MR Diorama; Android build settings | compile check; you with Build and Run |
+
+ succeeded in 41ms:
+> Superseded on October 20, 2026 by the showcase track (WO-S1 to WO-S4, Docs/SHOWCASE.md). Kept because WO-S3 and WO-S4 cite its sections.
+
+# WO-09 â€” The inspector's verbs on the Quest: ride, dismount, gaze inspect, wrist clipboard, cards, voice, comfort
+
+## Goal
+
+With the headset on (Quest Link in the Editor first, the APK in WO-10), the Site player can do everything `site.html` can: ride the truck to a stake, dismount and mount, inspect by looking, flag, stop work, confirm orders, hear the foremen, read event cards and inspection text. Nothing else is added. Comfort first: no smooth locomotion, no vection, snap turns.
+
+## Read
+
+- `AGENTS.md`, `Docs/ORCHESTRATOR_PHASE1.md`
+- `Docs/DESIGN_v0.md` "The VR seat" and "What each player can do" (Site table); `Docs/VR_SLICE.md` section B
+- WO-07's `SiteClient` API and WO-08's `SiteWorld` API
+- Meta XR Core SDK in `Packages/com.meta.xr.sdk.core`: `OVRCameraRig` prefab, `OVRManager`, `OVRInput`; the project's existing `Assets/Scenes/SampleScene.unity` shows the Building Blocks the project already has (camera rig and controller tracking); reuse their settings, do not add Interaction SDK or hands.
+
+## You may change
+
+- `Assets/LOBOver/Runtime/VR/**`, `Assets/LOBOver/Prefabs/VR/**`, `Assets/LOBOver/Editor/SiteSceneBuilder.cs` (add the rig and the truck), `Assets/LOBOver/Tests/**`, `Assets/StreamingAssets/Voice/**` (copied by your editor script from `Voice/`)
+
+## Build
+
+1. **Rig and truck.** The builder adds a `SiteTruck` (a cab from a 2.2 Ã— 2 Ã— 2.6 m box frame with an open front, a dashboard board 0.8 Ã— 0.3 m at 1.1 m, a driver seat) parked on the haul road at the gate, and parents an `OVRCameraRig` (tracking origin floor, the seat at 1.15 m eye height) to the cab. Snap turn 30Â° with the right thumbstick, left thumbstick does nothing. `OVRManager` as in SampleScene; no passthrough.
+2. **Ride.** The dashboard lists the next and previous stakes and the zone boards; pointing the right controller ray at a stake name and pulling the trigger (or thumbstick up/down to pick, A to go) sends `MoveTo`. The ride: fade to black over 0.3 s, play `dozer_engine_loop` for 1.5 s, reposition the cab at the stake (road side, facing +X), fade in over 0.3 s. The truck's position in the world follows the host's `truck.stationFt` when it changes, so a ride is never shown as motion. While `truck.moving` the dashboard reads "driving".
+3. **Dismount and mount.** B button toggles; dismount moves the rig to a standing point 1.5 m from the trench edge at the stake, facing the trench; mount returns to the seat. Verbs that need the stake are enabled only when `truck.dismounted` is true (the host enforces it too; the client just greys the buttons).
+4. **Inspect by looking.** A gaze ray from `CenterEyeAnchor` against colliders tagged `Inspectable` with an `InspectTarget` component (`wall`, `water`, `pipe`, `machine`, `protection`, `board`, `sky`, `ticket`, `crew`; WO-08 objects get the component, the sky target is a large collider dome, the ticket is on the gate); a thin reticle grows over 2.0 s of dwell, then `Inspect(target)` is sent once, with a 4 s cooldown per target. The reply text goes to the clipboard and is read with the Android `TextToSpeech` plugin when present (`AndroidJavaObject`; skipped in the Editor), nothing else.
+5. **Wrist clipboard.** On the left controller anchor: a 0.22 Ã— 0.16 m board with the last inspection text (TextMeshPro 12 pt equivalent), the day and speed line, and three physical buttons (3 Ã— 2 Ã— 1 cm, `SafetyOrange`): Flag, Stop work, Confirm. Pressing = right controller ray on the button + trigger; a button depresses 5 mm and clicks (`hydraulics_01` short). Flag sends `Flag(stake, "")` and plants a flag prefab at the stake. Stop work sends `StopWork(zone of the stake)`; the zone's board gets a red flag object (a fact, not a verdict). Confirm opens two buttons, Done / Not carried out, for the first order in `view.orders`; if none, the clipboard reads "no order landed here". Listen is automatic: within 10 m of `arguing` or `held` crews, play their lines from `voice` messages.
+6. **Cards and voice.** `event` messages for seat site show a card on the dashboard and on the clipboard: title and facts, for 20 s or until a button press. `voice` messages: play `StreamingAssets/Voice/<stage>/<lineId>.wav` (your editor script `LOB Over/Build/Copy Voice` copies `Voice/` into StreamingAssets; load with `UnityWebRequestMultimedia` on Android) at the speaking crew's position when the line's speaker is a foreman, else at the dashboard; missing file = the text on the clipboard for 8 s.
+7. **Comfort and failure modes.** Fixed cab frame always visible when mounted; a vignette during fades only; if `OnConnection` reports a disconnect, the dashboard reads "lost the office, reconnecting" and nothing moves; a `Settings` toggle on the dashboard for fade length (0.3 s / 0.6 s).
+8. **Tests.** PlayMode `InputLayerTests` with a `FakeInput` seam (`IInspectorInput` interface implemented by `OvrInput` and `FakeInput`): dwell fires `Inspect` once after 2 s and not again within 4 s; a button press with the truck mounted is refused with the clipboard text; a `Flag` press sends `Flag` with the current stake; a ride sets the cab to the stake only after the state's `truck.stationFt` changes. No test may require a headset.
+
+## Acceptance checks
+
+```
+# Unity: PlayMode tests in Assets/LOBOver/Tests pass (InputLayerTests included)
+# Unity: Site.unity, host with the slice and --autoplan, Play with Quest Link, Bryan in the headset for one run (ORCHESTRATOR_PHASE1.md: the orchestrator asks him and waits): he rides to 5+20, dismounts, looks at the wall (text appears), presses Stop work at the collapse, listens to the argument, confirms the order at the excavator; no nausea report; no console errors
+# Without a headset the orchestrator verifies with the Meta XR Simulator if installed, else with the fake input in Play mode: a scripted sequence in `LOB Over/Debug/Scripted Inspector` performs the same steps and the facilitator page shows the stopWork and confirm acks
+git status --short     # only Assets/LOBOver/**, Assets/StreamingAssets/Voice/**
+```
+
+## Out of scope
+
+No hand tracking, no Interaction SDK, no Plan or Rules UI in VR, no result overlay, no Android build settings (WO-10).
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 532ms:
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:1
++ rg --files -g AGENTS.md -g '*.cs' -g '*.asmdef' -g '*.ps1' Assets/LOB ...
++ ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:76
++ ... ENTS.md -g '*.cs' -g '*.asmdef' -g '*.ps1' Assets/LOBOver; rg -n 'The ...
++                                                                ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+using System;
+using System.IO;
+using LOBOver.Runtime;
+using LOBOver.World;
+using Newtonsoft.Json.Linq;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
+
+namespace LOBOver.Editor
+{
+    public static class SiteSceneBuilder
+    {
+        public const string ScenePath = "Assets/LOBOver/Scenes/Site.unity";
+        [MenuItem("LOB Over/Build/Site Scene")]
+        public static void BuildMenu()
+        {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            Build();
+        }
+        public static Scene Build(bool saveScene = true)
+        {
+            DataSync.Sync(); var assets = SiteAssetBuilder.Build();
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var light = new GameObject("Sun").AddComponent<Light>(); light.type = LightType.Directional;
+            light.color = new Color(1, 0.94f, 0.82f); light.intensity = 1.2f; light.shadows = LightShadows.Soft;
+            light.transform.rotation = Quaternion.Euler(48, -35, 0); RenderSettings.sun = light;
+            RenderSettings.ambientMode = AmbientMode.Trilight; RenderSettings.ambientSkyColor = new Color(0.65f, 0.75f, 0.85f);
+            RenderSettings.ambientEquatorColor = new Color(0.48f, 0.5f, 0.52f); RenderSettings.ambientGroundColor = new Color(0.25f, 0.23f, 0.2f);
+            RenderSettings.skybox = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Skybox.mat");
+            var volume = new GameObject("Global Volume").AddComponent<Volume>(); volume.isGlobal = true;
+            volume.sharedProfile = SiteAssetBuilder.Required<VolumeProfile>("Assets/Settings/DefaultVolumeProfile.asset");
+            BuildGround(assets);
+            var gate = new GameObject("Gate"); gate.transform.position = new Vector3(-20, 0, WorldUnits.RoadZ);
+            for (var i = 0; i < 2; i++)
+            {
+                var barrier = (GameObject)PrefabUtility.InstantiatePrefab(assets.barrier); barrier.name = "GateBarrier_" + (i + 1);
+                barrier.transform.SetParent(gate.transform, false); barrier.transform.localPosition = new Vector3(0, 0, i == 0 ? -3.5f : 3.5f);
+            }
+            var cone = (GameObject)PrefabUtility.InstantiatePrefab(assets.cone); cone.name = "GateCone";
+            cone.transform.SetParent(gate.transform, false); cone.transform.localPosition = new Vector3(0, 0, 2.5f);
+            var ticket = WorldDrawing.Box("GateTicket", gate.transform, new Vector3(0, 1.5f, 3), new Vector3(0.7f, 0.5f, 0.04f), assets.steel);
+            InspectTarget.Attach(ticket, "ticket");
+            var gateText = WorldDrawing.Text("GateText", gate.transform, new Vector3(0, 1.5f, 2.96f), new Vector2(0.65f, 0.45f), 0.08f, assets.font);
+            var trailer = WorldDrawing.Box("Trailer", null, new Vector3(-15, 1.5f, 14), new Vector3(6, 3, 3), SiteAssetBuilder.Material("Repair_SiteCabin"));
+            var siteBoard = Board("TrailerBoard", new Vector3(-15, 1.9f, 12.44f), new Vector2(2, 1), assets).AddComponent<TrailerBoard>();
+            var planBoard = Board("PlanPanel", new Vector3(-15, 1.9f, 15.56f), new Vector2(3, 1.5f), assets).AddComponent<PlanPanel>();
+            planBoard.transform.rotation = Quaternion.Euler(0, 180, 0);
+            // Boards remain at unit scale; parenting preserves their world dimensions.
+            siteBoard.transform.SetParent(trailer.transform, true); planBoard.transform.SetParent(trailer.transform, true);
+            var sign = new GameObject("JobSign"); sign.transform.position = new Vector3(-20, 0, 10);
+            for (var side = -1; side <= 1; side += 2) WorldDrawing.Box("TimberPost", sign.transform, new Vector3(side * 0.45f, 0.9f, 0), new Vector3(0.08f, 1.8f, 0.08f), assets.timber);
+            WorldDrawing.Box("SignBoard", sign.transform, new Vector3(0, 1.6f, 0), new Vector3(1.2f, 0.8f, 0.05f), assets.steel);
+            var jobSign = sign.AddComponent<JobSign>(); jobSign.label = WorldDrawing.Text("Job", sign.transform, new Vector3(0, 1.6f, -0.04f), new Vector2(1.1f, 0.7f), 0.1f, assets.font);
+            var director = new GameObject("Director").AddComponent<Director>();
+            var world = new GameObject("SiteWorld").AddComponent<SiteWorld>(); world.director = director; world.assets = assets;
+            world.trailerBoard = siteBoard; world.planPanel = planBoard; world.jobSign = jobSign; world.gateText = gateText;
+            world.truck = new GameObject("SiteTruck").transform; world.truck.SetParent(world.transform, false); world.truck.localPosition = new Vector3(0, 0, WorldUnits.RoadZ);
+            var truckFrame = WorldDrawing.Box("TruckFrame", world.truck, new Vector3(-1, 0.55f, 0), new Vector3(2.2f, 0.3f, 2), assets.steel);
+            // Preview marker only; the XR cab and its comfort presentation belong to WO-S4.
+            var previewPrefab = BuildPreviewPrefab();
+            var preview = ((GameObject)PrefabUtility.InstantiatePrefab(previewPrefab)).GetComponent<DesktopPreview>(); preview.name = "DesktopPreview";
+            preview.director = director; preview.world = world;
+            preview.previewCamera.transform.position = new Vector3(160, 9, 20); preview.previewCamera.transform.LookAt(new Vector3(140, -0.5f, 0));
+            world.sky = BuildSky(assets, preview.previewCamera.transform);
+            // Metadata appears in Edit mode without putting a facilitator view in any player board.
+            var source = JObject.Parse(File.ReadAllText("Data/Scenarios/slice_texas.json")); jobSign.Apply((JObject)source["job"]["sign"]);
+            Selection.activeGameObject = world.gameObject;
+            if (saveScene)
+            {
+                Directory.CreateDirectory("Assets/LOBOver/Scenes");
+                if (!EditorSceneManager.SaveScene(scene, ScenePath)) throw new IOException("Could not save " + ScenePath);
+            }
+            AssetDatabase.SaveAssets(); Debug.Log("LOB Over: Site Scene built. Press Play for the slice."); return scene;
+        }
+        private static void BuildGround(WorldAssets assets)
+        {
+            // WO-08: 1200 x 200 m terrain. Separate banks leave the 1.2 m trench visible down to its floor.
+            var ground = new GameObject("Ground");
+            const float length = 1200, width = 200, corridor = WorldUnits.TrenchWidth;
+            for (var side = -1; side <= 1; side += 2)
+                WorldDrawing.Box(side < 0 ? "FarBank" : "NearBank", ground.transform, new Vector3(500, -1, side * (width + corridor) / 4),
+                    new Vector3(length, 2, (width - corridor) / 2), assets.soil);
+            WorldDrawing.Box("Subsoil", ground.transform, new Vector3(500, -2.1f, 0), new Vector3(length, 0.2f, width), assets.soil);
+            WorldDrawing.Box("BeforeTrench", ground.transform, new Vector3(-50, -1, 0), new Vector3(100, 2, corridor), assets.soil);
+            // Initial slice length; stations beyond it are generated when a longer stage loads.
+            WorldDrawing.Box("Road", null, new Vector3(460, 0.015f, WorldUnits.RoadZ), new Vector3(980, 0.03f, 8), SiteAssetBuilder.Material("AccessRoad"));
+            new GameObject("TrenchCorridor");
+        }
+        private static GameObject Board(string name, Vector3 position, Vector2 size, WorldAssets assets)
+        {
+            var root = new GameObject(name); root.transform.position = position;
+            WorldDrawing.Box("Face", root.transform, Vector3.zero, new Vector3(size.x, size.y, 0.06f), assets.steel); return root;
+        }
+        private static GameObject BuildPreviewPrefab()
+        {
+            var root = new GameObject("DesktopPreview");
+            try
+            {
+                var preview = root.AddComponent<DesktopPreview>();
+                var cameraObject = new GameObject("DesktopFlyCamera"); cameraObject.transform.SetParent(root.transform, false);
+                preview.previewCamera = cameraObject.AddComponent<Camera>(); preview.previewCamera.nearClipPlane = 0.05f; preview.previewCamera.farClipPlane = 6000;
+                preview.previewCamera.fieldOfView = 65; cameraObject.tag = "MainCamera"; cameraObject.AddComponent<AudioListener>();
+                return PrefabUtility.SaveAsPrefabAsset(root, SiteAssetBuilder.Prefabs + "DesktopPreview.prefab");
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+        private static SiteSky BuildSky(WorldAssets assets, Transform observer)
+        {
+            var sky = new GameObject("SiteSky").AddComponent<SiteSky>(); sky.observer = observer;
+            var rainObject = new GameObject("Rain"); rainObject.transform.SetParent(sky.transform, false);
+            var rain = rainObject.AddComponent<ParticleSystem>(); rain.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            var main = rain.main; main.loop = true; main.playOnAwake = false; main.startLifetime = 1.2f; main.startSpeed = 24; main.startSize = 0.035f;
+            main.maxParticles = 1800; main.simulationSpace = ParticleSystemSimulationSpace.World;
+            var emission = rain.emission; emission.rateOverTime = 1000;
+            var shape = rain.shape; shape.shapeType = ParticleSystemShapeType.Box; shape.scale = new Vector3(24, 24, 1);
+            rainObject.transform.rotation = Quaternion.Euler(90, 0, 0);
+            var renderer = rain.GetComponent<ParticleSystemRenderer>(); renderer.sharedMaterial = assets.rain;
+            renderer.renderMode = ParticleSystemRenderMode.Stretch; renderer.lengthScale = 5; renderer.velocityScale = 0.02f;
+            sky.rain = rain; rainObject.SetActive(false);
+            var clouds = new GameObject("TowersSouth"); clouds.transform.SetParent(sky.transform, false); clouds.transform.localPosition = new Vector3(450, 180, -2000);
+            sky.cloudBank = clouds.transform;
+            for (var i = 0; i < 9; i++)
+            {
+                var cloud = new GameObject("Cumulus_" + i); cloud.transform.SetParent(clouds.transform, false);
+                cloud.transform.localPosition = new Vector3((i - 4) * 150, i % 3 * 45, 0);
+                cloud.AddComponent<MeshFilter>().sharedMesh = CloudMesh(); cloud.AddComponent<MeshRenderer>().sharedMaterial = assets.cloud;
+            }
+            clouds.SetActive(false);
+            var dome = GameObject.CreatePrimitive(PrimitiveType.Sphere); dome.name = "SkyInspectDome";
+            dome.transform.SetParent(sky.transform, false); dome.transform.localScale = Vector3.one * 10000;
+            var source = dome.GetComponent<MeshFilter>().sharedMesh; var path = SiteAssetBuilder.Art + "SkyDome.asset";
+            var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if (mesh == null)
+            {
+                mesh = Object.Instantiate(source); mesh.name = "InwardSkyDome"; var triangles = mesh.triangles;
+                for (var i = 0; i < triangles.Length; i += 3) { var a = triangles[i]; triangles[i] = triangles[i + 2]; triangles[i + 2] = a; }
+                mesh.triangles = triangles; mesh.RecalculateNormals(); AssetDatabase.CreateAsset(mesh, path);
+            }
+            Object.DestroyImmediate(dome.GetComponent<Collider>()); Object.DestroyImmediate(dome.GetComponent<Renderer>()); Object.DestroyImmediate(dome.GetComponent<MeshFilter>());
+            dome.AddComponent<MeshCollider>().sharedMesh = mesh; InspectTarget.Attach(dome, "sky"); return sky;
+        }
+        private static Mesh CloudMesh()
+        {
+            var path = SiteAssetBuilder.Art + "Cumulus.asset"; var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if (mesh != null) return mesh;
+            const int edges = 48; var vertices = new Vector3[edges + 1]; var triangles = new int[edges * 3];
+            for (var i = 0; i < edges; i++)
+            {
+                var angle = i * Mathf.PI * 2 / edges; var radius = 1 + 0.12f * Mathf.Cos(angle * 7);
+                vertices[i + 1] = new Vector3(Mathf.Cos(angle) * radius * 170, Mathf.Sin(angle) * radius * 70, 0);
+                triangles[i * 3] = 0; triangles[i * 3 + 1] = (i + 1) % edges + 1; triangles[i * 3 + 2] = i + 1;
+            }
+            mesh = new Mesh { name = "Cumulus", vertices = vertices, triangles = triangles }; mesh.RecalculateNormals(); mesh.RecalculateBounds();
+            AssetDatabase.CreateAsset(mesh, path); return mesh;
+        }
+        [MenuItem("LOB Over/Debug/Screenshot")]
+        public static void Screenshot()
+        {
+            var folder = Path.GetFullPath("Monitor/out/unity"); Directory.CreateDirectory(folder);
+            var path = Path.Combine(folder, "site-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".png");
+            ScreenCapture.CaptureScreenshot(path); Debug.Log("Screenshot: " + path);
+        }
+    }
+}
+param([string]$UnityData = 'C:/Program Files/Unity/Hub/Editor/6000.3.8f1/Editor/Data')
+$ErrorActionPreference = 'Stop'
+$projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '../../..')).Path
+Set-Location -LiteralPath $projectRoot
+$scratch = Join-Path $PSScriptRoot '.offline'
+New-Item -ItemType Directory -Path $scratch -Force | Out-Null
+$generated = [System.Collections.Generic.List[string]]::new()
+function Compile-Assembly([string]$name, [string]$folder, [string[]]$references, [string]$defines = 'UNITY_EDITOR;UNITY_6000_3_OR_NEWER;UNITY_INCLUDE_TESTS') {
+    $output = Join-Path $scratch ($name + '.dll')
+    $response = Join-Path $scratch ($name + '.rsp')
+    $generated.Add($output)
+    $generated.Add($response)
+    $argsForCompiler = @('-nologo', '-target:library', '-langversion:9', '-nostdlib+', ('-define:' + $defines), ('-out:"' + $output + '"'))
+    foreach ($reference in $references) { $argsForCompiler += '-r:"' + $reference + '"' }
+    foreach ($source in (Get-ChildItem -LiteralPath $folder -Recurse -Filter '*.cs')) { $argsForCompiler += '"' + $source.FullName + '"' }
+    $argsForCompiler | Set-Content -LiteralPath $response -Encoding UTF8
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') (Join-Path $UnityData 'DotNetSdkRoslyn/csc.dll') ('@' + $response)
+    if ($LASTEXITCODE -ne 0) { throw "Offline compilation failed: $name" }
+    Write-Output "$name`: 0 errors"
+}
+try {
+    $baseReferences = @((Join-Path $UnityData 'NetStandard/ref/2.1.0/netstandard.dll'))
+    $baseReferences += (Get-ChildItem (Join-Path $UnityData 'NetStandard/compat/2.1.0/shims/netfx') -Filter '*.dll').FullName
+    $jsonDll = (Get-ChildItem 'Library/PackageCache/com.unity.nuget.newtonsoft-json*/Runtime/Newtonsoft.Json.dll').FullName
+    $baseReferences += $jsonDll
+    $engineReferences = (Get-ChildItem (Join-Path $UnityData 'Managed/UnityEngine') -Filter '*.dll').FullName
+    Compile-Assembly 'LOBOver.Sim' 'Assets/LOBOver/Sim' $baseReferences
+    $runtimeReferences = $baseReferences + $engineReferences + @((Join-Path $scratch 'LOBOver.Sim.dll'))
+    Compile-Assembly 'LOBOver.Director' 'Assets/LOBOver/Runtime/Director' $runtimeReferences
+    $worldReferences = $runtimeReferences + @((Join-Path $scratch 'LOBOver.Director.dll'), 'Library/ScriptAssemblies/Unity.TextMeshPro.dll', 'Library/ScriptAssemblies/Unity.InputSystem.dll', 'Library/ScriptAssemblies/UnityEngine.UI.dll')
+    Compile-Assembly 'LOBOver.World' 'Assets/LOBOver/Runtime/World' $worldReferences
+    # Compile the conditional Android reader too, without opening the Editor or changing build settings.
+    Compile-Assembly 'LOBOver.Director.Android' 'Assets/LOBOver/Runtime/Director' $runtimeReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    Compile-Assembly 'LOBOver.World.Android' 'Assets/LOBOver/Runtime/World' $worldReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    $editorReferences = $worldReferences + @((Join-Path $scratch 'LOBOver.World.dll'), 'Library/ScriptAssemblies/Unity.RenderPipelines.Core.Runtime.dll')
+    Compile-Assembly 'LOBOver.Editor' 'Assets/LOBOver/Editor' $editorReferences
+    $testReferences = $editorReferences + @((Join-Path $scratch 'LOBOver.Editor.dll'), 'Library/ScriptAssemblies/UnityEngine.TestRunner.dll', 'Library/ScriptAssemblies/UnityEditor.TestRunner.dll')
+    $testReferences += (Get-ChildItem 'Library/PackageCache/com.unity.ext.nunit*/net40/unity-custom/nunit.framework.dll').FullName
+    Compile-Assembly 'LOBOver.EditModeTests' 'Assets/LOBOver/Tests/EditMode' $testReferences
+    Compile-Assembly 'LOBOver.PlayModeTests' 'Assets/LOBOver/Tests/PlayMode' $testReferences
+    Write-Output 'PASS: 8 offline assembly compilations; Unity import, tests and rendering still require the Editor.'
+    $fixtureProgram = Join-Path $scratch 'VerifyFixtures.dll'
+    $fixtureResponse = Join-Path $scratch 'VerifyFixtures.rsp'
+    $fixtureConfig = Join-Path $scratch 'VerifyFixtures.runtimeconfig.json'
+    $fixtureJson = Join-Path $scratch 'Newtonsoft.Json.dll'
+    foreach ($file in @($fixtureProgram, $fixtureResponse, $fixtureConfig, $fixtureJson)) { $generated.Add($file) }
+    $fixtureArgs = @('-nologo', '-target:exe', '-langversion:9', '-nostdlib+', ('-out:"' + $fixtureProgram + '"'), ('-r:"' + (Join-Path $scratch 'LOBOver.Sim.dll') + '"'))
+    foreach ($reference in $baseReferences) { $fixtureArgs += '-r:"' + $reference + '"' }
+    $fixtureArgs += '"' + (Join-Path $PSScriptRoot 'VerifyFixtures.cs.txt') + '"'
+    $fixtureArgs | Set-Content -LiteralPath $fixtureResponse -Encoding UTF8
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') (Join-Path $UnityData 'DotNetSdkRoslyn/csc.dll') ('@' + $fixtureResponse)
+    if ($LASTEXITCODE -ne 0) { throw 'Fixture verifier did not compile' }
+    Copy-Item -LiteralPath (Join-Path $UnityData 'DotNetSdkRoslyn/csc.runtimeconfig.json') -Destination $fixtureConfig
+    Copy-Item -LiteralPath $jsonDll -Destination $fixtureJson
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') $fixtureProgram
+    if ($LASTEXITCODE -ne 0) { throw 'Fixture replay failed' }
+}
+finally {
+    # Only exact outputs from this invocation are removed; never traverse another workspace.
+    foreach ($file in $generated) { if (Test-Path -LiteralPath $file) { Remove-Item -LiteralPath $file -Force } }
+    if ((Get-ChildItem -LiteralPath $scratch -Force | Measure-Object).Count -eq 0) { Remove-Item -LiteralPath $scratch }
+}
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-ChildItem -Path Assets/LOBOver -Recurse -File | Where-Object { $_.Extension -in '"'.cs','.asmdef' -or "'$_.Name -eq '"'AGENTS.md' } | Select-Object -ExpandProperty FullName; Select-String -Path Docs/DESIGN_v0.md -Pattern 'The VR seat' -Context 0,45" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-ChildItem Library/ScriptAssemblies -Filter '*.dll' | Where-Object { "'$_.Name -match '"'Oculus|Meta|XR|OpenXR' } | Select-Object -ExpandProperty Name; Get-ChildItem Library/PackageCache -Directory | Where-Object { "'$_.Name -match '"'meta|openxr|xr.management' } | Select-Object -ExpandProperty Name; Get-Content Assets/LOBOver/Editor/*.asmdef; Get-Content Assets/LOBOver/Tests/*/*.asmdef; Get-Content ProjectSettings/EditorBuildSettings.asset" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content Assets/LOBOver/Runtime/Director/*.cs; Get-Content Assets/LOBOver/Runtime/World/SiteWorld.cs; Get-Content Assets/LOBOver/Runtime/World/DesktopPreview.cs' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 54ms:
+using System;
+using System.Collections;
+using System.IO;
+using System.Linq;
+using LOBOver.Sim;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using UnityEngine;
+using Simulation = LOBOver.Sim.Sim;
+
+namespace LOBOver.Runtime
+{
+    public sealed class Director : MonoBehaviour
+    {
+        public string scenarioId = "slice_texas";
+        public SiteView SiteView { get; private set; }
+        public PlanView PlanView { get; private set; }
+        public JObject Job { get; private set; }
+        public JObject MachineCatalog { get; private set; }
+        public JArray Lines { get; private set; }
+        public double DeadlineDay { get; private set; }
+        public double TimeDays => simulation == null ? 0 : simulation.T;
+        // Same day boundary as Common.DisplayDay; view snapshots use simulation time instead.
+        public int DisplayDay => (int)Math.Floor(TimeDays + 1e-6) + 1;
+        public string Speed => simulation == null ? "paused" : simulation.Speed;
+        public bool Ready => simulation != null;
+        public bool Done => simulation != null && simulation.Done;
+        public string LoadError { get; private set; }
+        public string TranscriptPath { get; private set; }
+        public event Action Loaded;
+        public event Action<SiteView, PlanView> ViewsChanged;
+        public event Action<JObject> Message;
+        public event Action<JObject> Event;
+        public event Action<JObject> Voice;
+        public event Action<JObject> Result;
+
+        private Simulation simulation;
+        private Scenario scenario;
+        private Catalog catalog;
+        private Autoplan autoplan;
+        private Pacer pacer;
+        private Coroutine loading;
+        private double secondsFull, secondsSlow;
+        private JObject transcript;
+        private JArray snapshots, messages, commands;
+        private int lastSnapshot = -1;
+        private bool savedResult;
+
+        private void OnEnable() { if (!Ready && loading == null) Load(scenarioId); }
+
+        // Public Start is also Unity's lifecycle method. A slow Android load is started by OnEnable.
+        public void Start()
+        {
+            if (simulation == null || simulation.Done) return;
+            Apply("facilitator", new JObject { ["action"] = "start" });
+            Publish();
+        }
+        public void Pause()
+        {
+            if (simulation == null) return;
+            Apply("facilitator", new JObject { ["action"] = "pause" });
+            Publish(); SaveTranscript();
+        }
+        public void Reset()
+        {
+            if (scenario == null) return;
+            SaveTranscript(); Initialize();
+        }
+        public void Load(string id)
+        {
+            if (id != "slice_texas" && id != "stage1_texas" && id != "stage2_texas")
+                throw new ArgumentException("Unknown scenario: " + id, nameof(id));
+            SaveTranscript();
+            if (loading != null) StopCoroutine(loading);
+            pacer?.Close(); simulation = null; SiteView = null; PlanView = null;
+            scenarioId = id; LoadError = null;
+            loading = StartCoroutine(LoadFiles());
+        }
+        private IEnumerator LoadFiles()
+        {
+            // Let scene subscribers attach before File-backed Editor reads can finish.
+            yield return null;
+            string catalogText = null, scenarioText = null, scriptText = null;
+            Action<string> failed = error => { LoadError = error; Debug.LogError(error, this); };
+            yield return StreamingData.ReadText("Data/catalog.json", value => catalogText = value, failed);
+            if (LoadError != null) yield break;
+            yield return StreamingData.ReadText("Data/Scenarios/" + scenarioId + ".json", value => scenarioText = value, failed);
+            if (LoadError != null) yield break;
+            var script = scenarioId == "slice_texas" ? "slice_autoplan" : scenarioId == "stage1_texas" ? "stage1_pm_play" : "stage2_pull_play";
+            yield return StreamingData.ReadText("Data/scripts/" + script + ".json", value => scriptText = value, failed);
+            if (LoadError != null) yield break;
+            try
+            {
+                var source = JObject.Parse(scenarioText);
+                catalog = Catalog.Load(catalogText); scenario = Scenario.Load(scenarioText, catalog);
+                Job = (JObject)source["job"].DeepClone();
+                MachineCatalog = (JObject)JObject.Parse(catalogText)["machines"];
+                Lines = (JArray)source["lines"].DeepClone();
+                DeadlineDay = (double)source["plan"]["deadlineDay"];
+                secondsFull = (double)source["time"]["secondsPerDayFull"];
+                secondsSlow = (double)source["time"]["secondsPerDaySlow"];
+                if (secondsFull <= 0 || secondsSlow <= 0) throw new InvalidDataException("Scenario day lengths must be positive");
+                // Autoplan removes Site entries; the presenter retains every Site verb.
+                autoplan = new Autoplan(JArray.Parse(scriptText));
+                Initialize();
+            }
+            catch (Exception error) { failed(error.ToString()); }
+            loading = null;
+        }
+        private void Initialize()
+        {
+            pacer?.Close(); simulation = Simulation.Create(scenario, catalog); autoplan.Reset();
+            snapshots = new JArray(); messages = new JArray(); commands = new JArray();
+            transcript = new JObject { ["scenario"] = scenarioId, ["snapshots"] = snapshots,
+                ["messages"] = messages, ["commands"] = commands, ["result"] = null };
+            TranscriptPath = Path.Combine(Application.persistentDataPath, "transcripts",
+                scenarioId + "-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff") + ".json");
+            lastSnapshot = -1; savedResult = false;
+            pacer = new Pacer(() => simulation, AfterTick);
+            Loaded?.Invoke();
+            autoplan.Advance(simulation.T, Apply);
+            Start();
+            Drain(); CaptureDay();
+        }
+        private void Update()
+        {
+            if (simulation == null) return;
+            // Pacer's 5/20-second day cadence is scaled to the scenario's full/slow seconds per day.
+            var baselineMs = (Speed == "slow" ? Pacer.SLOW_MS : Pacer.FULL_MS) / Pacer.STEP_DAYS;
+            var authoredMs = (Speed == "slow" ? secondsSlow : secondsFull) * 1000;
+            pacer.Advance(UnityEngine.Time.unscaledDeltaTime * 1000 * baselineMs / authoredMs);
+            Publish();
+        }
+        private void AfterTick()
+        {
+            autoplan.Advance(simulation.T, Apply); Drain(); CaptureDay();
+            if (simulation.Done && !savedResult) { savedResult = true; SaveTranscript(); }
+        }
+        private void Apply(string seat, JObject command)
+        {
+            var reply = simulation.Apply(seat, command);
+            commands.Add(new JObject { ["t"] = simulation.T, ["seat"] = seat, ["cmd"] = command.DeepClone() });
+            var acknowledgement = JObject.FromObject(reply);
+            acknowledgement["t"] = reply.Ok ? "ack" : "nack";
+            acknowledgement["id"] = command["id"];
+            messages.Add(new JObject { ["t"] = simulation.T, ["message"] = acknowledgement });
+            // Only the initiating seat receives its rejection text.
+            if (seat == "site") Message?.Invoke(acknowledgement);
+            Drain();
+        }
+        public void Send(JObject command)
+        {
+            if (simulation == null || command == null) return;
+            Apply("site", command); Publish();
+        }
+        public static bool ForSeat(JObject message, string seat) =>
+            message["seats"] is JArray seats && seats.Any(value => (string)value == seat);
+        private void Drain()
+        {
+            foreach (var message in simulation.Drain())
+            {
+                messages.Add(new JObject { ["t"] = message["day"] ?? new JValue(simulation.T), ["message"] = message.DeepClone() });
+                Message?.Invoke(message);
+                if ((string)message["t"] == "event") Event?.Invoke(message);
+                if ((string)message["t"] == "voice") Voice?.Invoke(message);
+                if ((string)message["t"] == "result") Result?.Invoke(message);
+            }
+        }
+        private void Publish()
+        {
+            SiteView = SiteView.From(simulation.View("site"));
+            PlanView = PlanView.From(simulation.View("plan"));
+            ViewsChanged?.Invoke(SiteView, PlanView);
+        }
+        private void CaptureDay()
+        {
+            var day = (int)Math.Floor(simulation.T + 1e-6);
+            if (day == lastSnapshot) return;
+            snapshots.Add(simulation.View("facilitator")); lastSnapshot = day;
+            SaveTranscript();
+        }
+        public void SaveTranscript()
+        {
+            if (transcript == null || simulation == null) return;
+            transcript["result"] = simulation.Result;
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(TranscriptPath));
+                File.WriteAllText(TranscriptPath, transcript.ToString(Formatting.Indented));
+            }
+            catch (IOException error) { Debug.LogWarning("Transcript: " + error.Message, this); }
+            catch (UnauthorizedAccessException error) { Debug.LogWarning("Transcript: " + error.Message, this); }
+        }
+        private void OnApplicationPause(bool paused) { if (paused) SaveTranscript(); }
+        private void OnDisable()
+        {
+            SaveTranscript();
+            if (loading != null) { StopCoroutine(loading); loading = null; }
+        }
+        private void OnDestroy() { pacer?.Close(); }
+    }
+}
+using System;
+using System.Collections;
+using System.IO;
+using UnityEngine;
+using UnityEngine.Networking;
+
+namespace LOBOver.Runtime
+{
+    public static class StreamingData
+    {
+        public static string Url(string relative)
+        {
+            var path = Application.streamingAssetsPath.TrimEnd('/') + "/" + relative;
+            return path.Contains("://") ? path : new Uri(path).AbsoluteUri;
+        }
+
+        public static IEnumerator ReadText(string relative, Action<string> loaded, Action<string> failed)
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            using (var request = UnityWebRequest.Get(Url(relative)))
+            {
+                yield return request.SendWebRequest();
+                if (request.result == UnityWebRequest.Result.Success) loaded(request.downloadHandler.text);
+                else failed(relative + ": " + request.error);
+            }
+#else
+            string value;
+            try { value = File.ReadAllText(Path.Combine(Application.streamingAssetsPath, relative)); }
+            catch (Exception error) { failed(relative + ": " + error.Message); yield break; }
+            loaded(value);
+            yield break;
+#endif
+        }
+    }
+}
+using System.Collections.Generic;
+using System.Linq;
+using LOBOver.Runtime;
+using LOBOver.Sim;
+using Newtonsoft.Json.Linq;
+using TMPro;
+using UnityEngine;
+
+namespace LOBOver.World
+{
+    public sealed class SiteWorld : MonoBehaviour
+    {
+        public Director director;
+        public WorldAssets assets;
+        public TrailerBoard trailerBoard;
+        public PlanPanel planPanel;
+        public JobSign jobSign;
+        public SiteSky sky;
+        public TextMeshPro gateText;
+        public Transform truck;
+        public SiteView CurrentView { get; private set; }
+        public int CellCount => cells.Count;
+        public int BoardCount => boards.Count;
+        public int CrewCount => crews.Count;
+        public double LengthFt { get; private set; }
+        private readonly Dictionary<int, StationCell> cells = new Dictionary<int, StationCell>();
+        private readonly Dictionary<int, Transform> stakes = new Dictionary<int, Transform>();
+        private readonly Dictionary<int, ZoneBoard> boards = new Dictionary<int, ZoneBoard>();
+        private readonly Dictionary<string, CrewRig> crews = new Dictionary<string, CrewRig>();
+        private JArray zones;
+        private Transform generated;
+        public StationCell CellAt(int feet) => cells.TryGetValue(Mathf.FloorToInt(feet / WorldUnits.StationFeet) * (int)WorldUnits.StationFeet, out var cell) ? cell : null;
+        public CrewRig Crew(string id) => crews.TryGetValue(id, out var crew) ? crew : null;
+        public Transform StakeAt(int feet) => stakes.TryGetValue(feet, out var stake) ? stake : null;
+        public ZoneBoard Board(int zone) => boards.TryGetValue(zone, out var board) ? board : null;
+        public int ZoneAt(double feet) => (int)zones.OfType<JObject>().First(z => feet >= (double)z["fromFt"] && (feet < (double)z["toFt"] || feet == LengthFt))["id"];
+
+        private void OnEnable()
+        {
+            if (director == null) return;
+            director.Loaded += OnLoaded; director.ViewsChanged += OnViews; director.Result += OnResult;
+            if (director.Ready) { OnLoaded(); if (director.SiteView != null) OnViews(director.SiteView, director.PlanView); }
+        }
+        private void OnDisable()
+        {
+            if (director == null) return;
+            director.Loaded -= OnLoaded; director.ViewsChanged -= OnViews; director.Result -= OnResult;
+        }
+        private void OnLoaded() => Configure(director.Job, director.DeadlineDay);
+        private void OnViews(SiteView site, PlanView plan)
+        {
+            Apply(site, director.DisplayDay); planPanel.Apply(plan, director.TimeDays);
+        }
+        private void OnResult(JObject value) => planPanel.ShowResult(value);
+        public void Configure(JObject job, double deadline)
+        {
+            if (generated != null) WorldDrawing.Remove(generated.gameObject);
+            generated = WorldDrawing.Group("GeneratedSite", transform).transform;
+            cells.Clear(); stakes.Clear(); boards.Clear(); crews.Clear(); CurrentView = null;
+            LengthFt = (double)job["lengthFt"]; zones = (JArray)job["zones"].DeepClone();
+            jobSign.Apply((JObject)job["sign"]);
+            var boundaries = zones.OfType<JObject>().ToDictionary(z => (int)z["id"], z => (double)z["fromFt"]);
+            trailerBoard.Configure(assets, LengthFt, deadline, boundaries); planPanel.Configure(assets, LengthFt, deadline);
+            if (sky.State != null) sky.Apply("clear"); else sky.Configure(assets);
+        }
+        public void Apply(SiteView view, int displayDay)
+        {
+            if (generated == null) throw new System.InvalidOperationException("Configure SiteWorld before applying a view");
+            if (cells.Count == 0) Build(view);
+            CurrentView = view;
+            foreach (var cell in view.trench) if (cells.TryGetValue((int)cell.stationFt, out var target)) target.Apply(cell);
+            foreach (var crew in view.crews) crews[crew.id].Apply(crew);
+            var arguing = WorldUnits.CrewIds.Select(id => crews[id]).Where(crew => crew.Status == "arguing").ToArray();
+            foreach (var crew in crews.Values) crew.FaceArgument(arguing.FirstOrDefault(other => other != crew && crew.Status == "arguing")?.transform);
+            foreach (var board in view.boards) boards[(int)board.zone].Apply(board);
+            sky.Apply(view.sky); gateText.text = "Trucks waiting: " + view.gate.trucksWaiting;
+            truck.localPosition = new Vector3((float)view.truck.stationFt * WorldUnits.MetresPerFoot, 0, WorldUnits.RoadZ);
+            trailerBoard.Apply(view, displayDay);
+        }
+        private void Build(SiteView view)
+        {
+            foreach (var sample in view.trench)
+            {
+                // The endpoint is a stake, not an extra 100 ft of trench.
+                if (sample.stationFt >= LengthFt) continue;
+                var cell = Instantiate(assets.cellPrefab, generated); cell.Initialize(sample.stationFt, assets);
+                cells[(int)sample.stationFt] = cell; stakes[(int)sample.stationFt] = cell.stake;
+                var spoil = Instantiate(assets.spoil, generated); spoil.name = "Spoil_" + (int)sample.stationFt;
+                spoil.transform.localPosition = new Vector3((float)sample.stationFt * WorldUnits.MetresPerFoot + WorldUnits.CellLength / 2, 0, -3);
+            }
+            var endpoint = WorldDrawing.Box("Stake_" + (int)LengthFt, generated, new Vector3((float)LengthFt * WorldUnits.MetresPerFoot, 0.55f, 1.2f), new Vector3(0.08f, 1.1f, 0.08f), assets.timber);
+            var label = WorldDrawing.Text("Station", endpoint.transform, new Vector3(0, 0.6f, 0), new Vector2(1.5f, 0.4f), 0.3f, assets.font);
+            // Text cannot inherit the thin post's scale.
+            label.transform.SetParent(generated, true); label.transform.localScale = Vector3.one;
+            label.transform.localPosition = endpoint.transform.localPosition + Vector3.up * 0.6f; label.transform.localRotation = Quaternion.Euler(0, 180, 0);
+            label.text = WorldUnits.Station(LengthFt); stakes[(int)LengthFt] = endpoint.transform;
+            foreach (var zone in zones.OfType<JObject>())
+            {
+                var root = WorldDrawing.Group("ZoneBoard", generated); root.transform.localPosition = new Vector3((float)zone["fromFt"] * WorldUnits.MetresPerFoot, 0, 1.8f);
+                root.transform.localRotation = Quaternion.Euler(0, 180, 0);
+                WorldDrawing.Box("Post", root.transform, new Vector3(0, 1, 0), new Vector3(0.1f, 2, 0.1f), assets.timber);
+                var face = WorldDrawing.Box("Board", root.transform, new Vector3(0, 1.8f, 0), new Vector3(1, 1.5f, 0.06f), assets.steel);
+                InspectTarget.Attach(face, "board"); var board = root.AddComponent<ZoneBoard>();
+                board.label = WorldDrawing.Text("Permit", root.transform, new Vector3(0, 1.8f, -0.05f), new Vector2(0.9f, 1.3f), 0.12f, assets.font);
+                board.Initialize((int)zone["id"]); boards[board.Zone] = board;
+            }
+            foreach (var id in WorldUnits.CrewIds)
+            { var crew = Instantiate(assets.crewPrefab, generated); crew.Initialize(id, assets); crews[id] = crew; }
+        }
+    }
+}
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using LOBOver.Runtime;
+using LOBOver.Sim;
+using Newtonsoft.Json.Linq;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.Networking;
+
+namespace LOBOver.World
+{
+    public sealed class DesktopPreview : MonoBehaviour
+    {
+        public Director director;
+        public SiteWorld world;
+        public Camera previewCamera;
+        public string LastInspection { get; private set; } = "";
+        public string LastCard { get; private set; } = "";
+        private string voiceText = "";
+        private float voiceUntil;
+        private double lastTruckStation;
+        private bool lastDismounted, hasTruck;
+        private readonly Queue<string> voiceQueue = new Queue<string>();
+        private Coroutine voiceRoutine;
+        private AudioSource voiceSource = null;
+        private GUIStyle hud;
+        // Preview-only camera controls, independent of the simulation clock.
+        private const float FlyMetresPerSecond = 12, FastMultiplier = 4, LookDegreesPerPixel = 0.12f;
+
+        private void OnEnable()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            gameObject.SetActive(false);
+            return;
+#else
+            if (director == null) return;
+            director.Message += OnMessage; director.Voice += OnVoice; director.Loaded += Clear;
+            if (voiceSource == null) voiceSource = WorldDrawing.Sound(WorldDrawing.Group("VoiceAudio", transform), false);
+#endif
+        }
+        private void OnDisable()
+        {
+            if (director != null) { director.Message -= OnMessage; director.Voice -= OnVoice; director.Loaded -= Clear; }
+            Clear(); Cursor.lockState = CursorLockMode.None; Cursor.visible = true;
+        }
+        private void Clear()
+        {
+            LastInspection = ""; LastCard = ""; voiceText = ""; hasTruck = false; voiceQueue.Clear();
+            if (voiceRoutine != null) StopCoroutine(voiceRoutine);
+            voiceRoutine = null;
+            if (voiceSource != null) { voiceSource.Stop(); if (voiceSource.clip != null) Destroy(voiceSource.clip); voiceSource.clip = null; }
+        }
+        private void Update()
+        {
+            var keyboard = Keyboard.current; var mouse = Mouse.current;
+            if (keyboard == null || mouse == null) return;
+            var flying = mouse.rightButton.isPressed;
+            Cursor.lockState = flying ? CursorLockMode.Locked : CursorLockMode.None; Cursor.visible = !flying;
+            if (flying)
+            {
+                var delta = mouse.delta.ReadValue() * LookDegreesPerPixel;
+                var angles = previewCamera.transform.eulerAngles;
+                var pitch = angles.x > 180 ? angles.x - 360 : angles.x;
+                previewCamera.transform.rotation = Quaternion.Euler(Mathf.Clamp(pitch - delta.y, -85, 85), angles.y + delta.x, 0);
+                var move = new Vector3((keyboard.dKey.isPressed ? 1 : 0) - (keyboard.aKey.isPressed ? 1 : 0), 0,
+                    (keyboard.wKey.isPressed ? 1 : 0) - (keyboard.sKey.isPressed ? 1 : 0));
+                previewCamera.transform.Translate(move * FlyMetresPerSecond * (keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed ? FastMultiplier : 1) * Time.unscaledDeltaTime);
+            }
+            if (!director.Ready) return;
+            if (keyboard.spaceKey.wasPressedThisFrame) { if (director.Speed == "paused") director.Start(); else director.Pause(); }
+            if (keyboard.rKey.wasPressedThisFrame) director.Reset();
+            var view = director.SiteView;
+            if (view == null) return;
+            FollowTruck(view.truck);
+            // RMB scopes WASD to flight so D/S cannot also issue Site commands.
+            if (!flying)
+            {
+                if (keyboard.dKey.wasPressedThisFrame) Send(view.truck.dismounted ? "mount" : "dismount");
+                if (keyboard.sKey.wasPressedThisFrame) director.Send(new JObject { ["action"] = "stopWork", ["zone"] = world.ZoneAt(view.truck.stationFt) });
+            }
+            var digits = new[] { Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6, Key.Digit7, Key.Digit8, Key.Digit9 };
+            for (var i = 0; i < digits.Length; i++) if (keyboard[digits[i]].wasPressedThisFrame) Ride((i + 1) * WorldUnits.StationFeet);
+            if (keyboard.leftBracketKey.wasPressedThisFrame) Ride((Mathf.Round((float)view.truck.stationFt / WorldUnits.StationFeet) - 1) * WorldUnits.StationFeet);
+            if (keyboard.rightBracketKey.wasPressedThisFrame) Ride((Mathf.Round((float)view.truck.stationFt / WorldUnits.StationFeet) + 1) * WorldUnits.StationFeet);
+            if (keyboard.iKey.wasPressedThisFrame) Inspect();
+            if (keyboard.fKey.wasPressedThisFrame) director.Send(new JObject { ["action"] = "flag", ["stationFt"] = view.truck.stationFt, ["note"] = "" });
+            if (keyboard.cKey.wasPressedThisFrame) Confirm("done");
+            if (keyboard.nKey.wasPressedThisFrame) Confirm("notDone");
+            if (keyboard.lKey.wasPressedThisFrame) Send("listen");
+        }
+        private void FollowTruck(TruckView truck)
+        {
+            if (truck.moving) return;
+            if (hasTruck && (truck.stationFt != lastTruckStation || truck.dismounted != lastDismounted))
+            {
+                previewCamera.transform.position = world.transform.TransformPoint(new Vector3((float)truck.stationFt * WorldUnits.MetresPerFoot, 1.7f,
+                    truck.dismounted ? WorldUnits.TrenchWidth / 2 + 1.5f : WorldUnits.RoadZ));
+                previewCamera.transform.rotation = world.transform.rotation * Quaternion.Euler(12, 180, 0);
+            }
+            lastTruckStation = truck.stationFt; lastDismounted = truck.dismounted; hasTruck = true;
+        }
+        private void Ride(float station) => director.Send(new JObject { ["action"] = "moveTo", ["stationFt"] = Mathf.Clamp(station, 0, (float)world.LengthFt) });
+        private void Send(string action) => director.Send(new JObject { ["action"] = action });
+        private void Confirm(string outcome)
+        {
+            var order = director.SiteView.orders.FirstOrDefault(item => item.status == "landed");
+            if (order == null) { LastInspection = "no order landed here"; return; }
+            director.Send(new JObject { ["action"] = "confirm", ["orderId"] = order.id, ["outcome"] = outcome });
+        }
+        private void Inspect()
+        {
+            if (!Physics.Raycast(previewCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0)), out var hit, 6000, ~0, QueryTriggerInteraction.Collide)) return;
+            var target = hit.collider.GetComponentInParent<InspectTarget>();
+            if (target != null) director.Send(new JObject { ["action"] = "inspect", ["target"] = target.target });
+        }
+        private void OnMessage(JObject message)
+        {
+            var type = (string)message["t"];
+            if (type == "nack") LastInspection = (string)message["reason"];
+            if (!Director.ForSeat(message, "site")) return;
+            if (type == "inspection") LastInspection = (string)message["text"];
+            if (type == "event") LastCard = (string)message["card"]?["title"] + "\n" + string.Join("\n", message["card"]?["facts"]?.Values<string>() ?? Enumerable.Empty<string>());
+        }
+        private void OnVoice(JObject message)
+        {
+            if (!Director.ForSeat(message, "site")) return;
+            foreach (var id in message["lineIds"].Values<string>()) voiceQueue.Enqueue(id);
+            if (voiceRoutine == null) voiceRoutine = StartCoroutine(PlayVoice());
+        }
+        private IEnumerator PlayVoice()
+        {
+            yield return null;
+            while (voiceQueue.Count > 0)
+            {
+                var id = voiceQueue.Dequeue(); var line = director.Lines.OfType<JObject>().FirstOrDefault(item => (string)item["id"] == id);
+                if (line == null) continue;
+                var speaker = (string)line["speaker"];
+                var crew = speaker.StartsWith("foreman_") ? world.Crew(speaker.Substring("foreman_".Length)) : null;
+                voiceSource.transform.position = crew == null ? previewCamera.transform.position : crew.transform.position;
+                voiceSource.spatialBlend = crew == null ? 0 : 1;
+                voiceText = (string)line["text"]; voiceUntil = Time.unscaledTime + 8;
+                var relative = "Voice/" + director.scenarioId + "/" + id + ".wav";
+#if !UNITY_ANDROID || UNITY_EDITOR
+                if (!File.Exists(Path.Combine(Application.streamingAssetsPath, relative))) continue;
+#endif
+                using (var request = UnityWebRequestMultimedia.GetAudioClip(StreamingData.Url(relative), AudioType.WAV))
+                {
+                    yield return request.SendWebRequest();
+                    if (request.result != UnityWebRequest.Result.Success) continue;
+                    var clip = DownloadHandlerAudioClip.GetContent(request); voiceSource.clip = clip; voiceSource.Play();
+                    voiceUntil = Time.unscaledTime + Mathf.Max(8, clip.length);
+                    while (voiceSource.isPlaying) yield return null;
+                    voiceSource.clip = null; Destroy(clip);
+                }
+            }
+            voiceRoutine = null;
+        }
+        private void OnGUI()
+        {
+            if (hud == null) hud = new GUIStyle(GUI.skin.box) { alignment = TextAnchor.UpperLeft, fontSize = 16, wordWrap = true, padding = new RectOffset(12, 12, 10, 10) };
+            var truck = director.SiteView?.truck;
+            var text = director.LoadError ?? (director.Ready ? "Day " + director.DisplayDay + "  Â·  " + director.Speed + "\nTruck " + WorldUnits.Station(truck.stationFt)
+                + (truck.moving ? " driving" : truck.dismounted ? " dismounted" : " mounted") : "Loading site");
+            text += "\n" + LastInspection + "\n" + LastCard;
+            if (Time.unscaledTime < voiceUntil) text += "\n" + voiceText;
+            text += "\nRMB + WASD fly Â· Shift fast Â· 1â€“9 / [ ] ride\nD mount/dismount Â· I inspect Â· F flag Â· S stop\nC confirm Â· N not carried out Â· L listen Â· Space pause Â· R reset";
+            var width = Mathf.Min(520, Screen.width - 20);
+            GUI.Box(new Rect(10, 10, width, hud.CalcHeight(new GUIContent(text), width)), text, hud);
+            GUI.Label(new Rect(Screen.width / 2f - 6, Screen.height / 2f - 10, 20, 20), "+");
+        }
+    }
+}
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 142ms:
+Meta.Net.endel.nativewebsocket.dll
+Meta.Voice.Hub.Editor.dll
+Meta.Voice.Hub.Runtime.dll
+Meta.Voice.NLayer.dll
+Meta.Voice.Opus.dll
+Meta.Voice.VSDKHub.Editor.dll
+Meta.VoiceSDK.Mic.Common.dll
+Meta.VoiceSDK.Mic.Other.dll
+Meta.VoiceSDK.Mic.WebGL.dll
+Meta.Wit.Composer.dll
+Meta.Wit.Composer.Editor.dll
+Meta.Wit.Dictation.dll
+Meta.Wit.Dictation.Editor.dll
+Meta.WitAi.dll
+Meta.WitAi.Editor.dll
+Meta.WitAi.Lib.dll
+Meta.WitAI.Lib.Editor.dll
+Meta.WitAi.TTS.dll
+Meta.WitAi.TTS.Editor.dll
+meta.xr.ai.agentbridge.dll
+meta.xr.ai.agentbridge.editor.dll
+meta.xr.ai.agentbridge.telemetry.dll
+Meta.XR.Audio.dll
+Meta.XR.Audio.Editor.dll
+Meta.XR.BuildingBlocks.AIBlocks.dll
+Meta.XR.BuildingBlocks.DepthAPI.dll
+Meta.XR.BuildingBlocks.DepthAPI.Editor.dll
+Meta.XR.BuildingBlocks.dll
+Meta.XR.BuildingBlocks.Editor.dll
+Meta.XR.Editor.AIToolsSetup.dll
+Meta.XR.Editor.BuildingBlocks.AIBlocks.dll
+Meta.XR.Editor.Callbacks.dll
+Meta.XR.Editor.EditorCoroutine.dll
+Meta.XR.Editor.Guide.About.dll
+Meta.XR.Editor.Guide.Nux.dll
+Meta.XR.Editor.Guide.Welcome.dll
+Meta.XR.Editor.Id.dll
+Meta.XR.Editor.MetaXROperator.dll
+Meta.XR.Editor.Notifications.dll
+Meta.XR.Editor.PlayCompanion.dll
+Meta.XR.Editor.Reflection.dll
+Meta.XR.Editor.RemoteContent.dll
+Meta.XR.Editor.Settings.dll
+Meta.XR.Editor.StatusMenu.dll
+Meta.XR.Editor.Tags.dll
+Meta.XR.Editor.TelemetryUI.dll
+Meta.XR.Editor.ToolingSupport.dll
+Meta.XR.Editor.UPST.Notifications.dll
+Meta.XR.Editor.UserInterface.dll
+Meta.XR.EnvironmentDepth.dll
+Meta.XR.EnvironmentDepth.Editor.dll
+Meta.XR.FovSimulator.dll
+Meta.XR.Guides.Editor.dll
+Meta.XR.HandReadinessTool.Editor.dll
+Meta.XR.ImmersiveDebugger.DevAgent.dll
+Meta.XR.ImmersiveDebugger.DevAgent.Editor.dll
+Meta.XR.ImmersiveDebugger.dll
+Meta.XR.ImmersiveDebugger.Editor.dll
+Meta.XR.ImmersiveDebugger.Interface.dll
+meta.xr.json.dll
+Meta.XR.MetaWand.Editor.dll
+meta.xr.mrutilitykit.dll
+meta.xr.mrutilitykit.editor.dll
+Meta.XR.MultiplayerBlocks.Fusion.Editor.dll
+Meta.XR.MultiplayerBlocks.NGO.Editor.dll
+Meta.XR.MultiplayerBlocks.Shared.dll
+Meta.XR.MultiplayerBlocks.Shared.Editor.dll
+Meta.XR.RuntimeOptimizer.Core.dll
+Meta.XR.RuntimeOptimizer.dll
+Meta.XR.RuntimeOptimizer.Editor.dll
+MetaXRSimulatorCore.Editor.dll
+Oculus.Haptics.dll
+Oculus.Haptics.Editor.dll
+Oculus.Interaction.dll
+Oculus.Interaction.Editor.dll
+Oculus.Interaction.Editor.UnityXR.dll
+Oculus.Interaction.InterfaceSupport.dll
+Oculus.Interaction.OVR.dll
+Oculus.Interaction.OVR.Editor.dll
+Oculus.Interaction.OVR.Samples.dll
+Oculus.Interaction.Samples.dll
+Oculus.Interaction.Samples.Editor.dll
+Oculus.Interaction.Samples.Editor.UISet.dll
+Oculus.Interaction.Samples.Gaze.dll
+Oculus.Interaction.Samples.Gaze.Editor.dll
+Oculus.Interaction.UnityXR.dll
+Oculus.Platform.dll
+Oculus.Platform.Editor.dll
+Oculus.VR.dll
+Oculus.VR.Editor.dll
+Oculus.VR.Scripts.Editor.dll
+Unity.XR.CoreUtils.dll
+Unity.XR.CoreUtils.Editor.dll
+Unity.XR.Hands.Analytics.Editor.dll
+Unity.XR.Hands.Analytics.Hooks.Editor.dll
+Unity.XR.Hands.dll
+Unity.XR.Hands.Editor.dll
+Unity.XR.Management.dll
+Unity.XR.Management.Editor.dll
+Unity.XR.OpenXR.dll
+Unity.XR.OpenXR.Editor.dll
+Unity.XR.OpenXR.Features.ConformanceAutomation.dll
+Unity.XR.OpenXR.Features.MetaHandMeshData.dll
+Unity.XR.OpenXR.Features.MetaHandMeshData.Editor.dll
+Unity.XR.OpenXR.Features.MetaQuestSupport.dll
+Unity.XR.OpenXR.Features.MetaQuestSupport.Editor.dll
+Unity.XR.OpenXR.Features.MockRuntime.dll
+Unity.XR.OpenXR.Features.OculusQuestSupport.dll
+Unity.XR.OpenXR.Features.OculusQuestSupport.Editor.dll
+Unity.XR.OpenXR.Features.RuntimeDebugger.dll
+Unity.XR.OpenXR.Features.RuntimeDebugger.Editor.dll
+Unity.XR.OpenXR.TestTooling.dll
+UnityEditor.XR.LegacyInputHelpers.dll
+UnityEngine.XR.LegacyInputHelpers.dll
+com.meta.xr.mrutilitykit@84bc45ca9f62
+com.meta.xr.sdk.all@b11b69aa8b85
+com.meta.xr.sdk.audio@baafb66e77db
+com.meta.xr.sdk.core@d4cd875f54ee
+com.meta.xr.sdk.haptics@64b85fb39f00
+com.meta.xr.sdk.interaction.ovr@74fbc962f91e
+com.meta.xr.sdk.interaction@b0ce09a959ae
+com.meta.xr.sdk.platform@1b765c01c84f
+com.meta.xr.sdk.voice@856439ff2689
+com.unity.xr.management@574ebfb1e976
+com.unity.xr.openxr@b5b77b4027be
+{
+  "name": "LOBOver.Editor",
+  "rootNamespace": "LOBOver.Editor",
+  "references": ["LOBOver.Sim", "LOBOver.Director", "LOBOver.World", "Unity.TextMeshPro", "UnityEngine.UI", "Unity.RenderPipelines.Core.Runtime"],
+  "includePlatforms": ["Editor"],
+  "overrideReferences": true,
+  "precompiledReferences": ["Newtonsoft.Json.dll"]
+}
+{
+  "name": "LOBOver.EditModeTests",
+  "references": ["LOBOver.Editor", "LOBOver.Director", "LOBOver.World", "LOBOver.Sim", "Unity.TextMeshPro"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "overrideReferences": true,
+  "precompiledReferences": ["Newtonsoft.Json.dll", "nunit.framework.dll"]
+}
+{
+  "name": "LOBOver.PlayModeTests",
+  "references": ["LOBOver.Director", "LOBOver.World", "LOBOver.Sim", "Unity.TextMeshPro"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "overrideReferences": true,
+  "precompiledReferences": ["Newtonsoft.Json.dll", "nunit.framework.dll"]
+}
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/SampleScene.unity
+    guid: 99c9720ab356a0642a771bea13969a05
+  m_configObjects:
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: c026c88f56c386742a9796533a27eb4d, type: 2}
+    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 24056addbd35dd342885b6bc3c348aeb, type: 2}
+  m_UseUCBPForAssetBundles: 0
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 195ms:
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Editor\DataSync.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Editor\LOBOver.Editor.asmdef
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Editor\SiteAssetBuilder.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Editor\SiteSceneBuilder.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Runtime\Director\Director.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Runtime\Director\LOBOver.Director.asmdef
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Runtime\Director\StreamingData.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Runtime\World\CrewRig.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Runtime\World\DesktopPreview.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Runtime\World\InspectTarget.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Runtime\World\JobSign.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Runtime\World\LOBOver.World.asmdef
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Runtime\World\PlanPanel.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Runtime\World\SiteSky.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Runtime\World\SiteWorld.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Runtime\World\StationCell.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Runtime\World\TrailerBoard.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Runtime\World\WorldAssets.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Runtime\World\ZoneBoard.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Autoplan.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Common.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Conflict.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Crews.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Deviations.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Events.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\LOBOver.Sim.asmdef
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Money.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Orders.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Pacer.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Permits.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Planning.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Rain.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\ReadModels.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Rng.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Scenario.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Sim.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Site.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Sim\Views.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Tests\EditMode\LOBOver.EditModeTests.asmdef
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Tests\EditMode\SiteSceneBuilderTests.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Tests\PlayMode\LOBOver.PlayModeTests.asmdef
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Tests\PlayMode\SiteWorldTests.cs
+
+> Docs\DESIGN_v0.md:9:- The VR seat is an inspector, not a superintendent (revised October 14, evening). It sees the 
+true state of the site, reports it, holds a stop-work authority, and confirms whether the office's orders reached the 
+crews. It no longer moves machines, places protection or enters codes; Plan does those as plan changes.
+  Docs\DESIGN_v0.md:10:- The seats split as BOMBANANA splits its monkeys: Site sees but cannot act, Rules knows but 
+cannot act, Plan acts but cannot see. On the chart, Plan owns the planned lines, Rules owns the limits (permit 
+boundaries and hold points), Site owns the actual lines.
+  Docs\DESIGN_v0.md:11:- The monitor's actual line is a day old, from the daily report; Site is live. Orders take time 
+to reach the field, and field deviations (a crew that keeps working, a box at the wrong station) are events only Site 
+can catch.
+  Docs\DESIGN_v0.md:12:- Events slow the world instead of freezing it, so talk costs days. Four zones, the identical 
+seed in Stage 2, rain rework that scales with open trench, and demobilization are decided or recommended below.
+  Docs\DESIGN_v0.md:13:- Movement in VR is a site truck on the haul road with a stop at every station and a dismount 
+to inspect. No free locomotion.
+  Docs\DESIGN_v0.md:14:- The field manual follows the Keep Talking pattern and adds procedures that Rules reads aloud, 
+Captain Sonar style.
+  Docs\DESIGN_v0.md:15:- Stage 1 (push) has no huddle and the PM refuses preparation; Stage 2 (pull) adds a 30 second 
+huddle and permits; Stage 3 is Florida, Las Vegas or Los Angeles. A conflict in Stage 1 stops the job and plays as an 
+argument in VR.
+  Docs\DESIGN_v0.md:16:- Workbook values are validated by Phumpat and Dr. Rybkowski; the list for them is under 
+Numbers.
+  Docs\DESIGN_v0.md:17:
+  Docs\DESIGN_v0.md:18:## The team and the three levers
+  Docs\DESIGN_v0.md:19:
+  Docs\DESIGN_v0.md:20:A Line of Balance shows planned lines, actual lines, and the limits between them. Each seat 
+owns one of the three, and the agency splits the way BOMBANANA splits its three monkeys. This is the design's core 
+statement: learning the chart and playing the game are the same activity, seen from three sides.
+  Docs\DESIGN_v0.md:21:
+  Docs\DESIGN_v0.md:22:| Seat | Platform | Owns on the LOB | Agency | In construction terms |
+  Docs\DESIGN_v0.md:23:| --- | --- | --- | --- | --- |
+  Docs\DESIGN_v0.md:24:| Site | Quest; the 2D Site page for players without a headset | The actual lines: what the 
+crews really did today, seen live | Sees but cannot act: inspect, flag, stop work, confirm | Field inspector, the 
+owner's representative |
+  Docs\DESIGN_v0.md:25:| Plan | Monitor (web page) | The planned lines: start days, machine assignments and orders, 
+holds and resumes, and the money | Acts but cannot see: every change to the plan and every payment | Scheduler and the 
+PM's office |
+  Docs\DESIGN_v0.md:26:| Rules | Paper | The limits: permit boundaries (open trench) and hold points | Knows but 
+cannot act: diagnose, prescribe, issue permits, sign inspections | The spec book and the permit desk |
+  Docs\DESIGN_v0.md:27:
+  Docs\DESIGN_v0.md:28:Everyone reads the LOB, from different sides. The monitor shows planned lines against reported 
+actuals, which arrive at the end of each day, with uncertainty bands and money. The site trailer board in VR shows the 
+live actual lines and the permit limits, never the plan. The paper ledger records permit, pipe, inspection and 
+backfill days per zone. Site is the only seat that sees today; Plan is the only seat that can change tomorrow.
+  Docs\DESIGN_v0.md:29:
+  Docs\DESIGN_v0.md:30:|  | Site only | Plan only | Rules only |
+  Docs\DESIGN_v0.md:31:| --- | --- | --- | --- |
+  Docs\DESIGN_v0.md:32:| Sees | The site live: trench walls and water, the sky, machine plates (Small, Standard, 
+Heavy), pipe stencils and damage, protection in place or missing, crews working, idle or arguing, trucks at the gate, 
+the permit board at each zone | Planned lines, reported actuals as of yesterday, uncertainty bands, budget, deadline, 
+inbox (supplier dates, forecast percentages, inspector calendar, PM mail), catalog prices and lead days, the radio log 
+of orders sent | Field manual (situation rules, response effects, required checks, procedures), city page, permit book 
+with codes, hold-point checklists, open-trench limit |
+  Docs\DESIGN_v0.md:33:| Lacks | The plan, the rules, the money, the forecast | The ground, the rules, whether an 
+order was carried out | The ground, the plan, the money |
+  Docs\DESIGN_v0.md:34:
+  Docs\DESIGN_v0.md:35:Two rules follow. No event can be diagnosed, decided or executed from one seat. No order is 
+known to have worked until Site confirms it.
+  Docs\DESIGN_v0.md:36:
+  Docs\DESIGN_v0.md:37:## What each player can do
+  Docs\DESIGN_v0.md:38:
+  Docs\DESIGN_v0.md:39:Site's verbs are an inspector's verbs: look, report, stop, confirm. Everything that changes the 
+plan belongs to Plan, and everything that releases work belongs to Rules. Site never moves a machine, places 
+protection, holds a crew beyond a safety stop, or enters a code.
+  Docs\DESIGN_v0.md:40:
+  Docs\DESIGN_v0.md:41:**Site (VR)**
+  Docs\DESIGN_v0.md:42:
+  Docs\DESIGN_v0.md:43:| Verb | How | What it changes |
+  Docs\DESIGN_v0.md:44:| --- | --- | --- |
+  Docs\DESIGN_v0.md:45:| Ride and dismount | The site truck runs along the haul road and stops at any station stake; 
+dismount to stand at the stake. No walking beyond arm's reach | Where Site is, which decides what it can see and which 
+crew an order reaches at once |
+  Docs\DESIGN_v0.md:46:| Inspect | Look at a trench wall, a pipe, a machine plate, a delivery ticket or the sky for 
+two seconds; the clipboard reads the indicator out | Turns a range on the monitor into a fact; reveals an event's 
+variant (the game hides E1 and P3 variants until seen) |
+  Docs\DESIGN_v0.md:47:| Flag | Plant a flag at a station | An unlabeled marker on the monitor's LOB and in the 
+ledger; Plan has to ask what it is |
+  Docs\DESIGN_v0.md:48:| Stop work | Raise the red flag at a station; the crews in that zone halt within the hour and 
+keep billing | A safety hold that stands until Plan commits a plan or resumes; the inspector's one authority |
+  Docs\DESIGN_v0.md:49:| Confirm | After an order, watch the crew and press confirm, or report that the order was not 
+carried out | Closes the loop; an unconfirmed order is the commonest field deviation |
+  Docs\DESIGN_v0.md:50:| Listen | Stand with the foremen at a conflict or an idle crew; their lines give the cause | 
+The only account of why, which Plan needs to choose between holding and demobilizing |
+  Docs\DESIGN_v0.md:51:
+  Docs\DESIGN_v0.md:52:**Plan (monitor)**
+  Docs\DESIGN_v0.md:53:
+  Docs\DESIGN_v0.md:54:| Verb | How | What it changes |
+> Docs\DESIGN_v0.md:98:## The VR seat
+  Docs\DESIGN_v0.md:99:
+  Docs\DESIGN_v0.md:100:Site is an inspector. The seat is built around noticing, with one authority, because free 
+movement and a long verb list are what make VR tiring and what unbalanced the first draft. Site never changes the 
+plan: moving a machine, placing protection, holding a crew beyond a safety stop and entering codes are Plan's.
+  Docs\DESIGN_v0.md:101:
+  Docs\DESIGN_v0.md:102:- **Movement.** A site truck runs on the haul road beside the trench and stops at any station 
+stake; the player dismounts to stand at the stake. The cab is a fixed frame of reference, turns are snap turns, and 
+there is no free locomotion. Riding is not idle time: an order reaches a crew at once only when Site is standing 
+there, so Site chooses where to be.
+  Docs\DESIGN_v0.md:103:- **What only Site sees.** The site as it is today: trench walls and water, protection in 
+place or missing, machine plates, pipe stencils and damage, delivery tickets, the sky, trucks queued at the gate, the 
+permit number posted at each zone board, and crews working, idle or arguing. Held crews get visibly angrier the longer 
+they stand, and the daily report never says so. The monitor's actual line is yesterday's feet; Site is live.
+  Docs\DESIGN_v0.md:104:- **The clipboard.** Three buttons on the wrist: Flag, Stop work, Confirm. Inspection needs no 
+button; looking at an indicator for two seconds reads it out. Controllers first; the four verbs map to hand tracking 
+on the Quest 3S later without redesign.
+  Docs\DESIGN_v0.md:105:- **Field deviations.** A new event class, one or two per stage, that only Site can catch:
+  Docs\DESIGN_v0.md:106:  1. F1, order not received: a crew keeps working after a hold, or keeps digging after a stop. 
+An order lands at the next shift unless Site is there.
+  Docs\DESIGN_v0.md:107:  2. F2, pushing ahead: excavation crosses a zone boundary without a permit, and the city 
+fines it. Natural in Stage 1, where every permit was issued; an authored deviation in Stage 2.
+  Docs\DESIGN_v0.md:108:  3. F3, wrong station: protection or a lent machine arrives at the wrong stake.
+  Docs\DESIGN_v0.md:109:  4. F4, wrong delivery: the pipe stencil does not match the purchase order (a P2 variant).
+  Docs\DESIGN_v0.md:110:  5. F5, late arrival: a lent or ordered machine has not shown up when the plan says it has 
+(the remobilization delay).
+  Docs\DESIGN_v0.md:111:- **The argument.** At a conflict the foremen meet at the station and say why: the schedule 
+put them a day apart, and a crane lays 180 ft a day while a loader backfills 250. Site listens and reports; Plan 
+chooses between holding the crew and demobilizing it; Site confirms whichever happened.
+  Docs\DESIGN_v0.md:112:
+  Docs\DESIGN_v0.md:113:## The field manual
+  Docs\DESIGN_v0.md:114:
+  Docs\DESIGN_v0.md:115:The manual is the workbook rewritten the way the Keep Talking manual is written. Site 
+describes what it sees, the manual branches on that description plus the city, and nothing in it names the choice. Ben 
+Kane's rule applies: an expert role that is only dense reading does not make good play, so every page ends in a 
+question for another seat.
+  Docs\DESIGN_v0.md:116:
+  Docs\DESIGN_v0.md:117:1. **Front page, one rule.** Days lost to an event = rate drop × duration. The crew behind 
+idles for whatever exceeds its buffer. Checked in simulation: late pipe (P2) at 50% for 3 days costs 1.5 days; a 1 day 
+buffer idles backfill half a day, 1.5 days idles nothing.
+  Docs\DESIGN_v0.md:118:2. **City pages**, one per city: the Hazard Matrix row, the level signature, which situations 
+can occur (Texas has no rock, so no E2; Las Vegas has no water or rain), and how responses change here (congested 
+cities add 1 to 2 lead days and forbid sloping the trench; running sand halves a trench box's benefit and calls for 
+shoring). The city's open-trench limit.
+  Docs\DESIGN_v0.md:119:3. **Indicator tables** ("What am I looking at?"), keyed by Site's words and the city rating. 
+Water seeping and a wall that slumps when touched, with groundwater High or V.High: treat as Type C, collapse likely 
+(P1), box or shoring, no sloping where the city is congested. Machine stopped, operator out of the cab, orange flag on 
+a line: E1. Pipe on the ground beside the truck, boom down: P3; inspect the joint, cracked is damage, whole is a 
+safety hold only. Forecast 70% on the monitor and towers to the south in VR: A2 within a day.
+  Docs\DESIGN_v0.md:120:4. **Situation pages** (E1, E2, P1, P2, P3, B1, A1, A2): cause, what it hits, rate drop, 
+duration, hidden consequence, then options A to D with their effect on rate, other crews, cost and days, and the check 
+each needs with the seat that verifies it. The workbook's When Right and When Wrong verdicts are not printed (R5); the 
+checks they imply are.
+  Docs\DESIGN_v0.md:121:5. **Permit and hold-point rules**: the open-trench limit, the checklist before backfill 
+(tracer wire placed, bedding placed, compaction test passed), and what Site must confirm before Rules signs.
+  Docs\DESIGN_v0.md:122:6. **Lookup tables**: days lost by drop and duration, machine rates, lead days by city, and 
+the costs of holding or demobilizing a crew.
+  Docs\DESIGN_v0.md:123:7. **Procedures**: numbered checklists that Rules reads aloud, one line per seat, the way 
+Captain Sonar's crew calls its turns. Stop work (Site raises the flag, Site reports, Rules names, Plan commits, Site 
+confirms, Rules logs). Zone handshake. Lend a machine. Resume. Demobilize. A procedure read aloud is faster than a 
+discussion, and the clock is running.
+  Docs\DESIGN_v0.md:124:
+  Docs\DESIGN_v0.md:125:Sample situation page, P1 trench collapse. Prices and multipliers are the game's own values 
+(site\_catalog\_v2); durations are the workbook's.
+  Docs\DESIGN_v0.md:126:
+  Docs\DESIGN_v0.md:127:|  |  |
+  Docs\DESIGN_v0.md:128:| --- | --- |
+  Docs\DESIGN_v0.md:129:| Hits | Pipe laying, full stop |
+  Docs\DESIGN_v0.md:130:| Cause | Sidewall failure from inadequate shoring or sloping |
+  Docs\DESIGN_v0.md:131:| Duration | 3, 2 or 1 days to clear with a Small, Standard or Heavy excavator; the clearing 
+excavator stops digging for those days |
+  Docs\DESIGN_v0.md:132:| Hidden consequence | Clearing with your own machine moves the delay to excavation |
+  Docs\DESIGN_v0.md:133:| A. Clear with your own excavator | Pipe at 0% until cleared, then 100%. Check: an excavator 
+on site (Site reads the plate), and excavation's lead over pipe of at least the clearing days (Plan reads the LOB) |
+  Docs\DESIGN_v0.md:134:| B. Emergency shoring | $18,000 plus $150 a day, work resumes in 1 day. Check: budget (Plan) |
+  Docs\DESIGN_v0.md:135:| C. Hire an outside excavator | Catalog price, 3, 2 or 1 days by size, plus this city's lead 
+days. Check: lead days (Rules' city page) and budget (Plan) |
+  Docs\DESIGN_v0.md:136:| Before it happens | A trench box ($14,000 plus $90 a day) cuts likelihood to 0.35 and 
+severity to 0.5; shoring ($32,000 plus $180 a day) to 0.2 and 0.4; sloping ($6,000) to 0.45 and 0.7, not allowed in 
+New York, Los Angeles or Bangkok |
+  Docs\DESIGN_v0.md:137:
+  Docs\DESIGN_v0.md:138:## Paper kit
+  Docs\DESIGN_v0.md:139:
+  Docs\DESIGN_v0.md:140:Everything on paper is generated from the stage's scenario file, so the codes, stations and 
+city match the build. One stage fits in an envelope.
+  Docs\DESIGN_v0.md:141:
+  Docs\DESIGN_v0.md:142:| Item | Contents | Used for |
+  Docs\DESIGN_v0.md:143:| --- | --- | --- |
+> Docs\DESIGN_v0.md:253:- One simulation, one protocol. The PC hosts the simulation (the Unity Editor in Play mode 
+during development, a desktop build at the demo) and speaks one JSON-over-WebSocket protocol to two kinds of client: 
+the Quest app for the VR seat and the browser pages for the Plan seat and for a 2D Site seat. The 2D Site page covers 
+players without a headset and remote play over Zoom. In Phase 0, before any Unity work, a small Node host runs the 
+reference simulation on the same protocol so the three seats can be table-tested with the printed kit; the C# port 
+must reproduce its golden runs before it replaces it.
+  Docs\DESIGN_v0.md:254:- Paper's authority enters as typed codes: permit codes and inspection numbers on the monitor.
+  Docs\DESIGN_v0.md:255:- One scenario file per stage drives the simulation, the monitor's inbox, the voice lines and 
+the printed kit, so every discrepancy between seats is authored and none is accidental.
+  Docs\DESIGN_v0.md:256:- Voice. The scenario file carries a line sheet (id, speaker, trigger, text) for the PM, the 
+radio and the foremen. Placeholders are generated on the Windows PC with Kokoro (Apache-2.0, `pip install kokoro 
+soundfile`, plus the espeak-ng installer for fallback), 24 kHz WAV per line, by Claude Code or Astra in one batch; the 
+same sheet regenerates after every text change. ElevenLabs (`pip install elevenlabs-mcp`, `ELEVENLABS_API_KEY`) is the 
+optional step up for distinct foremen voices, and recorded lines replace either later.
+  Docs\DESIGN_v0.md:257:- Claude Code orchestrates and verifies; Astra implements bounded work orders: the web 
+monitor, the scenario schema and validator, the kit and voice generators, and specified C# extensions.
+  Docs\DESIGN_v0.md:258:- Order of work: a paper table test of Stage 1 (one afternoon, before any code), then a Stage 
+1 vertical slice, then Stage 2, then Stage 3.
+  Docs\DESIGN_v0.md:259:
+  Docs\DESIGN_v0.md:260:## Decisions needed
+  Docs\DESIGN_v0.md:261:
+  Docs\DESIGN_v0.md:262:- [x] Four zones of 1,500 ft with a hold point each.
+  Docs\DESIGN_v0.md:263:- [x] Events slow the world; talk costs days.
+  Docs\DESIGN_v0.md:264:- [x] Stage 2 runs the identical seed.
+  Docs\DESIGN_v0.md:265:- [x] Rain rework scales with open trench; values to validate.
+  Docs\DESIGN_v0.md:266:- [x] Demobilization: $5,000 and 1 to 3 days, pending validation.
+  Docs\DESIGN_v0.md:267:- [x] Validation by Phumpat and Dr. Rybkowski, from the list under Numbers.
+  Docs\DESIGN_v0.md:268:- [x] Stop work: held crews keep billing and get visibly angrier the longer they stand.
+  Docs\DESIGN_v0.md:269:- [x] Orders land at the crew's next shift unless Site is at its station.
+  Docs\DESIGN_v0.md:270:- [x] Reporting: the monitor is a planning surface fed once a day by the report; the why 
+arrives by voice from Site.
+  Docs\DESIGN_v0.md:271:- [x] No verdicts during play: facts at the event, consequences in the world, comparison and 
+change log at the end of the stage.
+  Docs\DESIGN_v0.md:272:- [x] Permit codes entered by Plan; the zone board posts the permit number, never a green or 
+red.
+  Docs\DESIGN_v0.md:273:- [x] Deviations: one or two per stage; pushing past a permit boundary draws a city fine (read 
+from the October 14 answer; confirm).
+  Docs\DESIGN_v0.md:274:- [x] Controllers first; hand tracking on the Quest 3S later.
+  Docs\DESIGN_v0.md:275:- [x] Voice: AI placeholders from the line sheet now; recorded lines later.
+  Docs\DESIGN_v0.md:276:- [x] The site trailer board shows the actual lines and the permit limits.
+  Docs\DESIGN_v0.md:277:- [ ] Working title. Recommendation: LOB, Over (a radio sign-off, since talk is the mechanic). 
+Alternatives: LOB Radio; Three LOB.
+  Docs\DESIGN_v0.md:278:- [ ] The amount of the city fine for pushing past a permit boundary (for Phumpat and Dr. 
+Rybkowski).
+  Docs\DESIGN_v0.md:279:
+  Docs\DESIGN_v0.md:280:## Sources
+  Docs\DESIGN_v0.md:281:
+  Docs\DESIGN_v0.md:282:Project documents, read in the LOB-Game MD Files folder on October 14: \_sr\_design.md, 
+\_pmo\_locked\_decisions.md, \_pmo\_P1\_spec.md, \_sim\_l0\_audit\_fleet.md, \_sim\_l0\_audit\_protection.md, 
+\_sim\_l0\_research\_timing.md, \_sr\_inv\_findings.md, 01\_design\_direction.md, and the 
+LOB\_Disruption\_Event\_Library\_Final7 workbook.
+  Docs\DESIGN_v0.md:283:
+  Docs\DESIGN_v0.md:284:- [Keep Talking and Nobody Explodes 
+(Wikipedia)](https://en.wikipedia.org/wiki/Keep_Talking_and_Nobody_Explodes)
+  Docs\DESIGN_v0.md:285:- [Ben Kane on designing Keep Talking and Nobody Explodes (Voices of 
+VR)](https://voicesofvr.com/?p=927)
+  Docs\DESIGN_v0.md:286:- [Bomb Defusal Manual](https://www.bombmanual.com/web/)
+  Docs\DESIGN_v0.md:287:- [BOMBANANA! on Steam](https://store.steampowered.com/app/4656000/BOMBANANA/)
+  Docs\DESIGN_v0.md:288:- [Captain Sonar rulebook](https://rulespal.com/captain-sonar/rulebook)
+  Docs\DESIGN_v0.md:289:- [Operation: Tango, asymmetric co-op design (PlayStation 
+Blog)](https://blog.playstation.com/?p=347233)
+  Docs\DESIGN_v0.md:290:- [Harris, Hancock and Scott 2016, Leveraging Asymmetries in Multiplayer 
+Games](https://uwaterloo.ca/touchlab/references/leveraging-asymmetries-multiplayer-games-investigating)
+  Docs\DESIGN_v0.md:291:- [Hopp and Spearman 2004, To Pull or Not to Pull](https://iaorifors.com/paper/45676)
+  Docs\DESIGN_v0.md:292:- [Tommelein, Riley and Howell 1999, Parade 
+Game](https://pure.psu.edu/en/publications/parade-game-impact-of-work-flow-variability-on-trade-performance/)
+  Docs\DESIGN_v0.md:293:- [OSHA 1926 Subpart P Appendix A, soil 
+classification](https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926SubpartPAppA)
+  Docs\DESIGN_v0.md:294:- [Texas811 excavator FAQ](https://texas811.org/?p=1512)
+  Docs\DESIGN_v0.md:295:- [Railroad Commission of Texas, Chapter 
+18](https://www.rrc.texas.gov/media/ap2ck4pb/chapter18-all-effective-feb12-2018.pdf)
+  Docs\DESIGN_v0.md:296:- [Sacramento County Section 19, maximum length of open 
+trench](https://saccountyspecs.saccounty.gov/Documents/PDF%20Documents%202016/Specifications/Section%2019.pdf)
+  Docs\DESIGN_v0.md:297:- [Framingham trench and street opening standards](https://framinghamma.gov/DocumentCenter/View
+/42651/2021-Construction-Standards-6---Trench-and-Street-Openings)
+  Docs\DESIGN_v0.md:298:- [Unity Relay with Netcode for GameObjects](https://docs.unity.com/relay/relay-and-ngo)
+
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+Step 1 of 4 is done. The work order allows new VR, MR, and Start code, but leaves WO-S3’s runtime files and Editor assembly definition out of scope. I’m checking their APIs so the additions stay isolated. Unity and headset checks will remain pending; I’ll run the required offline compile here.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content Assets/LOBOver/Runtime/Director/Director.cs; Get-Content Assets/LOBOver/Runtime/World/SiteWorld.cs' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 32ms:
+using System;
+using System.Collections;
+using System.IO;
+using System.Linq;
+using LOBOver.Sim;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using UnityEngine;
+using Simulation = LOBOver.Sim.Sim;
+
+namespace LOBOver.Runtime
+{
+    public sealed class Director : MonoBehaviour
+    {
+        public string scenarioId = "slice_texas";
+        public SiteView SiteView { get; private set; }
+        public PlanView PlanView { get; private set; }
+        public JObject Job { get; private set; }
+        public JObject MachineCatalog { get; private set; }
+        public JArray Lines { get; private set; }
+        public double DeadlineDay { get; private set; }
+        public double TimeDays => simulation == null ? 0 : simulation.T;
+        // Same day boundary as Common.DisplayDay; view snapshots use simulation time instead.
+        public int DisplayDay => (int)Math.Floor(TimeDays + 1e-6) + 1;
+        public string Speed => simulation == null ? "paused" : simulation.Speed;
+        public bool Ready => simulation != null;
+        public bool Done => simulation != null && simulation.Done;
+        public string LoadError { get; private set; }
+        public string TranscriptPath { get; private set; }
+        public event Action Loaded;
+        public event Action<SiteView, PlanView> ViewsChanged;
+        public event Action<JObject> Message;
+        public event Action<JObject> Event;
+        public event Action<JObject> Voice;
+        public event Action<JObject> Result;
+
+        private Simulation simulation;
+        private Scenario scenario;
+        private Catalog catalog;
+        private Autoplan autoplan;
+        private Pacer pacer;
+        private Coroutine loading;
+        private double secondsFull, secondsSlow;
+        private JObject transcript;
+        private JArray snapshots, messages, commands;
+        private int lastSnapshot = -1;
+        private bool savedResult;
+
+        private void OnEnable() { if (!Ready && loading == null) Load(scenarioId); }
+
+        // Public Start is also Unity's lifecycle method. A slow Android load is started by OnEnable.
+        public void Start()
+        {
+            if (simulation == null || simulation.Done) return;
+            Apply("facilitator", new JObject { ["action"] = "start" });
+            Publish();
+        }
+        public void Pause()
+        {
+            if (simulation == null) return;
+            Apply("facilitator", new JObject { ["action"] = "pause" });
+            Publish(); SaveTranscript();
+        }
+        public void Reset()
+        {
+            if (scenario == null) return;
+            SaveTranscript(); Initialize();
+        }
+        public void Load(string id)
+        {
+            if (id != "slice_texas" && id != "stage1_texas" && id != "stage2_texas")
+                throw new ArgumentException("Unknown scenario: " + id, nameof(id));
+            SaveTranscript();
+            if (loading != null) StopCoroutine(loading);
+            pacer?.Close(); simulation = null; SiteView = null; PlanView = null;
+            scenarioId = id; LoadError = null;
+            loading = StartCoroutine(LoadFiles());
+        }
+        private IEnumerator LoadFiles()
+        {
+            // Let scene subscribers attach before File-backed Editor reads can finish.
+            yield return null;
+            string catalogText = null, scenarioText = null, scriptText = null;
+            Action<string> failed = error => { LoadError = error; Debug.LogError(error, this); };
+            yield return StreamingData.ReadText("Data/catalog.json", value => catalogText = value, failed);
+            if (LoadError != null) yield break;
+            yield return StreamingData.ReadText("Data/Scenarios/" + scenarioId + ".json", value => scenarioText = value, failed);
+            if (LoadError != null) yield break;
+            var script = scenarioId == "slice_texas" ? "slice_autoplan" : scenarioId == "stage1_texas" ? "stage1_pm_play" : "stage2_pull_play";
+            yield return StreamingData.ReadText("Data/scripts/" + script + ".json", value => scriptText = value, failed);
+            if (LoadError != null) yield break;
+            try
+            {
+                var source = JObject.Parse(scenarioText);
+                catalog = Catalog.Load(catalogText); scenario = Scenario.Load(scenarioText, catalog);
+                Job = (JObject)source["job"].DeepClone();
+                MachineCatalog = (JObject)JObject.Parse(catalogText)["machines"];
+                Lines = (JArray)source["lines"].DeepClone();
+                DeadlineDay = (double)source["plan"]["deadlineDay"];
+                secondsFull = (double)source["time"]["secondsPerDayFull"];
+                secondsSlow = (double)source["time"]["secondsPerDaySlow"];
+                if (secondsFull <= 0 || secondsSlow <= 0) throw new InvalidDataException("Scenario day lengths must be positive");
+                // Autoplan removes Site entries; the presenter retains every Site verb.
+                autoplan = new Autoplan(JArray.Parse(scriptText));
+                Initialize();
+            }
+            catch (Exception error) { failed(error.ToString()); }
+            loading = null;
+        }
+        private void Initialize()
+        {
+            pacer?.Close(); simulation = Simulation.Create(scenario, catalog); autoplan.Reset();
+            snapshots = new JArray(); messages = new JArray(); commands = new JArray();
+            transcript = new JObject { ["scenario"] = scenarioId, ["snapshots"] = snapshots,
+                ["messages"] = messages, ["commands"] = commands, ["result"] = null };
+            TranscriptPath = Path.Combine(Application.persistentDataPath, "transcripts",
+                scenarioId + "-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff") + ".json");
+            lastSnapshot = -1; savedResult = false;
+            pacer = new Pacer(() => simulation, AfterTick);
+            Loaded?.Invoke();
+            autoplan.Advance(simulation.T, Apply);
+            Start();
+            Drain(); CaptureDay();
+        }
+        private void Update()
+        {
+            if (simulation == null) return;
+            // Pacer's 5/20-second day cadence is scaled to the scenario's full/slow seconds per day.
+            var baselineMs = (Speed == "slow" ? Pacer.SLOW_MS : Pacer.FULL_MS) / Pacer.STEP_DAYS;
+            var authoredMs = (Speed == "slow" ? secondsSlow : secondsFull) * 1000;
+            pacer.Advance(UnityEngine.Time.unscaledDeltaTime * 1000 * baselineMs / authoredMs);
+            Publish();
+        }
+        private void AfterTick()
+        {
+            autoplan.Advance(simulation.T, Apply); Drain(); CaptureDay();
+            if (simulation.Done && !savedResult) { savedResult = true; SaveTranscript(); }
+        }
+        private void Apply(string seat, JObject command)
+        {
+            var reply = simulation.Apply(seat, command);
+            commands.Add(new JObject { ["t"] = simulation.T, ["seat"] = seat, ["cmd"] = command.DeepClone() });
+            var acknowledgement = JObject.FromObject(reply);
+            acknowledgement["t"] = reply.Ok ? "ack" : "nack";
+            acknowledgement["id"] = command["id"];
+            messages.Add(new JObject { ["t"] = simulation.T, ["message"] = acknowledgement });
+            // Only the initiating seat receives its rejection text.
+            if (seat == "site") Message?.Invoke(acknowledgement);
+            Drain();
+        }
+        public void Send(JObject command)
+        {
+            if (simulation == null || command == null) return;
+            Apply("site", command); Publish();
+        }
+        public static bool ForSeat(JObject message, string seat) =>
+            message["seats"] is JArray seats && seats.Any(value => (string)value == seat);
+        private void Drain()
+        {
+            foreach (var message in simulation.Drain())
+            {
+                messages.Add(new JObject { ["t"] = message["day"] ?? new JValue(simulation.T), ["message"] = message.DeepClone() });
+                Message?.Invoke(message);
+                if ((string)message["t"] == "event") Event?.Invoke(message);
+                if ((string)message["t"] == "voice") Voice?.Invoke(message);
+                if ((string)message["t"] == "result") Result?.Invoke(message);
+            }
+        }
+        private void Publish()
+        {
+            SiteView = SiteView.From(simulation.View("site"));
+            PlanView = PlanView.From(simulation.View("plan"));
+            ViewsChanged?.Invoke(SiteView, PlanView);
+        }
+        private void CaptureDay()
+        {
+            var day = (int)Math.Floor(simulation.T + 1e-6);
+            if (day == lastSnapshot) return;
+            snapshots.Add(simulation.View("facilitator")); lastSnapshot = day;
+            SaveTranscript();
+        }
+        public void SaveTranscript()
+        {
+            if (transcript == null || simulation == null) return;
+            transcript["result"] = simulation.Result;
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(TranscriptPath));
+                File.WriteAllText(TranscriptPath, transcript.ToString(Formatting.Indented));
+            }
+            catch (IOException error) { Debug.LogWarning("Transcript: " + error.Message, this); }
+            catch (UnauthorizedAccessException error) { Debug.LogWarning("Transcript: " + error.Message, this); }
+        }
+        private void OnApplicationPause(bool paused) { if (paused) SaveTranscript(); }
+        private void OnDisable()
+        {
+            SaveTranscript();
+            if (loading != null) { StopCoroutine(loading); loading = null; }
+        }
+        private void OnDestroy() { pacer?.Close(); }
+    }
+}
+using System.Collections.Generic;
+using System.Linq;
+using LOBOver.Runtime;
+using LOBOver.Sim;
+using Newtonsoft.Json.Linq;
+using TMPro;
+using UnityEngine;
+
+namespace LOBOver.World
+{
+    public sealed class SiteWorld : MonoBehaviour
+    {
+        public Director director;
+        public WorldAssets assets;
+        public TrailerBoard trailerBoard;
+        public PlanPanel planPanel;
+        public JobSign jobSign;
+        public SiteSky sky;
+        public TextMeshPro gateText;
+        public Transform truck;
+        public SiteView CurrentView { get; private set; }
+        public int CellCount => cells.Count;
+        public int BoardCount => boards.Count;
+        public int CrewCount => crews.Count;
+        public double LengthFt { get; private set; }
+        private readonly Dictionary<int, StationCell> cells = new Dictionary<int, StationCell>();
+        private readonly Dictionary<int, Transform> stakes = new Dictionary<int, Transform>();
+        private readonly Dictionary<int, ZoneBoard> boards = new Dictionary<int, ZoneBoard>();
+        private readonly Dictionary<string, CrewRig> crews = new Dictionary<string, CrewRig>();
+        private JArray zones;
+        private Transform generated;
+        public StationCell CellAt(int feet) => cells.TryGetValue(Mathf.FloorToInt(feet / WorldUnits.StationFeet) * (int)WorldUnits.StationFeet, out var cell) ? cell : null;
+        public CrewRig Crew(string id) => crews.TryGetValue(id, out var crew) ? crew : null;
+        public Transform StakeAt(int feet) => stakes.TryGetValue(feet, out var stake) ? stake : null;
+        public ZoneBoard Board(int zone) => boards.TryGetValue(zone, out var board) ? board : null;
+        public int ZoneAt(double feet) => (int)zones.OfType<JObject>().First(z => feet >= (double)z["fromFt"] && (feet < (double)z["toFt"] || feet == LengthFt))["id"];
+
+        private void OnEnable()
+        {
+            if (director == null) return;
+            director.Loaded += OnLoaded; director.ViewsChanged += OnViews; director.Result += OnResult;
+            if (director.Ready) { OnLoaded(); if (director.SiteView != null) OnViews(director.SiteView, director.PlanView); }
+        }
+        private void OnDisable()
+        {
+            if (director == null) return;
+            director.Loaded -= OnLoaded; director.ViewsChanged -= OnViews; director.Result -= OnResult;
+        }
+        private void OnLoaded() => Configure(director.Job, director.DeadlineDay);
+        private void OnViews(SiteView site, PlanView plan)
+        {
+            Apply(site, director.DisplayDay); planPanel.Apply(plan, director.TimeDays);
+        }
+        private void OnResult(JObject value) => planPanel.ShowResult(value);
+        public void Configure(JObject job, double deadline)
+        {
+            if (generated != null) WorldDrawing.Remove(generated.gameObject);
+            generated = WorldDrawing.Group("GeneratedSite", transform).transform;
+            cells.Clear(); stakes.Clear(); boards.Clear(); crews.Clear(); CurrentView = null;
+            LengthFt = (double)job["lengthFt"]; zones = (JArray)job["zones"].DeepClone();
+            jobSign.Apply((JObject)job["sign"]);
+            var boundaries = zones.OfType<JObject>().ToDictionary(z => (int)z["id"], z => (double)z["fromFt"]);
+            trailerBoard.Configure(assets, LengthFt, deadline, boundaries); planPanel.Configure(assets, LengthFt, deadline);
+            if (sky.State != null) sky.Apply("clear"); else sky.Configure(assets);
+        }
+        public void Apply(SiteView view, int displayDay)
+        {
+            if (generated == null) throw new System.InvalidOperationException("Configure SiteWorld before applying a view");
+            if (cells.Count == 0) Build(view);
+            CurrentView = view;
+            foreach (var cell in view.trench) if (cells.TryGetValue((int)cell.stationFt, out var target)) target.Apply(cell);
+            foreach (var crew in view.crews) crews[crew.id].Apply(crew);
+            var arguing = WorldUnits.CrewIds.Select(id => crews[id]).Where(crew => crew.Status == "arguing").ToArray();
+            foreach (var crew in crews.Values) crew.FaceArgument(arguing.FirstOrDefault(other => other != crew && crew.Status == "arguing")?.transform);
+            foreach (var board in view.boards) boards[(int)board.zone].Apply(board);
+            sky.Apply(view.sky); gateText.text = "Trucks waiting: " + view.gate.trucksWaiting;
+            truck.localPosition = new Vector3((float)view.truck.stationFt * WorldUnits.MetresPerFoot, 0, WorldUnits.RoadZ);
+            trailerBoard.Apply(view, displayDay);
+        }
+        private void Build(SiteView view)
+        {
+            foreach (var sample in view.trench)
+            {
+                // The endpoint is a stake, not an extra 100 ft of trench.
+                if (sample.stationFt >= LengthFt) continue;
+                var cell = Instantiate(assets.cellPrefab, generated); cell.Initialize(sample.stationFt, assets);
+                cells[(int)sample.stationFt] = cell; stakes[(int)sample.stationFt] = cell.stake;
+                var spoil = Instantiate(assets.spoil, generated); spoil.name = "Spoil_" + (int)sample.stationFt;
+                spoil.transform.localPosition = new Vector3((float)sample.stationFt * WorldUnits.MetresPerFoot + WorldUnits.CellLength / 2, 0, -3);
+            }
+            var endpoint = WorldDrawing.Box("Stake_" + (int)LengthFt, generated, new Vector3((float)LengthFt * WorldUnits.MetresPerFoot, 0.55f, 1.2f), new Vector3(0.08f, 1.1f, 0.08f), assets.timber);
+            var label = WorldDrawing.Text("Station", endpoint.transform, new Vector3(0, 0.6f, 0), new Vector2(1.5f, 0.4f), 0.3f, assets.font);
+            // Text cannot inherit the thin post's scale.
+            label.transform.SetParent(generated, true); label.transform.localScale = Vector3.one;
+            label.transform.localPosition = endpoint.transform.localPosition + Vector3.up * 0.6f; label.transform.localRotation = Quaternion.Euler(0, 180, 0);
+            label.text = WorldUnits.Station(LengthFt); stakes[(int)LengthFt] = endpoint.transform;
+            foreach (var zone in zones.OfType<JObject>())
+            {
+                var root = WorldDrawing.Group("ZoneBoard", generated); root.transform.localPosition = new Vector3((float)zone["fromFt"] * WorldUnits.MetresPerFoot, 0, 1.8f);
+                root.transform.localRotation = Quaternion.Euler(0, 180, 0);
+                WorldDrawing.Box("Post", root.transform, new Vector3(0, 1, 0), new Vector3(0.1f, 2, 0.1f), assets.timber);
+                var face = WorldDrawing.Box("Board", root.transform, new Vector3(0, 1.8f, 0), new Vector3(1, 1.5f, 0.06f), assets.steel);
+                InspectTarget.Attach(face, "board"); var board = root.AddComponent<ZoneBoard>();
+                board.label = WorldDrawing.Text("Permit", root.transform, new Vector3(0, 1.8f, -0.05f), new Vector2(0.9f, 1.3f), 0.12f, assets.font);
+                board.Initialize((int)zone["id"]); boards[board.Zone] = board;
+            }
+            foreach (var id in WorldUnits.CrewIds)
+            { var crew = Instantiate(assets.crewPrefab, generated); crew.Initialize(id, assets); crews[id] = crew; }
+        }
+    }
+}
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Select-String -Path Assets/LOBOver/Runtime/Director/Director.cs -Pattern 'private Autoplan','private double secondsFull','autoplan =','autoplan.Reset','autoplan.Advance','authoredMs'; git status --short" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 108ms:
+
+Assets\LOBOver\Runtime\Director\Director.cs:40:        private Autoplan autoplan;
+Assets\LOBOver\Runtime\Director\Director.cs:43:        private double secondsFull, secondsSlow;
+Assets\LOBOver\Runtime\Director\Director.cs:104:                autoplan = new Autoplan(JArray.Parse(scriptText));
+Assets\LOBOver\Runtime\Director\Director.cs:112:            pacer?.Close(); simulation = Simulation.Create(scenario, 
+catalog); autoplan.Reset();
+Assets\LOBOver\Runtime\Director\Director.cs:121:            autoplan.Advance(simulation.T, Apply);
+Assets\LOBOver\Runtime\Director\Director.cs:130:            var authoredMs = (Speed == "slow" ? secondsSlow : 
+secondsFull) * 1000;
+Assets\LOBOver\Runtime\Director\Director.cs:131:            pacer.Advance(UnityEngine.Time.unscaledDeltaTime * 1000 * 
+baselineMs / authoredMs);
+Assets\LOBOver\Runtime\Director\Director.cs:136:            autoplan.Advance(simulation.T, Apply); Drain(); 
+CaptureDay();
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+ M Docs/WORKLOG.md
+?? Docs/WORK_ORDERS/logs/WO-S4.20261020-172515.log
+
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+Blocked before edits. [Director.cs](/C:/Users/bryan/Documents/TAMU/02-Research/Creative%20Care/Unity/LOB-OVER/Assets/LOBOver/Runtime/Director/Director.cs:121) runs Autoplan unconditionally and exposes no playback-rate control. WO-S4 requires both controls, but excludes this file from changes.
+
+```text
+STATUS: BLOCKED
+WO: WO-S4
+CHANGED:
+  - None.
+TESTS:
+  - git status --short -> only existing orchestrator changes:
+      M Docs/WORKLOG.md
+      ?? Docs/WORK_ORDERS/logs/WO-S4.20261020-172515.log
+  - Offline compilation not run; no new assemblies created.
+  - Unity PlayMode and headset checks unavailable in this dispatch.
+NOTES:
+  - Step 1 of 4 complete: instructions, scope, and integration APIs inspected.
+  - Director.cs calls autoplan.Advance during initialization and every tick; its pacing fields are private. Required controls cannot use its existing public API.
+  - Next action (under 2 minutes): amend WO-S4 to allow Assets/LOBOver/Runtime/Director/Director.cs for Autoplan enable/disable and playback-rate controls, preserving existing defaults.
+```
+hook: Stop
+hook: Stop
+hook: Stop Completed
+hook: Stop Completed
+tokens used
+54,031
+Blocked before edits. [Director.cs](/C:/Users/bryan/Documents/TAMU/02-Research/Creative%20Care/Unity/LOB-OVER/Assets/LOBOver/Runtime/Director/Director.cs:121) runs Autoplan unconditionally and exposes no playback-rate control. WO-S4 requires both controls, but excludes this file from changes.
+
+```text
+STATUS: BLOCKED
+WO: WO-S4
+CHANGED:
+  - None.
+TESTS:
+  - git status --short -> only existing orchestrator changes:
+      M Docs/WORKLOG.md
+      ?? Docs/WORK_ORDERS/logs/WO-S4.20261020-172515.log
+  - Offline compilation not run; no new assemblies created.
+  - Unity PlayMode and headset checks unavailable in this dispatch.
+NOTES:
+  - Step 1 of 4 complete: instructions, scope, and integration APIs inspected.
+  - Director.cs calls autoplan.Advance during initialization and every tick; its pacing fields are private. Required controls cannot use its existing public API.
+  - Next action (under 2 minutes): amend WO-S4 to allow Assets/LOBOver/Runtime/Director/Director.cs for Autoplan enable/disable and playback-rate controls, preserving existing defaults.
+```
+
+=== codex exit code: 0
+=== finished 20261020-172632

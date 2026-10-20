@@ -36,3 +36,7 @@ git status --short     # only Assets/LOBOver/**, ProjectSettings/EditorBuildSett
 ## Out of scope
 
 No hand tracking, no scene understanding or table detection, no Plan interaction in the headset, no networking, no store packaging.
+
+## Amendment 1 (orchestrator, 2026-10-20): Director controls
+
+Astra reported BLOCKED: item 1's Autoplan toggle and item 3's wrist-panel speed need controls that `Assets/LOBOver/Runtime/Director/Director.cs` (WO-S3) does not expose; it runs `Autoplan` unconditionally and keeps its pacing private. Add to "You may change": `Assets/LOBOver/Runtime/Director/Director.cs` and, only if the loader must change for it, `StreamingData.cs`, for additive changes only: a public `AutoplanEnabled` (default true; when false the Director neither applies nor advances the script, and turning it back on resumes at the current t), a public playback-rate control expressed as seconds per simulated day (default the scenario's value; the wrist panel sets the scenario's value, half of it and double it), and nothing else. WO-S3's defaults, public API and behaviour stay as committed in ebdaaf3; the WO-S3 tests must still pass.
