@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs';
+const { readFileSync } = typeof process !== 'undefined' && process.versions?.node
+  ? await import('node:fs') : {};
 import { loadCatalog } from '../common/catalog.js';
 import { validateScenario, formatProblem } from './validate.js';
 import { checkDigitOk, deepFreeze, zoneAt } from './helpers.js';
@@ -8,7 +9,12 @@ const STATION_EVERY_FT = 100;
 
 /** Synchronous load; catalog is a parsed catalog object and defaults to Data/catalog.json. */
 export function loadScenario(path, { catalog = loadCatalog() } = {}) {
-  const data = JSON.parse(readFileSync(path, 'utf8'));
+  if (!readFileSync) throw new Error('Use loadScenarioFromObject in the browser');
+  return loadScenarioFromObject(JSON.parse(readFileSync(path, 'utf8')), catalog);
+}
+
+export function loadScenarioFromObject(obj, catalog) {
+  const data = structuredClone(obj);
   const result = validateScenario(data, catalog);
   if (!result.ok) {
     const error = new Error(result.problems.map(formatProblem).join('\n'));

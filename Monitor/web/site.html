@@ -9,6 +9,7 @@ button.primary:hover{background:#365568}
 <div class="layout"><div><section id="events" class="panel"></section><section class="panel"><h2>Inspect</h2><div id="inspect-buttons" class="row"></div><h3>Clipboard</h3><div id="clipboard"></div><div class="row" style="margin-top:12px"><button id="listen">Listen</button><label><input id="read-aloud" type="checkbox">Read clipboard aloud</label></div><div id="listen-lines"></div></section>
 <section class="panel"><h2>Field actions</h2><div class="row"><label>Flag station<input id="flag-station" placeholder="7+20"></label><label>Note · 40 characters<input id="flag-note" maxlength="40" style="width:250px"></label><button id="flag">Flag</button><button id="stop-work">Stop work</button></div></section></div>
 <aside><section class="panel"><h2>Confirm</h2><div id="orders"></div></section><section class="panel"><h2>Trailer board</h2><div class="legend"><span>━ exc</span><span>┄ pipe</span><span>┈ back</span><span>Live actual</span></div><svg id="actual" viewBox="0 0 420 240" role="img" aria-label="Live actual lines"></svg><div id="boards"></div><p id="gate"></p></section></aside></div></main>
+<script src="lib/transport.js"></script>
 <script>
 'use strict';
 const $=id=>document.getElementById(id),esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -20,7 +21,7 @@ const TARGETS=['wall','water','pipe','machine','protection','board','sky','ticke
 const MOODS=['○','◔','◑','●'];
 let state, result, stage, lastDay=0, sequence=0;
 const cards=new Map();
-const socket=new WebSocket(`${location.protocol==='https:'?'wss':'ws'}://${location.host}/ws`);
+const socket=LobTransport.connect();
 socket.onopen=()=>socket.send(JSON.stringify({t:'hello',v:1,seat:'site',client:'web'}));
 socket.onclose=()=>{$('connection').textContent='Disconnected';};
 function command(action,fields={}){if(socket.readyState!==WebSocket.OPEN)return;$('feedback').textContent='';socket.send(JSON.stringify({t:'cmd',v:1,id:'s-'+(++sequence),seat:'site',action,...fields}));}

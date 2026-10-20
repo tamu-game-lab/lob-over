@@ -1,11 +1,8 @@
-import { WebSocket, WebSocketServer } from 'ws';
-
 const SEATS = new Set(['plan', 'site', 'facilitator']);
-export function createClients(server, { state, welcome, command }) {
-  const wss = new WebSocketServer({ server, path: '/ws' });
-  const clients = new Map();
+export function createClients({ state, welcome, command }) {
+  const clients = new Map(), connections = new Set();
   const send = (socket, message) => {
-    if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(message));
+    socket.send(message);
   };
   const broadcast = () => {
     const views = new Map();
@@ -14,12 +11,10 @@ export function createClients(server, { state, welcome, command }) {
       send(socket, views.get(client.seat));
     }
   };
-  wss.on('connection', socket => {
-    socket.on('error', error => console.error('WebSocket:', error.message));
-    socket.on('close', () => clients.delete(socket));
-    socket.on('message', raw => {
-      let message;
-      try { message = JSON.parse(raw); } catch { return; }
+  function attach(socket) {
+    connections.add(socket);
+    socket.onClose(() => { clients.delete(socket); connections.delete(socket); });
+    socket.onMessage(message => {
       if (!message || message.v !== 1) return;
       if (message.t === 'hello') {
         if (!SEATS.has(message.seat) || clients.has(socket)) return;
@@ -45,9 +40,9 @@ export function createClients(server, { state, welcome, command }) {
       if (reason) { send(socket, { t: 'nack', v: 1, id: message.id, reason }); return; }
       command(socket, client.seat, message, send);
     });
-  });
+  }
   return {
-    broadcast,
+    attach, broadcast,
     deliver(message, requester) {
       for (const [socket, client] of clients) {
         if (message.t === 'inspection') {
@@ -59,6 +54,6 @@ export function createClients(server, { state, welcome, command }) {
         }
       }
     },
-    close() { for (const socket of wss.clients) socket.terminate(); wss.close(); },
+    close() { for (const socket of connections) socket.close(); connections.clear(); clients.clear(); },
   };
 }

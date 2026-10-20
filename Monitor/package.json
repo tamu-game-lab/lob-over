@@ -8,7 +8,9 @@
     "validate": "node src/scenario/validate.js",
     "headless": "node src/sim/headless.js",
     "host": "node src/host/server.js",
-    "e2e": "node --test e2e/stage1.e2e.js"
+    "e2e": "node --test e2e/*.e2e.js",
+    "showcase": "node src/showcase/build.js",
+    "showcase:serve": "node src/showcase/serve.js"
   },
   "keywords": [],
   "author": "",

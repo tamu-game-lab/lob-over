@@ -21,6 +21,7 @@ button.primary:hover{background:#365568}
 <section class="panel" id="responses" hidden><h2>Respond</h2><div id="response-options"></div></section>
 <section class="panel keypad"><h2>Permit / Inspection keypad</h2><label>Zone<select id="key-zone"></select></label><div class="row"><label>Permit code<input id="permit-code" autocomplete="off"></label><button id="enter-permit">Enter permit</button></div><div class="row"><label>Inspection number<input id="inspection-number" autocomplete="off"></label><button id="enter-inspection">Enter inspection</button></div><div id="posted"></div></section>
 </aside></div></main>
+<script src="lib/transport.js"></script>
 <script>
 'use strict';
 const $=id=>document.getElementById(id), esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -33,7 +34,7 @@ const CREWS=['exc','pipe','back'], DASH=['','9 5','2 5'];
 const VOICE_MS=8000;
 let state, result, lastReport, draft=[], sequence=0, stage, lastDay=0, catalogStage, drag, pmTimer;
 const pending=new Map(), voiceFiles=new Map();
-const socket=new WebSocket(`${location.protocol==='https:'?'wss':'ws'}://${location.host}/ws`);
+const socket=LobTransport.connect();
 socket.onopen=()=>socket.send(JSON.stringify({t:'hello',v:1,seat:'plan',client:'web'}));
 socket.onclose=()=>{$('connection').textContent='Disconnected';};
 function sendOps(ops,onAck){
@@ -137,7 +138,7 @@ function showResult(message){
 async function playVoice(message){
   const voiceStage=stage;
   for(const line of message.lines??[]){
-    const url=`/Voice/${encodeURIComponent(voiceStage)}/${encodeURIComponent(line.id)}.wav`;
+    const url=`Voice/${encodeURIComponent(voiceStage)}/${encodeURIComponent(line.id)}.wav`;
     if(!voiceFiles.has(url))voiceFiles.set(url,fetch(url,{method:'HEAD'}).then(r=>r.ok).catch(()=>false));
     const fallback=()=>{if(stage!==voiceStage)return;clearTimeout(pmTimer);$('pm').hidden=false;$('pm-text').textContent=line.text;pmTimer=setTimeout(()=>{$('pm').hidden=true;},VOICE_MS);};
     if(await voiceFiles.get(url)){try{await new Audio(url).play();}catch{fallback();}}else fallback();

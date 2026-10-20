@@ -1,15 +1,22 @@
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+// Keep synchronous filesystem loaders on Node without requesting Node modules in a browser.
+const node = typeof process !== 'undefined' && Boolean(process.versions?.node);
+const { readFileSync } = node ? await import('node:fs') : {};
 
 // Resolve from this module so commands work from either Monitor or the repo root.
-const DEFAULT_CATALOG_PATH = fileURLToPath(new URL('../../../Data/catalog.json', import.meta.url));
+const DEFAULT_CATALOG_PATH = new URL('../../../Data/catalog.json', import.meta.url);
 
 export function loadCatalog(path = DEFAULT_CATALOG_PATH) {
+  if (!node) throw new Error('Use loadCatalogFromObject in the browser');
   return JSON.parse(readFileSync(path, 'utf8'));
 }
 
 // Data/catalog.json remains the source of every shared game constant.
-const catalog = loadCatalog();
+let catalog = node ? loadCatalog() : null;
+
+export function loadCatalogFromObject(obj) {
+  catalog = structuredClone(obj);
+  return structuredClone(catalog);
+}
 
 function lookup(entries, kind, key) {
   if (!Object.hasOwn(entries, key)) {
