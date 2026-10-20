@@ -10,7 +10,7 @@
 
 ## Verifying web work (WO-S1)
 
-Playwright against the static server the WO adds (`npm --prefix Monitor run showcase:serve`), never against `file://` (ES modules do not load from files). Open the landing page, start a showcase with the slice and autoplan on, open the Plan and Site tabs in the same browser context, press Start on the host tab, and check the WO's list. Screenshots at 1280×800 and at 390×844 (phone) into `Monitor/out/showcase/`; look at them. After Bryan publishes (his step 4), `curl -s -o /dev/null -w "%{http_code}" https://tamu-game-lab.github.io/lob-over-showcase/` is the last check of the first goal; if it is not 200 yet, say so and still print `READY_FOR_PAGES` once WO-S2 is accepted, because publishing is his step.
+Playwright against the static server the WO adds (`npm --prefix Monitor run showcase:serve`), never against `file://` (ES modules do not load from files). Open the landing page, start a showcase with the slice and autoplan on, open the Plan and Site tabs in the same browser context, press Start on the host tab, and check the WO's list. Screenshots at 1280×800 and at 390×844 (phone) into `Monitor/out/showcase/`; look at them. After Bryan publishes (his step 4), `curl -s -o /dev/null -w "%{http_code}" https://tamu-game-lab.github.io/lob-over/` is the last check of the first goal; if it is not 200 yet, say so and still print `READY_FOR_PAGES` once WO-S2 is accepted, because publishing is his step.
 
 ## Verifying the C# simulation (WO-S2)
 
@@ -22,7 +22,22 @@ Playwright against the static server the WO adds (`npm --prefix Monitor run show
 2. Then stop for Bryan with a message of at most six lines: what to open, which menu item to run, what to press, what he should see in the first 60 seconds, and what to reply. His one-line reply is the check's result; record it in the worklog. If he reports something wrong, that is the rejection note's content, in his words plus the WO section it belongs to.
 3. Never open, edit or review scene or prefab YAML; Astra builds scenes from editor scripts, and the only acceptable scene is one the menu item regenerates.
 
+## Publishing (second goal, before any Unity work)
+
+One public repository holds everything: `https://github.com/tamu-game-lab/lob-over` (Bryan created it with a blank README). Source lives on `main`, the built site on `gh-pages`, Pages serves `https://tamu-game-lab.github.io/lob-over/`. Steps, in order, all run by you (ops, not feature code; `.claude/settings.json` allows `git push`, `powershell`, `gh`, `dotnet`):
+
+1. `git remote get-url origin || git remote add origin https://github.com/tamu-game-lab/lob-over.git`, then `git fetch origin`.
+2. If `git log --oneline origin/main` shows exactly one commit and `git show --stat origin/main` touches only `README.md`, the remote holds nothing of value: `git push --force -u origin main`. Otherwise `git merge --allow-unrelated-histories -X ours origin/main -m "Merge GitHub initial commit"` and `git push -u origin main`. Bryan may have to complete a GitHub sign-in window the first time; wait for it.
+3. Local path fix: the showcase test server and e2e assume the old subpath. In `Monitor/src/showcase/serve.js` change `/lob-over-showcase` to `/lob-over`; in `Monitor/e2e/showcase.e2e.js` change the base to `http://localhost:7340/lob-over/`; grep `Monitor/` for any other `lob-over-showcase`; run `npm --prefix Monitor run e2e`; commit "Showcase: one repository, /lob-over path".
+4. `Sim/NuGet.Config` now points at nuget.org again (it was cleared for Astra's offline sandbox): run `dotnet restore Sim/LOBOver.Sim.Tests` and `dotnet test Sim/LOBOver.Sim.Tests -c Release` once with network; commit if the lock files changed.
+5. Publish: `powershell -ExecutionPolicy Bypass -File Tools/publish_showcase.ps1` (it builds `Showcase/dist`, pushes it to `gh-pages` through a worktree in `Showcase/.publish`, and prints the URL).
+6. Pages: `gh auth status`; if signed in, `gh api --method POST -H "Accept: application/vnd.github+json" /repos/tamu-game-lab/lob-over/pages -f "source[branch]=gh-pages" -f "source[path]=/"`; a 409 means Pages already exists, then `gh api --method PUT ... /repos/tamu-game-lab/lob-over/pages -f "source[branch]=gh-pages" -f "source[path]=/"`. If `gh` is missing or not signed in, print for Bryan: "GitHub → lob-over → Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: gh-pages, / (root) → Save" and continue; re-check at the end of the run.
+7. `README.md`: add one line under the title, "Play it in the browser: https://tamu-game-lab.github.io/lob-over/ (the field manual PDF is linked on the landing page)"; commit and push.
+8. Verify: poll `curl -s -o /dev/null -w "%{http_code}" https://tamu-game-lab.github.io/lob-over/` every 30 s for up to 10 minutes after Pages is enabled; 200 is the check. Then open the live landing page, host, Plan and Site with Playwright once (same checks as WO-S1, against the live URL) and keep the screenshots in `Monitor/out/showcase-live/`. Record the URL and the gh-pages commit in the worklog.
+
+After every accepted Unity work order in this goal, `git push` as well, so the public repository stays current.
+
 ## Finish lines
 
 - First goal: `READY_FOR_PAGES` when WO-05a, WO-S1 and WO-S2 are ACCEPTED.
-- Second goal: `READY_FOR_HEADSET` when WO-S3 and WO-S4 are ACCEPTED with Bryan's Play-mode check recorded. Build and Run is his step.
+- Second goal: `READY_FOR_HEADSET` when the site answers 200 at its Pages URL, WO-S3 and WO-S4 are ACCEPTED with Bryan's Play-mode check recorded, and `main` is pushed. Build and Run is his step.

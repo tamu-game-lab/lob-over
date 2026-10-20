@@ -32,11 +32,14 @@
       "Bash(touch:*)",
       "Bash(cp:*)",
       "Bash(mv:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(powershell:*)",
+      "Bash(gh:*)",
+      "Bash(dotnet:*)",
+      "Bash(robocopy:*)"
     ],
     "deny": [
       "Bash(rm -rf:*)",
-      "Bash(git push:*)",
       "Bash(git reset --hard:*)"
     ]
   }

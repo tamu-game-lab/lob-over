@@ -13,8 +13,8 @@ The three-minute slice (`Data/Scenarios/slice_texas.json`, measured in `Docs/VR_
 1. PowerShell in `LOB-OVER`, Unity closed: `git add -A; git commit -m "Showcase plan, slice, work orders"`.
 2. `dotnet --version`. If it fails: `winget install Microsoft.DotNet.SDK.8`, reopen PowerShell. (The C# simulation is built and tested with `dotnet`, outside Unity, so the orchestrator can verify it.)
 3. Launch and paste the first goal (below). Walk away; it runs WO-05a, WO-S1, WO-S2 with no Unity. Two to four hours.
-4. When it prints `READY_FOR_PAGES`: on GitHub create a **public** repo `tamu-game-lab/lob-over-showcase` (empty, no README). Settings → Pages → Build and deployment → Source "Deploy from a branch", branch `main`, folder `/ (root)`. Then run `Tools\publish_showcase.ps1`. Open the printed URL on the PC and on your phone.
-5. Launch the second goal (below). It copies the LOB-Game art into this project, writes the Unity code and the scene builder, and stops when it needs you. One to two days with your checks in between.
+4. When it prints `READY_FOR_PAGES`: one public repository holds everything, `https://github.com/tamu-game-lab/lob-over` (source on `main`, the built site on `gh-pages`). The second goal connects the local repository to it, pushes `main`, publishes `gh-pages` with `Tools\publish_showcase.ps1`, and turns Pages on through `gh` if it is installed and signed in; otherwise it tells you the three clicks (Settings → Pages → Deploy from a branch → `gh-pages` → `/ (root)`). Be at the PC for the first push: Git may open a GitHub sign-in window. The site is `https://tamu-game-lab.github.io/lob-over/`.
+5. Launch the second goal (below). It publishes the site, then copies the LOB-Game art into this project, writes the Unity code and the scene builder, and stops when it needs you. One to two days with your checks in between.
 6. When it says "check in Unity": open LOB-OVER in Unity 6000.3.8f1, menu **LOB Over → Build → Site Scene**, open `Assets/LOBOver/Scenes/Site.unity`, press **Play**. Desktop preview: the chain plays by itself (collapse Day 4, argument Day 5, rain Day 9, finish Day 24); WASD and mouse to look. Report what you saw in one line; the run continues.
 7. When it prints `READY_FOR_HEADSET`: headset plugged in, developer mode on; File → Build Profiles → Android → **Build and Run**. Put on the headset, pick MR Diorama. That is the stakeholder demo. Pick VR Site for the inspector seat.
 8. Each later change to a scenario, the manual or the voice lines: `python Paper\make_kit.py Data\Scenarios\slice_texas.json`, `.venv\Scripts\python Tools\voice\make_voice.py Data\Scenarios\slice_texas.json`, `Tools\publish_showcase.ps1`, and Build and Run again. Nothing else.
@@ -27,10 +27,10 @@ First (web and simulation, Unity closed):
 /goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md and follow them. Dispatch WO-05a, then WO-S1, then WO-S2 through bash Tools/astra.sh; verify each with its acceptance checks; accept or reject (max two rounds); commit each; keep Docs/WORKLOG.md current. Done when all three are ACCEPTED and READY_FOR_PAGES is printed, or a stop condition is reported to me.
 ```
 
-Second (Unity, after step 4; Unity may be open or closed, the orchestrator checks):
+Second (publish, then Unity; Unity may be open or closed, the orchestrator checks):
 
 ```
-/goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md and follow them. Copy the LOB-Game assets with Tools/import_lobgame_assets.ps1 first. Dispatch WO-S3 then WO-S4 through bash Tools/astra.sh; verify what can be verified without Unity, then stop and ask me to check in Unity exactly as the addendum says; accept or reject (max two rounds); commit each; keep Docs/WORKLOG.md current. Done when both are ACCEPTED and READY_FOR_HEADSET is printed, or a stop condition is reported to me.
+/goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md and follow them, including the addendum's "Publishing" section: connect origin to https://github.com/tamu-game-lab/lob-over.git, push main, publish gh-pages with Tools/publish_showcase.ps1, enable Pages through gh if available, put the Pages link in README.md, and verify the site answers. Then run Tools/import_lobgame_assets.ps1 and dispatch WO-S3 then WO-S4 through bash Tools/astra.sh; verify what can be verified without Unity, then stop and ask me to check in Unity exactly as the addendum says; accept or reject (max two rounds); commit and push each; keep Docs/WORKLOG.md current. Done when the site is live, both WOs are ACCEPTED and READY_FOR_HEADSET is printed, or a stop condition is reported to me.
 ```
 
 ## What is in and what is out
