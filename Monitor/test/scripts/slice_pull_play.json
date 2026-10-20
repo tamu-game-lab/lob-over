@@ -94,7 +94,7 @@
     "seat": "site",
     "cmd": {
       "action": "moveTo",
-      "stationFt": 1100,
+      "stationFt": 900,
       "id": "c-8"
     }
   },

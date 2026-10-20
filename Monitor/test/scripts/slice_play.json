@@ -59,6 +59,31 @@
     }
   },
   {
+    "t": 3.91,
+    "seat": "site",
+    "cmd": {
+      "action": "mount",
+      "id": "c-26"
+    }
+  },
+  {
+    "t": 3.91,
+    "seat": "site",
+    "cmd": {
+      "action": "moveTo",
+      "stationFt": 270,
+      "id": "c-27"
+    }
+  },
+  {
+    "t": 3.93,
+    "seat": "site",
+    "cmd": {
+      "action": "dismount",
+      "id": "c-28"
+    }
+  },
+  {
     "t": 4,
     "seat": "plan",
     "cmd": {
@@ -110,7 +135,7 @@
     "seat": "site",
     "cmd": {
       "action": "moveTo",
-      "stationFt": 1100,
+      "stationFt": 900,
       "id": "c-11"
     }
   },
@@ -195,7 +220,7 @@
     "seat": "site",
     "cmd": {
       "action": "confirm",
-      "orderId": "o-3",
+      "orderId": "o-6",
       "outcome": "done",
       "id": "c-20"
     }

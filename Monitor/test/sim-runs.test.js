@@ -14,6 +14,10 @@ const s1 = read('../../Data/Scenarios/stage1_texas.json');
 const s2 = read('../../Data/Scenarios/stage2_texas.json');
 const script1 = read('./scripts/stage1_pm_play.json');
 const script2 = read('./scripts/stage2_pull_play.json');
+const slice = read('../../Data/Scenarios/slice_texas.json');
+const slicePlay = read('./scripts/slice_play.json');
+const slicePull = read('./scripts/slice_pull_play.json');
+const sliceAutoplan = read('./scripts/slice_autoplan.json');
 const forbidden = /\b(correct|wrong|score|well done|should have)\b/i;
 const events = run => run.messages.filter(x => x.message.t === 'event');
 const nacks = run => run.messages.filter(x => x.message.t === 'nack');
@@ -53,6 +57,63 @@ test('Stage 1 and 2 scripts complete with the specified comparative facts and ze
     assert.equal(run.result.changeLog.length, (run === first ? script1 : script2).filter(x => x.cmd.action === 'commit').length);
     for (const points of Object.values(run.result.lines.actual)) assert.ok(points.length > 2);
   }
+});
+
+test('slice push plays collapse, argument, listen, hold and rain with F1 caught and no rejected commands', () => {
+  const run = runHeadless(slice, catalog, slicePlay);
+  assert.deepEqual(nacks(run), []);
+  assert.equal(run.result.lost, undefined);
+  assert.ok(run.result.finishDay >= 22.5 && run.result.finishDay <= 25.5);
+  const cards = events(run);
+  assert.deepEqual(cards.map(x => x.message.eventId), ['ev_p1', 'conflict_back_pipe', 'ev_a2']);
+  assert.equal(cards[0].t, 3.89);
+  assert.deepEqual(cards[0].message.card, slice.events[0].card);
+  const argument = cards[1];
+  assert.equal(argument.message.card.title, 'Crews stopped');
+  assert.ok(argument.t >= 4 && argument.t < 5);
+  assert.equal(cards[2].t, 8);
+  const listen = slicePlay.find(x => x.cmd.action === 'listen');
+  const hold = slicePlay.find(x => x.cmd.ops?.some(op => op.op === 'hold' && op.crew === 'back'));
+  assert.ok(listen.t > argument.t && hold.t > listen.t);
+  const conflictLines = slice.lines.filter(line => line.trigger === 'conflict').map(line => line.id);
+  assert.ok(run.messages.some(x => x.t === listen.t && x.message.t === 'voice'
+    && x.message.lineIds.some(id => conflictLines.includes(id))), 'Site hears the argument at the listen stop');
+  assert.equal(run.result.deviationsCaught, 1);
+  assert.equal(run.result.deviationsMissed, 0);
+});
+
+test('slice pull finishes before push with less idle time, timely holds and no rejected commands', () => {
+  const push = runHeadless(slice, catalog, slicePlay);
+  const pull = runHeadless(slice, catalog, slicePull);
+  assert.deepEqual(nacks(pull), []);
+  assert.equal(pull.result.lost, undefined);
+  assert.ok(pull.result.finishDay < push.result.finishDay);
+  assert.ok(pull.result.idleCrewDays < push.result.idleCrewDays);
+  assert.equal(collapse(pull).t, 3.89);
+  assert.deepEqual(collapse(pull).message.card, slice.events[0].cardWhenProtected);
+  assert.equal(events(pull).find(x => x.message.eventId === 'ev_a2').t, 8);
+  for (const argument of events(pull).filter(x => x.message.card.title === 'Crews stopped')) {
+    const hold = slicePull.find(x => x.t > argument.t
+      && x.cmd.ops?.some(op => op.op === 'hold' && op.crew === 'back'));
+    assert.ok(hold && hold.t - argument.t <= .5, 'Plan holds backfill within half a day of the argument');
+  }
+  assert.equal(pull.result.deviationsCaught, 1);
+  assert.equal(pull.result.deviationsMissed, 0);
+  assert.ok(pull.result.events.some(e => e.option === 'drainage_pump'));
+});
+
+test('slice autoplan retains its event chain, finish and idle time with F1 missed and no rejected commands', () => {
+  const run = runHeadless(slice, catalog, sliceAutoplan);
+  assert.deepEqual(nacks(run), []);
+  assert.equal(run.result.lost, undefined);
+  // WO-05a Amendment 1: the no-Site baseline remains unchanged.
+  assert.ok(Math.abs(run.result.finishDay - 24.8) <= .05);
+  assert.ok(Math.abs(run.result.idleCrewDays - 19.967) <= .001);
+  assert.deepEqual(events(run).map(x => [x.message.eventId, x.t]), [
+    ['ev_p1', 3.89], ['conflict_back_pipe', 4.09], ['ev_a2', 8],
+  ]);
+  assert.equal(run.result.deviationsCaught, 0);
+  assert.equal(run.result.deviationsMissed, 1);
 });
 
 test('two headless CLI runs produce byte-for-byte identical rounded transcripts', () => {

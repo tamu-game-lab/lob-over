@@ -1,0 +1,3215 @@
+=== WO-05a dispatched 20261020-151041
+=== root: /c/Users/bryan/Documents/TAMU/02-Research/Creative Care/Unity/LOB-OVER
+=== flags: --sandbox workspace-write -c approval_policy=never 
+=== note: Amendment 1 only: carry out the 'Amendment 1' section at the end of Docs/WORK_ORDERS/WO-05a.md (items 9-11 and its acceptance checks). Items 1-8 are already committed in 7e9e9c3 and must keep passing; do not redo them.
+
+Reading additional input from stdin...
+OpenAI Codex v0.163.0-alpha.10.2
+--------
+workdir: C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+model: gpt-6-astra
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a15af0-0700-7f43-9e86-5a912a358885
+--------
+user
+You are Astra, the implementer on this repository. Read AGENTS.md first and obey it.
+Then read Docs/WORK_ORDERS/WO-05a.md and carry out that work order exactly: only the files it allows,
+only the behaviour it specifies, every acceptance check run by you before you finish.
+Do not commit. Do not touch Data/ unless the work order says so. Do not add dependencies.
+If something outside your scope blocks you, stop and report BLOCKED with the exact reason.
+Finish with the STATUS block in the format AGENTS.md gives, as the very last thing you print.
+Orchestrator note for this dispatch: Amendment 1 only: carry out the 'Amendment 1' section at the end of Docs/WORK_ORDERS/WO-05a.md (items 9-11 and its acceptance checks). Items 1-8 are already committed in 7e9e9c3 and must keep passing; do not redo them.
+2026-10-20T20:10:42.872775Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://mcp.consensus.app/.well-known/oauth-protected-resource\", scope=\"search\"" })
+warning: Codex is ignoring 2 unrecognized configuration settings. Check for typos or deprecated settings.
+  user (C:\Users\bryan\.codex\config.toml): `features.rmcp_client` is ignored.
+  user (C:\Users\bryan\.codex\config.toml): `mcp_servers.code-review-graph.type` is ignored.
+warning: Codex is ignoring 2 unrecognized configuration settings. Check for typos or deprecated settings.
+  user (C:\Users\bryan\.codex\config.toml): `features.rmcp_client` is ignored.
+  user (C:\Users\bryan\.codex\config.toml): `mcp_servers.code-review-graph.type` is ignored.
+warning: loading hooks from both C:\Users\bryan\.codex\hooks.json and C:\Users\bryan\.codex\config.toml; prefer a single representation for this layer
+warning: clamping SessionEnd hook timeout to 3s in C:\Users\bryan\.codex\hooks.json
+warning: clamping SessionEnd hook timeout to 3s in C:\Users\bryan\.codex\config.toml
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+hook: UserPromptSubmit Completed
+codex
+Step 1 of 4: I’ll read `AGENTS.md` and WO-05a, then implement only Amendment 1 and run its acceptance checks.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath AGENTS.md' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 59ms:
+# AGENTS.md â€” rules for the implementer (Codex / Astra)
+
+You are the implementer on LOB, Over, a three-seat cooperative construction-scheduling game (VR inspector, web scheduler, paper spec-keeper). An orchestrator (Claude Code) writes you bounded work orders, verifies the result, and accepts or rejects it. You do not decide design questions; you build exactly what the work order says and report precisely.
+
+## Read first, every time
+
+1. This file.
+2. The work order you were given: `Docs/WORK_ORDERS/WO-xx.md`. It names the files you may touch, the acceptance checks, and what is out of scope.
+3. Only the design files the work order points you to (usually one or two sections of `Docs/DESIGN_v0.md`, `Docs/PROTOCOL.md`, `Docs/SCENARIO_SCHEMA.md`). Do not read the whole design doc unless the work order says so.
+
+## Repository layout (root = the Unity project root)
+
+```
+Assets/ Packages/ ProjectSettings/   Unity (Phase 1; do not touch in Phase 0 work orders)
+Data/        catalog.json, Scenarios/*.json, goldens/*.json   â€” source of truth for sim, kit and voice
+Docs/        DESIGN_v0.md, PROTOCOL.md, SCENARIO_SCHEMA.md, ORCHESTRATOR.md, WORK_ORDERS/, WORKLOG.md, DECISIONS.md
+Monitor/     Node host + JS reference simulation + browser pages (Plan page, 2D Site page, facilitator page)
+Paper/       field manual source and generated printable kit
+Tools/       astra.sh (dispatch), reference/ (Python oracle for goldens), voice/ (Kokoro batch)
+Voice/       generated WAV lines (output)
+```
+
+## Hard rules
+
+- **Scope.** Touch only the files and folders the work order lists under "You may change". If the job needs a change elsewhere, stop and say so in the STATUS block (`BLOCKED`), do not make it.
+- **No design decisions.** If the work order is ambiguous, pick the reading that is simplest to change later, state the choice in `NOTES`, and continue. Never invent game rules, numbers, event behaviours or UI feedback that the work order or the pointed-to design section does not state.
+- **No verdict feedback, ever.** Nothing in any player-facing surface may tell players that a choice was right or wrong: no green/red for decisions, no "correct", no score, no hint text, no "you should have". Boards post facts (a permit number, a day count, a dollar figure). This is the project's core educational rule (design doc, "No verdicts during play"). Typo-level rejection of a code that is not on file is allowed; judgement of whether entering it was wise is not.
+- **Determinism.** The simulation is seeded and must produce identical output for identical input and seed. No `Math.random()` without the seeded RNG, no wall-clock reads inside the simulation, no iteration-order dependence on object keys for anything that affects state.
+- **One truth, filtered per seat.** The host holds one state; each seat gets a filtered view (`Docs/PROTOCOL.md`). Never send the Plan seat live field truth, and never send the Site seat the plan or the money.
+- **No network from your sandbox.** Dependencies are installed by the orchestrator before you run. If a module is missing, say so in `BLOCKED`; do not try to install it or vendor a copy.
+- **Data files are authored, not generated by you.** Do not modify `Data/Scenarios/*.json`, `Data/catalog.json` or `Data/goldens/*.json` unless the work order says so explicitly.
+- **Git.** This is a git repo. Do not commit, branch, stash or reset; the orchestrator commits. Never run git on any other folder (LOB-Game is under Plastic SCM and is read-only reference material).
+- **Keep it plain.** Vanilla JS (ES modules), Node 20+, no framework, no bundler, no TypeScript in Phase 0. Tests with Node's built-in `node:test`. Pages are single HTML files with inline CSS and JS, served by the host.
+- **Code style.** Small modules, pure functions for the simulation (`state, input -> state`), named constants for every number that comes from the design, each constant with a comment naming its source (catalog, workbook, decided rule). Comments say why, not what.
+- **Do not touch** `Assets/`, `Packages/`, `ProjectSettings/`, `.gitignore`, `AGENTS.md`, `CLAUDE.md`, `Docs/ORCHESTRATOR.md`, or anything under `Docs/WORK_ORDERS/logs/`.
+
+## How to work a work order
+
+1. Restate the acceptance checks to yourself; they are what the orchestrator will run.
+2. Build the smallest thing that passes them, then stop. No extra features, no refactors of files outside scope, no "while I was here".
+3. Run every acceptance check yourself. Paste the actual command output (trimmed) into `TESTS`.
+4. If a check cannot pass because of something outside your scope, report `BLOCKED` with the exact reason and the smallest change that would unblock it.
+5. Scope check: `git status --short` must show only your own changes. Ignore `Docs/WORK_ORDERS/logs/` (the dispatch log being written while you run) and `Docs/WORKLOG.md` / `Docs/DECISIONS.md` if the orchestrator left them modified; never clean those up and never treat them as a blocker.
+6. Windows shell: your commands run in PowerShell, where `npm` and `npx` resolve to `.ps1` shims that the execution policy blocks. Call `npm.cmd` and `npx.cmd` instead; the acceptance checks mean exactly that. `node`, `python`, `pip` and `git` work as written.
+
+## STATUS block (always the last thing you print)
+
+```
+STATUS: DONE | PARTIAL | BLOCKED
+WO: WO-xx
+CHANGED:
+  - path/one.js  (new)        one line on what it is
+  - path/two.html (modified)  one line on what changed
+TESTS:
+  - <command>  ->  <pass/fail, key numbers>
+NOTES:
+  - choices you made where the order was silent, each in one line
+  - anything the verifier must know (known gaps, follow-ups, risks)
+```
+
+`DONE` means every acceptance check passed on your machine. `PARTIAL` means some passed and you list which did not and why. `BLOCKED` means you could not proceed; name the blocker. Never claim a check passed that you did not run.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath Docs/WORK_ORDERS/WO-05a.md' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 38ms:
+# WO-05a â€” Simulation pass before the table test: O10, O11, O13 and the review follow-ups
+
+## Goal
+
+Three outcome-changing gaps found in the WO-02 review and the finish-line smoke are closed, the six minor follow-ups from that review are fixed, the printed fine is formatted, and the Plan page can send an empty commit. Everything already accepted keeps passing: goldens, determinism, the three scripted runs, the e2e. No new features.
+
+## Read
+
+- `AGENTS.md`
+- `Docs/DECISIONS.md`: Open items O10, O11, O13 (the decisions, taken by Bryan, are the "Recommended answer" column) and Taken item K8
+- `Docs/WORK_ORDERS/WO-02.md` section 3 (Orders, Hold / resume, Stop work, Deviations) and section 4 (scripts)
+- `Docs/WORKLOG.md`, the "WO-02 REVIEW" line (the six minor follow-ups, quoted below so you need not search)
+- The modules you will touch: `Monitor/src/sim/deviations.js`, `permits.js`, `orders.js`, `crews.js`, `money.js`, `sim.js`, `views.js`; `Monitor/web/plan.html` (the Commit button only); `Paper/make_kit.py` (currency formatting only)
+
+## You may change
+
+- `Monitor/src/sim/**`, `Monitor/test/**` (including `test/scripts/*.json` if a script needs an extra command to keep its expectations)
+- `Monitor/web/plan.html`: only the Commit button's enabled state and label
+- `Paper/make_kit.py`: only the currency formatter
+- `Docs/DECISIONS.md`: move O10, O11, O13 from Open to Taken with one line each (K17, K18, K19), nothing else
+
+## Build
+
+1. **O10, F2 never fires at the job start.** `firstUnpermittedBoundary` means a boundary between two zones. At 0 ft with zone 1 unpermitted the excavator idles (`idleNoPermit`), bills, no overshoot, no fine, and F2 stays available for the first real boundary. The facilitator view's deviation state must say `armed` until then.
+2. **O11, a stop-work lift lands by the order-lag rule.** When a Plan commit lifts a stop-work (K8), create a `resume` order per affected crew with the normal `landsT` (at once if Site is dismounted within 100 ft of that crew, else next shift). A commit that holds a crew replaces its stop-work with the hold, as before. Site's `confirm` applies to these orders like any other.
+3. **O13, an empty commit is "no change".** `commit` with `ops: []` â†’ ack, speed returns to `full`, change log entry `{day, ops: [], note: "no change"}`. On the Plan page the Commit button stays enabled with an empty draft and reads "Commit (no change)" then; it reads "Commit N changes" otherwise. Nothing else on the page changes.
+4. **Review follow-ups** (from the WO-02 REVIEW worklog line): (a) an argument does not reset a held crew's mood; mood only falls after the crew works a full day; (b) the `demobFeeUsd` is charged at the `remob` commit, not when the order lands; (c) a radioed order that is in transit is not listed in Site's `orders[]` at Site's station until it lands; (d) a second `pay clear_own` or a second `lend` of the same machine before the first lands is nacked `"machine already committed"`; (e) a receiving crew without a machine of its own works at the lent machine's rate while it holds it (WO-02 Lend clause); (f) a stop-work on a zone does not touch a crew that has not started (`t < startDay - 1`); it starts on its day and then idles if the stop-work still stands.
+5. **Currency formatting in the kit.** Every dollar figure `make_kit.py` prints uses thousands separators (`$10,000`), including the fine and any `_validate` placeholder values.
+6. **Scenario rule switches.** The review found that `orderLagShifts`, `heldCrewBills`, `conflictRule`, `conflictBehaviour`, `unpermittedBoundary`, `pumpHalvesRework`, `likelihoodRollsApply` and `shiftsPerDay` are not read. Do not implement alternatives; instead make the loader (`Monitor/src/scenario/load.js` is out of scope, so do this in `sim.js` at `createSim`) throw a clear error if any of them differs from the authored value, so a future retune cannot silently do nothing.
+7. **Tests.** Add to `Monitor/test/`: O10 (Stage 2, no codes entered, run to t 1: exc at 0 ft, `idleNoPermit`, `finesUsd 0`, F2 `armed`; then codes for zones 1 and 2 entered, run until exc reaches 30+00 with zone 3 unpermitted and Site elsewhere: overshoot 100 ft, fine charged once); O11 (stop-work at t 5.1 with Site at 7+20, Plan commit at 5.2 with no hold: backfill at ~250 ft resumes at t 6.0, pipe would resume at once if it were not stopped by the collapse; with Site standing at the backfill crew it resumes at 5.2); O13 (empty commit acks, speed `full`, change log entry); one test per follow-up (a) to (f); the rule-switch guard throws on a changed `orderLagShifts`.
+8. Keep `test/scripts/stage1_pm_play.json` and `stage2_pull_play.json` passing their expectations; if O11 shifts a day, adjust the script's commands, not the expectations in WO-02. Record the new finish, idle and spend numbers in `NOTES`.
+
+## Acceptance checks
+
+```
+npm --prefix Monitor test                                                                          # all pass, including the new O10/O11/O13 and (a)-(f) tests
+node Monitor/src/sim/goldens.js Data/goldens/no_events.json ; echo exit=$?                        # 5 x PASS, exit=0
+node Monitor/src/sim/headless.js Data/Scenarios/stage2_texas.json --out Monitor/out/s2n.json && node -e "const r=require('./Monitor/out/s2n.json');console.log(r.result.finesUsd, r.snapshots[1].deviations ? JSON.stringify(r.snapshots[1].deviations) : 'see facilitator view')"   # 0 fines with nobody entering a code; F2 armed, not triggered
+node Monitor/src/sim/headless.js Data/Scenarios/stage1_texas.json --script Monitor/test/scripts/stage1_pm_play.json --out Monitor/out/s1a.json && node Monitor/src/sim/headless.js Data/Scenarios/stage1_texas.json --script Monitor/test/scripts/stage1_pm_play.json --out Monitor/out/s1b.json && cmp Monitor/out/s1a.json Monitor/out/s1b.json && echo DETERMINISTIC
+node -e "const r=require('./Monitor/out/s1a.json').result;console.log(r.finishDay, r.lost, r.idleCrewDays)"   # > 35, < 46, undefined
+node Monitor/src/sim/headless.js Data/Scenarios/stage2_texas.json --script Monitor/test/scripts/stage2_pull_play.json --out Monitor/out/s2.json && node -e "const r=require('./Monitor/out/s2.json').result;console.log(r.finishDay, r.finesUsd, r.idleCrewDays)"   # < 46, 0, lower than Stage 1's
+npm --prefix Monitor run e2e                                                                       # 1/1
+python Paper/make_kit.py Data/Scenarios/stage2_texas.json && grep -c '\$10,000' Paper/out/stage2_texas/manual.txt   # >= 1
+grep -c '\$10000' Paper/out/stage2_texas/manual.txt ; echo grep-exit=$?                           # 0, grep-exit=1
+git status --short      # only Monitor/src/sim, Monitor/test, Monitor/web/plan.html, Paper/make_kit.py, Docs/DECISIONS.md
+```
+
+## Out of scope
+
+No new verbs, no page work beyond the Commit button, no scenario number changes, no changes to `Docs/WORK_ORDERS/WO-02.md`. If a follow-up turns out to need a design decision, leave it, say so in NOTES, and finish the rest.
+
+## Amendment 1 (orchestrator, 2026-10-20): the slice scripts
+
+`Monitor/test/scripts/slice_*.json` and `Docs/VR_SLICE.md` were added on 2026-10-20, after this work order was written; item 8 names only the two stage scripts. Everything above is committed (7e9e9c3) and stands; this is not a rejection round. Under the rules above (chiefly O11: a stop-work lift lands by the order-lag rule) the two slice play scripts no longer play the chain `Docs/VR_SLICE.md` describes and measured (collapse Day 4, argument Day 5, rain Day 9, finish about Day 24).
+
+Observed with `node Monitor/src/sim/headless.js Data/Scenarios/slice_texas.json --script Monitor/test/scripts/<name>.json --out Monitor/out/<name>.json`:
+
+- `slice_play`: lost at the deadline (t 29), idle 72.2 crew-days; before 7e9e9c3 it finished at 23.85 with 18.1 idle and $128,357 spent. Cause: the `stopWork` at t 3.9 now holds exc (869 ft) and back (238 ft) until the lift's `resume` orders land at t 5.0 (Site stands at 5+20, within 100 ft of pipe only); the "Crews stopped" argument moves from t 4.14 to t 7.14, after the script's `listen` (4.3) and `hold back` (4.35), so pipe and back argue to the deadline and every later commit is nacked `conflict: hold or demobilize the trailing crew` (c-22, c-23, c-24, c-25). Also at t 5.05 Site stands at 11+00 while exc is at about 880 ft, so `confirm o-2` (c-14, c-16) and `confirm o-3` (c-20) are nacked `order not landed here`, and the radioed lend lands at 6.0 instead of 5.05. The order ids also shifted: the lift's resume orders are o-3, o-4, o-5 and the hold is o-6.
+- `slice_pull_play`: finish 23.4, idle 12.2, $134,801 (before: 22.35, 9.1, $128,262); `confirm o-5` at 5.05 (c-10, c-12) nacked `order not landed here` for the same reason, the lend lands at 6.0, the argument moves from 10.2 to 9.8.
+- `slice_autoplan`: unchanged (24.8, idle 19.967).
+
+### Build (continued)
+
+9. Re-choreograph `slice_play.json` and `slice_pull_play.json` so that, under the rules above, they play the chain VR_SLICE.md describes. Commands only (times, stations, order ids, an extra ride, mount/dismount or listen), as item 8 allows; keep each script's plan ops (the pushed plan with its lend and hold in `slice_play`; `setStart back 8`, the trench box 4+00 to 7+00, both permits at the start, the pump at the forecast and the hold in `slice_pull_play`), the `stopWork` at the collapse, and the F1 flow at the excavator (`confirm notDone`, `radio`, `confirm done`). Target outcomes:
+   - `slice_play`: collapse card at t 3.89 (unchanged); "Crews stopped" fires with t < 5.0 (Day 5; for that, Site can ride to the backfill crew and dismount before Plan's commit so the lift lands there at once); Site `listen`s and Plan holds the trailing crew after the argument, not before; heavy rain at t 8 (unchanged); `finishDay` between 22.5 and 25.5; `lost` undefined; no `nack` message in the transcript.
+   - `slice_pull_play`: no `nack`; finishes before `slice_play` with fewer idle crew-days; if the argument still occurs, the hold answers it within half a day.
+   - `slice_autoplan`: unchanged (24.8) unless the lend's order id in a no-Site run is no longer o-2; then fix the id only.
+10. Add to `Monitor/test/sim-runs.test.js` one test per slice script asserting these outcomes (event `t`s, zero nacks, finish and idle relations, autoplan finish 24.8 within 0.05), so the slice chain is guarded like the stage scripts.
+11. In NOTES report, per slice script, the new measured finish day, idle crew-days (total and exc / pipe / back), spend, peak open trench and the deviation outcome, in the columns of the VR_SLICE.md table; the orchestrator refreshes that table.
+
+### Acceptance checks (in addition to the ones above, which must still pass)
+
+```
+npm --prefix Monitor test                                                                              # all pass, including the three slice-chain tests
+node Monitor/src/sim/headless.js Data/Scenarios/slice_texas.json --script Monitor/test/scripts/slice_play.json --out Monitor/out/sp.json
+node Monitor/src/sim/headless.js Data/Scenarios/slice_texas.json --script Monitor/test/scripts/slice_pull_play.json --out Monitor/out/spp.json
+node Monitor/src/sim/headless.js Data/Scenarios/slice_texas.json --script Monitor/test/scripts/slice_autoplan.json --out Monitor/out/sa.json
+node -e "for (const n of ['sp','spp','sa']) { const r=require('./Monitor/out/'+n+'.json'); console.log(n, r.result.finishDay, r.result.lost, r.result.idleCrewDays, 'nacks', r.messages.filter(m=>m.message.t==='nack').length, 'events', r.messages.filter(m=>m.message.t==='event').map(m=>m.t+':'+m.message.card.title).join(', ')) }"
+   # sp: finish 22.5..25.5, lost undefined, nacks 0, events 3.89 collapse / <5.0 Crews stopped / 8 Heavy rain; spp: finish < sp's, idle < sp's, nacks 0; sa: 24.8 undefined 19.967 nacks 0
+git status --short      # only Monitor/test/scripts/slice_*.json and Monitor/test/sim-runs.test.js (plus files of the original scope only if a slice outcome needs a rule fix, which you then list in NOTES)
+```
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'git status --short' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 27ms:
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+?? Docs/WORK_ORDERS/logs/WO-05a.20261020-151041.log
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -LiteralPath Monitor/src/sim/headless.js; Get-Content -LiteralPath Monitor/src/sim/orders.js; Get-Content -LiteralPath Monitor/src/sim/site.js; Get-Content -LiteralPath Monitor/package.json; rg -n 'idleCrewDays|peakOpen|spent|listen|confirm|radio|stopWork|mount|ride' Monitor/src/sim Monitor/test" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -LiteralPath Docs/VR_SLICE.md -Encoding UTF8; rg -n 'O10|O11|O13|K8|K17|K18|K19' Docs/DECISIONS.md; Get-Content -LiteralPath Docs/WORK_ORDERS/WO-02.md -Encoding UTF8" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "rg --files -g AGENTS.md -g '*sim-runs*' -g 'slice_*.json' Monitor; Get-Content -LiteralPath Monitor/test/sim-runs.test.js; Get-Content -LiteralPath Monitor/test/scripts/slice_play.json; Get-Content -LiteralPath Monitor/test/scripts/slice_pull_play.json; Get-Content -LiteralPath Monitor/test/scripts/slice_autoplan.json" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ exited 1 in 329ms:
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { loadCatalog } from '../common/catalog.js';
+import { loadScenario } from '../scenario/load.js';
+import { DT, EPS } from './common.js';
+import { createSim } from './sim.js';
+
+// WO-02 transcript precision and safety-stop allowance.
+const TRANSCRIPT_DECIMALS = 3;
+const SAFETY_DAYS = 5;
+export const roundedJSON = value => JSON.stringify(value, (key, v) =>
+  typeof v === 'number' ? Number(v.toFixed(TRANSCRIPT_DECIMALS)) : v, 2) + '\n';
+
+export function runHeadless(scenario, catalog, script = [], { pure = false } = {}) {
+  const sim = createSim(scenario, catalog, { pure });
+  const commands = script.map((entry, index) => ({ ...entry, index })).sort((a, b) => a.t - b.t || a.index - b.index);
+  const transcript = { scenario: scenario.id, seed: scenario.seed, snapshots: [], messages: [], result: null };
+  let index = 0, snapshotDay = -1;
+  const drain = () => { for (const message of sim.drain()) transcript.messages.push({ t: message.day ?? sim.t, message }); };
+  while (!sim.done && sim.t <= scenario.plan.deadlineDay + SAFETY_DAYS) {
+    while (index < commands.length && commands[index].t <= sim.t + EPS) {
+      const { seat, cmd } = commands[index++];
+      const reply = sim.apply(seat, cmd);
+      transcript.messages.push({ t: sim.t, message: { t: reply.ok ? 'ack' : 'nack', v: 1, id: cmd.id, ...reply } });
+      drain();
+    }
+    const day = Math.floor(sim.t + EPS);
+    if (day > snapshotDay) { transcript.snapshots.push(sim.view('facilitator')); snapshotDay = day; }
+    drain();
+    if (sim.speed === 'paused') {
+      transcript.safetyStop = { t: sim.t, reason: 'paused without a same-time resume' };
+      break;
+    }
+    sim.tick(DT);
+    drain();
+  }
+  transcript.result = sim.result;
+  if (!sim.done && !transcript.safetyStop) transcript.safetyStop = { t: sim.t, reason: 'time limit' };
+  return transcript;
+}
+
+function main(args) {
+  const [path, ...options] = args;
+  if (!path || path.startsWith('--')) {
+    console.log('Usage: node headless.js <scenario.json> [--script <script.json>] [--out <transcript.json>] [--pure]');
+    return 2;
+  }
+  let scriptPath, out, pure = false;
+  for (let i = 0; i < options.length; i++) {
+    if (options[i] === '--pure') pure = true;
+    else if (options[i] === '--script' && options[i + 1]) scriptPath = options[++i];
+    else if (options[i] === '--out' && options[i + 1]) out = options[++i];
+    else throw new Error(`Unknown or incomplete option: ${options[i]}`);
+  }
+  const catalog = loadCatalog(), scenario = loadScenario(path, { catalog });
+  const script = scriptPath ? JSON.parse(readFileSync(scriptPath, 'utf8')) : [];
+  const transcript = runHeadless(scenario, catalog, script, { pure });
+  if (out) {
+    mkdirSync(dirname(resolve(out)), { recursive: true });
+    writeFileSync(out, roundedJSON(transcript));
+    console.log(`${scenario.id}: ${transcript.result?.lost ?? 'finished'} t=${transcript.result?.finishDay ?? transcript.snapshots.at(-1)?.t}`);
+  } else process.stdout.write(roundedJSON(transcript));
+  return transcript.safetyStop ? 1 : 0;
+}
+
+if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
+  try { process.exitCode = main(process.argv.slice(2)); }
+  catch (error) { console.error(error.message); process.exitCode = 1; }
+}
+import { CREW_IDS, EPS, activeCollapse, displayDay, nearby, nextBoundary, travelDays, voice } from './common.js';
+import { markFirstRadio, firstLend } from './deviations.js';
+import { availableResponses, clearingDays } from './events.js';
+import { buyMachine, releaseMachine } from './money.js';
+import { validateInspection, validatePermit, updateHoldPoints } from './permits.js';
+import { projectOrder } from './planning.js';
+
+const OFFICE_OPS = new Set(['setStart', 'enterPermit', 'enterInspection', 'pay']);
+const CREW_OPS = new Set(['setStart', 'hold', 'resume', 'demob', 'remob']);
+const PLAN_OPS = new Set([...CREW_OPS, ...OFFICE_OPS, 'lend', 'order', 'protect', 'radio']);
+const positive = n => Number.isFinite(n) && n > 0;
+const owns = (object, key) => typeof key === 'string' && Object.hasOwn(object, key) && !key.startsWith('_');
+const ownerOf = (s, machine) => CREW_IDS.find(id => s.crews[id].machine === machine);
+const machineCommitted = (s, machine) => s.orders.some(order => order.op.op === 'lend'
+  && order.op.machine === machine && order.appliedT == null);
+export const landingTime = (s, crew) => s.pure || crew && nearby(s, s.crews[crew].pos) ? s.t : nextBoundary(s.t);
+
+export function validateOp(s, op) {
+  if (!op || !PLAN_OPS.has(op.op)) return 'unknown operation';
+  if (CREW_OPS.has(op.op) && !CREW_IDS.includes(op.crew)) return 'unknown crew';
+  const c = s.crews[op.crew];
+  if (op.op === 'setStart') {
+    if (s.scenario.plan.locked || c.locked) return 'plan locked';
+    if (s.t >= c.startDay - 1 - EPS) return 'crew already started';
+    if (!Number.isInteger(op.day) || op.day < displayDay(s.t)) return 'invalid start day';
+  }
+  if (op.op === 'hold' && (op.days != null && !positive(op.days)
+    || op.fromDay != null && (!Number.isInteger(op.fromDay) || op.fromDay < displayDay(s.t)))) return 'invalid hold';
+  if (op.op === 'lend') {
+    if (machineCommitted(s, op.machine)) return 'machine already committed';
+    const owner = ownerOf(s, op.machine);
+    if (!owner || s.crews[owner].lentAway || s.loans.some(l => l.fromCrew === owner && l.phase !== 'returned')) return 'machine unavailable';
+    if (!CREW_IDS.includes(op.toCrew) || op.toCrew === owner || !positive(op.days)) return 'invalid lend';
+  }
+  if (op.op === 'protect' || op.op === 'order') {
+    if (!s.scenario.plan.preparationAllowed) return 'not in the budget';
+    if (op.op === 'order') {
+      if (!owns(s.catalog.machines, op.machine)) return 'unknown machine';
+      if (op.rush) return 'rush unavailable';
+    } else {
+      if (!owns(s.catalog.protection, op.kind)) return 'unknown protection';
+      if (s.catalog.protection[op.kind].reactOnly) return 'no such response now';
+      if (op.kind === 'trench_slope' && (s.catalog.cities[s.scenario.city].slopeRefused
+        || s.catalog.protection[op.kind].refusedInCities?.includes(s.scenario.city))) return 'slope refused';
+      if (!Number.isFinite(op.fromFt) || !Number.isFinite(op.toFt) || op.fromFt < 0
+        || op.toFt > s.scenario.job.lengthFt || op.fromFt >= op.toFt) return 'invalid stretch';
+    }
+  }
+  if (op.op === 'pay') {
+    if (op.item === 'clear_own' && machineCommitted(s, s.crews.exc.machine)) return 'machine already committed';
+    const response = availableResponses(s).find(r => r.option.key === op.item);
+    if (!response) return 'no such response now';
+    if (op.item === 'hire_excavator' && (!owns(s.catalog.machines, op.machine)
+      || s.catalog.machines[op.machine].crew !== 'exc')) return 'unknown machine';
+    if (op.item === 'clear_own' && s.crews.exc.lentAway) return 'machine unavailable';
+  }
+  if (op.op === 'enterPermit') return validatePermit(s, op);
+  if (op.op === 'enterInspection') return validateInspection(s, op);
+  if (op.op === 'radio' && !s.orders.some(order => order.id === op.orderId)) return 'order not on file';
+}
+
+function startLoan(s, op) {
+  const fromCrew = ownerOf(s, op.machine);
+  const event = fromCrew === 'exc' && op.toCrew === 'pipe' ? activeCollapse(s) : null;
+  const loan = { machine: op.machine, fromCrew, toCrew: op.toCrew, phase: 'outbound',
+    arrivesT: s.t + travelDays(s.crews[fromCrew].pos, s.crews[op.toCrew].pos), days: op.days,
+    eventId: event?.id ?? null };
+  s.crews[fromCrew].lentAway = true;
+  s.loans.push(loan);
+  if (event) event.option = 'clear_own';
+  firstLend(s);
+}
+
+function purchase(s, machine, event) {
+  buyMachine(s, machine);
+  s.deliveries.push({ machine, crew: s.catalog.machines[machine].crew, issuedT: s.t,
+    arrivesT: s.t + s.catalog.machines[machine].leadDays.normal + s.catalog.cities[s.scenario.city].leadDelayDays,
+    hired: !!event, eventId: event?.id ?? null, arrived: false, released: false });
+}
+
+function pay(s, op) {
+  const { event, option } = availableResponses(s).find(r => r.option.key === op.item);
+  event.option = op.item;
+  if (op.item === 'hire_excavator') {
+    purchase(s, op.machine, event);
+    return;
+  }
+  s.spentUsd += option.cost.usd;
+  s.payments.push({ item: op.item, paidT: s.t, perDayUsd: option.cost.perDayUsd });
+  if (option.effect.lend) {
+    const fromCrew = option.effect.lend.machineOf;
+    issueOrder(s, { op: 'lend', machine: s.crews[fromCrew].machine,
+      toCrew: option.effect.lend.toCrew, days: clearingDays(s, event, s.crews[fromCrew].machine) });
+  }
+  if (option.effect.resumeAfterDays != null) event.endsT = s.t + option.effect.resumeAfterDays;
+  if (option.effect.rainRateRestore) {
+    event.pumpPaidT = s.t;
+    event.restore = option.effect.rainRateRestore;
+    event.reworkMultiplier = option.effect.reworkMultiplier;
+  }
+}
+
+function applyLanded(s, order) {
+  const op = order.op, c = s.crews[order.crew];
+  if (op.op === 'hold') {
+    const fromT = Math.max(s.t, op.fromDay != null ? op.fromDay - 1 : s.t);
+    c.hold = { fromT, untilT: op.days != null ? fromT + op.days : null };
+    c.arguing = false;
+    c.stop = null;
+  } else if (op.op === 'resume') {
+    c.hold = c.stop = null;
+  } else if (op.op === 'lend') startLoan(s, op);
+  else if (op.op === 'protect') s.protections.push({ kind: op.kind, fromFt: op.fromFt, toFt: op.toFt, placedT: s.t });
+  else if (op.op === 'demob') {
+    c.demobilized = true;
+    c.demobBillingEndsT = nextBoundary(s.t);
+    c.arguing = false;
+  } else if (op.op === 'remob') {
+    c.remobT = s.t + s.catalog.cities[s.scenario.city].remobilizationDelayDays;
+  }
+  order.appliedT = s.t;
+}
+
+export function issueOrder(s, op) {
+  if (op.op === 'radio') {
+    const order = s.orders.find(order => order.id === op.orderId);
+    order.issuedT = s.t;
+    order.landsT = landingTime(s, order.crew);
+    order.status = 'sent';
+    order.ignored = false;
+    order.reissued = true;
+    // Acknowledging an already-applied order must not buy or lend twice.
+    order.alreadyApplied = order.appliedT != null;
+    return;
+  }
+  const crew = op.crew ?? (op.op === 'lend' ? ownerOf(s, op.machine)
+    : op.op === 'order' ? s.catalog.machines[op.machine].crew : op.op === 'protect' ? 'exc' : null);
+  const order = { id: `o-${s.nextOrderId++}`, op: { ...op }, crew, issuedT: s.t,
+    landsT: OFFICE_OPS.has(op.op) ? s.t : landingTime(s, crew), status: 'sent' };
+  s.orders.push(order);
+  projectOrder(s, order);
+  if (!s.pure) markFirstRadio(s, order);
+  if (op.op === 'protect') s.spentUsd += s.catalog.protection[op.kind].priceUsd;
+  if (op.op === 'order') purchase(s, op.machine);
+  if (op.op === 'remob') s.spentUsd += s.scenario.rules.demobFeeUsd;
+  if (op.op === 'hold') voice(s, 'holdCommitted', ['plan']);
+  if (op.op === 'demob') voice(s, 'demobCommitted', ['plan']);
+  if (!OFFICE_OPS.has(op.op)) return;
+  if (op.op === 'setStart') {
+    s.crews[op.crew].startDay = op.day;
+    s.plannedLines[op.crew].startDay = op.day;
+    s.plannedLines[op.crew].segments[0].fromT = op.day - 1;
+  } else if (op.op === 'enterPermit') s.permits[op.zone].entered = true;
+  else if (op.op === 'enterInspection') {
+    s.inspections[op.zone].cleared = true;
+    updateHoldPoints(s);
+  } else if (op.op === 'pay') pay(s, op);
+  order.appliedT = order.landedT = s.t;
+  order.status = 'landed';
+}
+
+export function updateOrders(s) {
+  for (const order of s.orders) {
+    if (order.status !== 'sent' || s.t < order.landsT - EPS) continue;
+    order.status = 'landed';
+    order.landedT = s.t;
+    voice(s, 'orderLanded', ['plan']);
+    if (!order.ignored && !order.alreadyApplied) applyLanded(s, order);
+  }
+  for (const loan of s.loans) {
+    if (loan.phase === 'outbound' && s.t >= loan.arrivesT - EPS) {
+      loan.phase = 'working';
+      const event = s.events.find(e => e.id === loan.eventId);
+      loan.returnsT = s.t + (event ? clearingDays(s, event, loan.machine) : loan.days);
+      if (event) { event.clearingT = s.t; event.endsT = loan.returnsT; }
+    }
+    if (loan.phase === 'working' && s.t >= loan.returnsT - EPS) {
+      loan.phase = 'returning';
+      loan.homeT = s.t + travelDays(s.crews[loan.toCrew].pos, s.crews[loan.fromCrew].pos);
+    }
+    if (loan.phase === 'returning' && s.t >= loan.homeT - EPS) {
+      loan.phase = 'returned';
+      s.crews[loan.fromCrew].lentAway = false;
+    }
+  }
+  for (const delivery of s.deliveries) {
+    if (!delivery.arrived && s.t >= delivery.arrivesT - EPS) {
+      delivery.arrived = true;
+      if (delivery.hired) {
+        const event = s.events.find(e => e.id === delivery.eventId);
+        event.clearingT = s.t;
+        event.endsT = s.t + clearingDays(s, event, delivery.machine);
+        delivery.releaseT = event.endsT;
+      } else {
+        const crew = s.crews[delivery.crew];
+        releaseMachine(s, crew.machine);
+        crew.machine = delivery.machine;
+      }
+    }
+    if (delivery.hired && delivery.arrived && !delivery.released && s.t >= delivery.releaseT - EPS) {
+      delivery.released = true;
+      releaseMachine(s, delivery.machine);
+    }
+  }
+}
+import { CREW_IDS, EPS, HOURS_PER_DAY, activeCollapse, crewAt, emit, nearby, travelDays, voice, zoneAt } from './common.js';
+import { confirmDeviation, inspectProtection } from './deviations.js';
+import { inspectionText, stakeAt } from './views.js';
+
+const TARGETS = new Set(['wall', 'water', 'pipe', 'machine', 'protection', 'board', 'sky', 'ticket', 'crew']);
+export function applySite(s, cmd) {
+  const truck = s.truck;
+  if (cmd.action === 'moveTo') {
+    if (truck.moving || truck.dismounted) return 'mount before moving';
+    if (!Number.isFinite(cmd.stationFt) || cmd.stationFt < 0 || cmd.stationFt > s.scenario.job.lengthFt) return 'invalid station';
+    truck.fromFt = truck.stationFt;
+    truck.toFt = cmd.stationFt;
+    truck.departT = s.t;
+    truck.arrivesT = s.t + travelDays(truck.stationFt, cmd.stationFt);
+    truck.moving = truck.arrivesT > s.t;
+    return;
+  }
+  if (cmd.action === 'mount' || cmd.action === 'dismount') {
+    if (truck.moving) return 'truck moving';
+    truck.dismounted = cmd.action === 'dismount';
+    return;
+  }
+  if (!truck.dismounted || truck.moving) return 'dismount first';
+  if (cmd.action === 'inspect') {
+    if (!TARGETS.has(cmd.target)) return 'unknown inspection target';
+    const ft = stakeAt(s, truck.stationFt);
+    if (cmd.target === 'protection') inspectProtection(s, ft);
+    const event = activeCollapse(s);
+    if (event && stakeAt(s, event.stationFt) === ft) event.inspected = true;
+    emit(s, 'inspection', { id: cmd.id, target: cmd.target, text: inspectionText(s, cmd.target), seats: ['site'] });
+    return;
+  }
+  if (cmd.action === 'flag') {
+    // Protocol caps authored notes at 40 characters.
+    const MAX_NOTE_LENGTH = 40;
+    if (!Number.isFinite(cmd.stationFt) || cmd.stationFt < 0 || cmd.stationFt > s.scenario.job.lengthFt
+      || cmd.note != null && (typeof cmd.note !== 'string' || cmd.note.length > MAX_NOTE_LENGTH)) return 'invalid flag';
+    s.flags.push({ stationFt: cmd.stationFt, day: s.t, ...(cmd.note ? { note: cmd.note } : {}) });
+    return;
+  }
+  if (cmd.action === 'stopWork') {
+    if (zoneAt(s, truck.stationFt)?.id !== cmd.zone) return 'outside zone';
+    const stop = { zone: cmd.zone, fromT: s.t + s.scenario.rules.stopWorkReachHours / HOURS_PER_DAY };
+    for (const id of CREW_IDS) {
+      const c = s.crews[id];
+      if (zoneAt(s, c.pos)?.id !== cmd.zone) continue;
+      if (s.t >= c.startDay - 1 - EPS) c.stop = { ...stop };
+      else s.pendingStops[id] = { ...stop };
+    }
+    return;
+  }
+  if (cmd.action === 'confirm') {
+    const order = s.orders.find(order => order.id === cmd.orderId);
+    if (!order?.crew || order.landedT == null || order.status === 'sent'
+      || !nearby(s, s.crews[order.crew].pos)) return 'order not landed here';
+    if (!['done', 'notDone'].includes(cmd.outcome)) return 'invalid outcome';
+    order.status = cmd.outcome === 'done' ? 'confirmed' : 'notCarriedOut';
+    confirmDeviation(s, order, cmd.outcome);
+    if (cmd.outcome === 'notDone') voice(s, 'orderNotDone', ['plan']);
+    return;
+  }
+  if (cmd.action === 'listen') {
+    const c = crewAt(s);
+    if (c?.arguing) {
+      const conflict = s.conflicts.find(conflict => conflict.trailing === c.id || conflict.leader === c.id);
+      voice(s, 'conflict', ['site'], [conflict.trailing, conflict.leader]);
+    } else if (c && (c.status === 'held' || c.status === 'stopped') && c.mood > 0) {
+      voice(s, `heldDay${c.mood}`, ['site'], [c.id]);
+    } else emit(s, 'inspection', { id: cmd.id, target: 'crew', text: 'Nothing to hear.', seats: ['site'] });
+    return;
+  }
+  return 'unknown action';
+}
+
+export function updateTruck(s) {
+  const truck = s.truck;
+  if (!truck.moving) return;
+  if (s.t >= truck.arrivesT - EPS) {
+    truck.stationFt = truck.toFt;
+    truck.moving = false;
+  } else truck.stationFt = truck.fromFt + (truck.toFt - truck.fromFt)
+    * (s.t - truck.departT) / (truck.arrivesT - truck.departT);
+}
+{
+  "name": "monitor",
+  "version": "1.0.0",
+  "description": "Node host, JS reference simulation and the browser pages. WO-00 scaffolds this folder; see Docs/WORK_ORDERS/WO-00.md.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test",
+    "validate": "node src/scenario/validate.js",
+    "headless": "node src/sim/headless.js",
+    "host": "node src/host/server.js",
+    "e2e": "node --test e2e/stage1.e2e.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
+  }
+}
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:204
++ ... im/site.js; Get-Content -LiteralPath Monitor/package.json; rg -n 'idl ...
++                                                                ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+
+ succeeded in 309ms:
+# VR_SLICE.md — a playable three-minute slice with the headset
+
+Written October 20, 2026, after Phase 0. Section A (testing today's browser build with a team on a LAN) and the slice numbers stand. Sections B to E (the headset as a client of a LAN host) are superseded by `Docs/SHOWCASE.md`, which embeds the simulation in the headset; they are kept because WO-S3 and WO-S4 reuse their specifications. The design, protocol and rules do not change; the slice is a shorter scenario and a Unity client.
+
+## The slice
+
+`Data/Scenarios/slice_texas.json`: the Stage 1 world cut in half. 3,000 ft, two zones of 1,500 ft, Standard machines, excavation Day 1, pipe Day 2, backfill Day 4, promise Day 18, deadline Day 30, budget $172,320. Rules holds both permit cards. Every mechanic fires once, in this order (measured with the scripted plays in `Monitor/test/scripts/`):
+
+| Sim day | What happens | Who acts | Procedure |
+| --- | --- | --- | --- |
+| Huddle (host paused) | Plan enters zone 1's permit code; Site rides to the seepage at 4+00 to 7+00 and looks | Plan, Site, Rules | P-2 |
+| 4 (t 3.89) | Collapse at 5+20; Site stops work on zone 1; Rules reads P1; Plan lends the excavator | all | P-1 |
+| 5 (t 4.1) | Backfill catches the stopped pipe crew; the foremen argue; Plan holds backfill | Site, Plan | P-6 |
+| 5 to 6 | The lend went out by radio and was not carried out (F1); Site finds the excavator still digging, Plan radios again | Site, Plan | P-1 line 6 |
+| 8 | Forecast in Plan's inbox; towers to the south in VR; zone 2's permit is due before excavation reaches 15+00 | Plan, Rules | P-2 |
+| 9 to 10 | Rain, every crew at half speed; afterwards pipe laying waits for the rework (3 days unpermitted, 1.5 with a pump) | — | A2 page |
+| 16 | Backfill reaches the end of zone 1: inspection handshake | Site, Rules, Plan | P-3 |
+| 24 | Finish, result card | — | — |
+
+| Scripted play | Finish day | Idle crew-days (exc / pipe / back) | Spent | Peak open trench | Collapse days lost | Rain days lost |
+| --- | --- | --- | --- | --- | --- | --- |
+| Push as the PM wrote it (`slice_play.json`) | 23.85 | 18.1 (3.1 / 6.2 / 8.9) | $128,357 | 1,281 ft | 3.18 | 3.0 |
+| Pull in the huddle: backfill Day 8, trench box 4+00 to 7+00, pump at the forecast (`slice_pull_play.json`) | 22.35 | 9.1 (1.1 / 4.7 / 3.4) | $128,262 | 1,820 ft | 2.18 | 2.5 |
+| Plan on autopilot, Site does nothing (`slice_autoplan.json`) | 24.8 | 20.0 | — | — | F1 missed | — |
+
+Wall clock at the slice's pace (4 s per day, 15 s per day while an event waits for Plan): 96 s of full speed plus however long the three seats take to resolve the collapse, the argument and the rain. Three minutes when the team moves; five when it talks. The real stages keep 5 and 20 s.
+
+## A. Test what exists today (browser seats, no headset)
+
+Exact steps, Windows PC, PowerShell in `C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER`. Close the Unity Editor first.
+
+1. One-time: `git add -A; git commit -m "Slice scenario, table-test docs, WO-05a"` (the slice files are untracked until then). Print `Paper\out\slice_texas\manual.pdf` (double-sided), `cards.pdf` and `tokens.pdf` (card stock), `ledger.pdf` (landscape), `jobsign.pdf`.
+2. Voice placeholders for the slice (optional; the pages show the line text when a WAV is missing): `.venv\Scripts\python Tools\voice\make_voice.py Data\Scenarios\slice_texas.json`.
+3. Start the host: `npm --prefix Monitor run host -- Data/Scenarios/slice_texas.json`. It prints the port (7331). Find the PC's LAN address with `ipconfig` (IPv4). If a phone cannot connect, allow node through the Windows firewall on 7331.
+4. Open on the host PC: `http://localhost:7331/facilitator.html` (you). On the Plan laptop: `http://<PC-IP>:7331/plan.html`. On the Site laptop or phone: `http://<PC-IP>:7331/site.html`. Rules sits with the printed kit and nothing else.
+5. The host starts paused. Say only: three jobs, talking is the game, the manual is Rules's, nothing will say whether a choice was right. Tell Rules to issue zone 1 (P-2) and Plan to type the code now; tell Site to ride the line and look at the walls. That is the huddle.
+6. Press Start. Do not help. When the result card appears, press Reset for a second run with a pulled plan (backfill Day 8, a trench box over the seepage, the pump when the forecast lands) if the team wants to try it; the overlay in a reset run has no previous lines (that is Stage 2's feature), so compare the two result cards by hand.
+7. Quick solo smoke without a team: start the host, open the facilitator page and the Plan page on the PC and the Site page on your phone, press Start, and play Site from the phone while glancing at Plan; nobody enters the permit for zone 2, so excavation idles at 15+00 from about Day 9 until you type `2936-0` on the Plan keypad. That alone shows the loop.
+
+Until WO-05a is accepted, Plan must enter zone 1's code while the host is paused (DECISIONS O10) and a stop-work is lifted the instant Plan commits (O11). Neither affects the slice's chain.
+
+## B. What the VR seat is, in this slice
+
+The Quest is a client of the same Node host, on the same protocol as `site.html`. Nothing is simulated on the headset. The Site player:
+
+- stands in the cab of the site truck on the haul road beside the trench, 1 ft = 0.3048 m, 30.5 m between station stakes; rides by picking a stake on the dashboard (fade, engine sound, arrive; no smooth vection), dismounts to stand at the stake; snap turns only;
+- sees what the design says only Site sees: trench walls and water per station, pipe in the trench, protection, the three machines (LOB-Game's Excavator, Crane and Backfill prefabs with their animators) with a plate on each, crews of LOB-Game workers whose animation and posture follow the state (`working`, `idle`, `held`, `stopped`, `arguing` with the ConflictTalk clip, `demobilized`), mood 0 to 3, the zone boards with the permit number, the sky (clear, towers to the south, rain with LOB-Game's rain bed), the gate with trucks, the trailer board (live actual lines and the permit limits), the job sign;
+- looks at a thing for two seconds to inspect it (wall, water, machine plate, pipe, protection, board, sky, ticket, crew); the clipboard on the left wrist shows the host's text and plays it if a WAV exists;
+- has three physical buttons on the wrist, pressed by pointing the right controller and pulling the trigger: Flag (plants a flag at the stake), Stop work (the zone), Confirm (Done / Not carried out, for the order landed at this crew); Listen is automatic within 10 m of arguing or held crews (their lines play);
+- hears the PM and the radio on the Plan page, not in the headset; event cards appear as a card on the dashboard with the facts and nothing else.
+
+What is left out of the slice on purpose: hand tracking, the Unity host, the C# simulation, Stage 3 cities, recorded voice, the result overlay in VR (the Plan page shows it).
+
+## C. Your manual steps (about 40 minutes, once)
+
+1. **Export the assets from LOB-Game.** Open LOB-Game in Unity 6000.3.6f1. In the Project window select these folders and files, then Assets > Export Package…, tick **Include dependencies**, save as `C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Tools\import\LOB-Game-Site-Assets.unitypackage` (the folder is ignored by git):
+   - `Assets/_Project/Art` (Prefabs: Equipment, Workers, Placeholders, Effects; Materials; ProjectSite with its Animation and Materials and ProjectPipeSegment)
+   - `Assets/_Project/Animation` (Crane.controller, Excavator.controller)
+   - `Assets/3D_Models/constructionWorkers_Anims_01`, `_02`, `_03`
+   - `Assets/3D_Models/a-pile-of-sand`, `Assets/3D_Models/Construction Assets/Traffic Props`, `Assets/3D_Models/trafic-cone`, `Assets/3D_Models/water-barriers`
+   - `Assets/Audio/Construction`, `Assets/Resources/SiteAudioBank.asset`, `Assets/PM`
+   Include dependencies pulls the FBX sources the prefabs use (`3D_Models/Execavator`, `Mobile Crane`, `Full_Set/Level_1.fbx`, `pipe/source/PIPE.fbx`, the dozer mesh) and their textures. Do not export `_Project/Code`, `_Project/Scenes` or `_Project/UI`. Expect 300 to 600 MB.
+2. **Import into LOB-OVER.** Open LOB-OVER (6000.3.8f1), Assets > Import Package > Custom Package…, pick the file, Import All. The assets land under the same paths (`Assets/_Project/Art/...`, `Assets/3D_Models/...`); leave them there. If the import reports missing scripts on a prefab (LOB-Game components), ignore it: WO-08 strips those components by script. Commit: `git add -A; git commit -m "LOB-Game site assets (own project, reused)"`.
+3. **Newtonsoft.** Window > Package Manager > + > Add package by name: `com.unity.nuget.newtonsoft-json` (3.2.1). Or let the orchestrator add it to `Packages/manifest.json` at step 0.
+4. **Quest 3S.** Developer mode on in the Meta Horizon app; USB-C cable; `adb devices` lists it (the Android SDK's platform-tools from the Unity Hub install, or `winget install Google.PlatformTools`). Meta Quest Link app installed on the PC for Editor play with the headset on.
+5. **Memory.** Exactly one Unity Editor open (LOB-OVER) during Phase 1 runs; it is needed for the Unity MCP. Start Claude Code with `CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1` set in the PowerShell session: `$env:CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1; claude --model fable --effort max`.
+
+## D. The work orders (dispatched by the orchestrator, in this order)
+
+| WO | What exists when it is accepted | Verified by |
+| --- | --- | --- |
+| WO-06 | The host plays a Plan script on its own (`--autoplan`) so one person in the headset gets the whole chain; the slice scripts are fixtures; the e2e covers the slice | `npm test`, headless runs, e2e |
+| WO-07 | `LOBOver.Client` assembly: WebSocket client, protocol types, site-state model, main-thread dispatch, reconnect, host-address panel, text HUD; works in the Editor against the Node host | a PlayMode test that starts the host and round-trips `moveTo` |
+| WO-08 | `Site.unity` built by an editor script from the imported assets; a `SiteWorld` that spawns stations, boards, crews and machines from the first `state` and keeps them in step with every `state` | PlayMode test with a recorded state sequence; a Play-mode screenshot at 5+20 on Day 5 |
+| WO-09 | The inspector's verbs on the Quest controllers: ride, dismount, gaze inspect, wrist clipboard, cards, SFX and voice, comfort settings | PlayMode tests on the input layer with simulated controllers; your run with Link |
+| WO-10 | The APK: Android ARM64, OpenXR with the Meta feature set, host-address panel, 72 Hz; installed with adb | logcat shows `welcome` for seat `site`; your run on the headset |
+
+Then the tests in `Docs/TABLE_TEST.md` apply to the slice with the headset in the Site seat: first you alone with `--autoplan` (section E), then three seats.
+
+## E. Test steps once WO-10 is accepted
+
+Solo, you in the headset, Plan on autopilot, no paper:
+
+1. PC: `npm --prefix Monitor run host -- Data/Scenarios/slice_texas.json --autoplan Monitor/test/scripts/slice_autoplan.json`. Open `facilitator.html` on the PC.
+2. Headset: launch LOB Over, type the PC's LAN address once on the start panel, confirm the dashboard reads "connected, seat site, slice_texas".
+3. Facilitator: Start. Ride to 5+20 before Day 4 (the dashboard shows the day), look at the wall and the water; at the collapse press Stop work; at the argument stand with the foremen and listen; ride to the excavator on Day 5 and press Confirm → Not carried out; ride back to the backfill crew and Confirm → Done; watch the sky on Day 8; ride to 15+00 on Day 16 for the inspection. The Plan script does the rest. The result card appears on the Plan page on the PC at about Day 24.
+4. Watch for: any discomfort during a ride (switch to the shorter fade if so), a gaze inspect that fires when you did not mean it, a button you could not hit, a card you could not read, a crew whose posture did not match the dashboard text.
+
+Three seats: the same as section A, with the headset instead of `site.html` and no `--autoplan`. Film it. Fill in the observation sheet in `Docs/TABLE_TEST.md`.
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:59
++ Get-Content -LiteralPath Docs/VR_SLICE.md -Encoding UTF8; rg -n 'O10| ...
++                                                           ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+# WO-02 — Reference simulation (JS), headless runner, golden parity
+
+## Goal
+
+A pure, deterministic simulation module that turns a scenario file into a running job: three crews on a 6,000 ft line, orders that land late, events from the scenario, deviations, permits and hold points, stop-work, conflicts, rain rework, money. A headless runner plays scripted commands against it with no clock pacing and writes a transcript. A golden harness proves the crew model matches the Python oracle in `Data/goldens/no_events.json`. WO-03 wraps this module in a host; nothing in this WO touches networking or pages.
+
+## Read
+
+- `AGENTS.md`
+- `Docs/DESIGN_v0.md`: sections "What each player can do", "The cooperation loop", "World rules", "Numbers" (use `grep -n "^## "` to find them; skip the rest)
+- `Docs/PROTOCOL.md`: "Plan ops", "Site actions", "Per-seat views"
+- `Docs/SCENARIO_SCHEMA.md` (whole)
+- `Data/goldens/no_events.json` (read the `_doc` block: it states the crew-model conventions)
+- `Tools/reference/make_goldens.py` (the oracle, 60 lines; your crew model must reproduce it)
+- `Data/Scenarios/stage1_texas.json`, `Data/Scenarios/stage2_texas.json`
+
+## You may change
+
+- `Monitor/src/sim/**`, `Monitor/test/sim*.test.js`, `Monitor/test/scripts/**`
+
+## Build
+
+### 1. Module shape (`src/sim/`)
+
+- `sim.js`: `createSim(scenario, catalog, { pure = false }) → sim` with
+  - `sim.tick(dt)` advances `dt` days (use `dt = 0.01`; the host calls it many times per frame)
+  - `sim.apply(seat, cmd) → { ok: true, appliedDay } | { ok: false, reason }` for every Plan op (inside a `commit`), Site action and facilitator `ctrl`, exactly as `Docs/PROTOCOL.md` names them
+  - `sim.view(seat) → object` the per-seat view of `Docs/PROTOCOL.md` (Plan never sees live positions; Site never sees plan or money; facilitator sees all)
+  - `sim.drain() → message[]` host-bound messages produced since the last drain (`event`, `report`, `voice`, `result`, `inspection` replies)
+  - `sim.t`, `sim.speed` (`full|slow|paused`), `sim.done`, `sim.result`
+  - `sim.serialize()` → JSON of the full state (for transcripts and parity)
+- `crews.js` (movement and blocking), `orders.js` (order lifecycle), `events.js` (triggers, effects, options), `deviations.js`, `permits.js` (permits, open-zone limit, hold points), `money.js`, `views.js` (seat filtering), `conflict.js`, `rain.js`. Pure functions on a plain state object; no classes needed; no `Date`, no `Math.random` (use `src/common/rng.js` seeded from `scenario.seed`).
+- `headless.js`: CLI, see 4.
+- `goldens.js`: CLI, see 5.
+
+### 2. The crew model (must match the oracle exactly in `pure` mode)
+
+- `t` in days, `t = 0` is the morning of Day 1; a crew with `startDay` N starts at `t = N - 1`.
+- Each tick, in order `exc`, `pipe`, `back`: if started and not finished, `limit = min(lengthFt, leaderPos)` where exc has no leader, pipe's leader is exc, back's leader is pipe; `newPos = min(pos + rate * mult * dt, limit)`; `work += (newPos - pos) / rate` when it moved; `pos = newPos`; finished when `pos >= lengthFt - 1e-6`.
+- `rate` = the crew's current machine's `rateFtPerDay`; `mult` = product of active modifiers (event rate drops as `1 - rateDrop`, rain 0.5, hold/stop/arguing/demobilized/lent-away 0, rework 0 for pipe).
+- Peak open trench = max over ticks of `exc.pos - back.pos`.
+- Idle days per crew = (finish - start) - work. Crew cost = Σ daily machine cost × days on site × (1 + overheadRate). Days on site end at the crew's own finish, or at demobilization.
+- Optional WIP cap (`pure` mode only, for the golden `pull_distance_*` case): exc `limit = min(limit, back.pos + capFt)`.
+- `pure` mode disables events, deviations, permits, hold points, orders landing late and conflicts; it exists only to prove the crew model. Everything else uses the full model.
+
+### 3. The full model (rules; every constant comes from the scenario or the catalog, never from code)
+
+- **Speed.** `full` normally; `slow` from the moment an event fires until the next Plan `commit`; `paused` by facilitator `ctrl`. Speed is the host's pacing concern; the sim only exposes it.
+- **Orders.** A `commit` turns each op into an `Order {id, op, crew, issuedT, landsT, status}`. `landsT = issuedT` if the Site truck is dismounted within 100 ft of that crew's current position, else the next shift boundary `Math.floor(issuedT) + 1`. Orders apply when they land. `setStart`, `enterPermit`, `enterInspection` and `pay` apply at once (office actions). `radio` re-issues an order with a fresh `landsT` by the same rule. A commit is all-or-none: validate every op first (nack reasons below), then apply.
+- **setStart.** `setStart {crew, day}`: nack `"plan locked"` when `plan.locked` or the crew's `locked` is true, nack `"crew already started"` when `t >= crew.startDay - 1`; otherwise the crew's `startDay` becomes `day` (whole days, `>= displayDay`).
+- **Hold / resume.** `hold {crew, fromDay?, days?}`: from landing (or from `fromDay` if later) the crew's `mult` is 0 and it bills; with `days` the hold ends by itself after `days`, without it the hold stands until `resume`. `resume` lifts a hold or a stop-work for that crew. Any Plan `commit` after a stop-work lifts the stop-work for the zone's crews unless the commit holds them (design: "stands until Plan commits a plan or resumes").
+- **Lend.** `lend {machine, toCrew, days}`: the lender's `mult` is 0 from landing; the machine moves along the haul road and arrives at `toCrew` after `|Δft| / 1500 / 24` days (same day; the city's remobilization delay applies only to `remob` and to hired machines, decision K15). A `lend` of the excavation crew's machine to `pipe` while a P1 is active is the `clear_own` response: the arrival starts the clearing, the lender stays at 0 for the clearing days (`lenderLosesSameDays`), then the machine returns the same way. Otherwise the machine works for `toCrew` for `days` (the receiving crew's rate becomes the lent machine's rate while it has no machine of its own; a crew with its own machine plus a lent one adds the lent rate) and returns.
+- **Order a machine.** `order {machine}`: price + `mobilizationUsd` charged at commit; arrives after `leadDays.normal + cities[city].leadDelayDays`; on arrival it replaces the crew's machine (the old one is released at half its price). `pay {item: "hire_excavator", machine}` during an active P1 is the hired-clearing response: same charges and lead time, it clears the collapse in the clearing days for its `sizeClass`, then is released at half price. Rush orders are not exposed (catalog `rushExposedToPlayers: false`).
+- **Protect.** `protect {kind, fromFt, toFt}`: price at commit, daily cost while any crew works inside the stretch; `trench_slope` refused in `slopeRefused` cities; `preparationAllowed: false` → nack `"not in the budget"` plus the `prepRefused` voice trigger for `protect` and `order` at any time in that stage (the PM refuses purchases ahead; `pay` for an active or forecast event's options is always allowed).
+- **Pay.** `pay {item, machine?}`: `item` must be an `options[].key` of an event that is active, or whose `forecast.inboxDay` has passed (so a pump can be rented when the forecast lands); charges `cost.usd` at once and `cost.perDayUsd` daily to the end of the stage; applies `effect` as this WO describes per event. Unknown or inactive item → nack `"no such response now"`.
+- **Demob / remob.** `demob`: billing stops from the next day boundary after landing; `remob`: `demobFeeUsd`, the crew returns after `remobilizationDelayDays`.
+- **Permits.** Exc may not pass a zone's end into a zone whose permit is not entered; it idles there (`idleNoPermit`) and bills. `enterPermit` with a code not on the zone's card → nack `"code not on file"`. Entering a permit when open zones (entered and not yet signed) already equal `openZoneLimit` → nack `"city limit: N zones open"`. Stage 1 (`heldBy: "pm"`) starts with all permits entered.
+- **Hold points.** Back may not pass a zone's end until `enterInspection` for that zone with the card's number; it idles (`idleHoldPoint`) and bills. The compaction result (`"passed"` in both Texas stages) appears in Plan's inbox when backfill first reaches the zone end. Finishing the job requires zone 4's inspection entered.
+- **Stop work.** `stopWork {zone}` (Site dismounted anywhere in that zone): crews in the zone go to `mult 0` after `stopWorkReachHours / 24` days, bill, and their mood rises one level per `moodStepDays` up to 3. Lifted as under Hold / resume.
+- **Site actions.** `moveTo {stationFt}`: the truck arrives after `|Δft| / 1500 / 24` days; `mount`/`dismount` only while not moving. `inspect {target}` answers from state at the truck's station (nearest 100 ft stake), with these fixed sources, no invented text: `wall` → the covering `ground.segments[].indicator.wall`, else `ground.defaultIndicator.wall`; `"Wall slumped into the trench."` at a collapse station until cleared; `"Not excavated here yet."` where exc has not passed. `water` → the segment's `indicator.water`, else the default; `"Standing water in the trench bottom."` at a collapse station, and at every open station during rain and rework. `machine` → the nearest crew within 100 ft: `"<crew name>: <catalog label>, plate <sizeClass>"`, else `"No machine within sight."`. `protection` → `"<catalog label> in place, <from> to <to>"` or `"No protection here."`. `board` → `"Zone N board: permit <number>"` / `"Zone N board: no permit posted"` plus `"inspection <number>"` when signed. `sky` → `"Clear."` / `"Towers building to the south."` / `"Rain."`. `ticket` → an order in transit: `"Delivery ticket: <label>, due Day N"`, else `"No truck at the gate."`. `crew` → nearest crew: `"Working."` / `"Idle, waiting on <leader>."` / `"Held by the office since Day N."` / `"Stopped: stop-work."` / `"Arguing with <crew>."` / `"Demobilized."` followed by the mood word `calm | grumbling | angry | furious` for levels 0–3. `pipe` → `"No pipe here yet."` / `"Pipe laid, open trench."` / `"Backfilled."`. Per-station trench state for the Site view: `undug` until exc passes the stake, `open` until pipe passes, `piped` until back passes, then `backfilled`; `water` is `seep` at open stations inside a seepage segment, `standing` at the collapse station and at open stations during rain and rework, else `none`; `wall` is `slumped` at the collapse station until cleared. `flag {stationFt, note}` adds `{stationFt, day, note}` to Plan's `flags[]`. `listen` at arguing crews returns the two `conflict` lines; at a held crew its `heldDayN` line for its mood; else `"Nothing to hear."`. `confirm {orderId, outcome}` needs the order landed at a crew within 100 ft.
+- **Events.** Check triggers each tick (`crewReaches` fires when the crew's pos first reaches `ft`; `day` fires at `t = day - 1`). On firing: speed `slow`; emit `event` to `visibleTo` seats (card = `card`, or `cardWhenProtected` when protection covers `stationFt`); apply `rateDrop` to `hits` for `durationDays`. P1: pipe stays at `mult 0` until a response resolves it: `clear_own` (a `lend` of exc's machine to pipe, see Lend) → clearing days by that excavator's `sizeClass` (× `severityByProtection[kind]` if protection covers the station, rounded to 0.5), pipe resumes after; `pay emergency_shoring` → resumes after `resumeAfterDays`; `pay hire_excavator {machine}` → resumes after lead days + clearing days by the hired size; no response → stays stopped (the slow clock is the pressure). A2: all crews × 0.5 for 2 days; at the rain's start record `openFt = exc.pos - back.pos`; at the rain's end `reworkDays = ceil(openFt / 500) × daysPer500Ft × (a pump paid for before the rain ends ? 0.5 : 1)`; pipe `mult 0` for `reworkDays` after the rain ends. The pump's `rainRateRestore` sets the listed crews' rain multiplier back to 1 for the rest of the rain. Forecast: the inbox item on `forecast.inboxDay` is generated from `forecast.text` (not listed in `inbox[]`), Site `sky` becomes `towersSouth` from `skyFromDay`, `rain` during.
+- **Deviations.** F1 `firstRadioOrder`: the first order (in commit order, first matching op in the first commit that has one) with `op` in `ops` whose `landsT > issuedT` lands but is not applied; it applies when Plan `radio`s it (new landing by the normal rule). Caught if Site `confirm notDone` on it before the next day boundary. F2 `firstUnpermittedBoundary`: the first time exc reaches an unpermitted boundary it continues `overshootFt` into the zone, then idles; `permitFineUsd` is charged; not if Site is dismounted within 100 ft of the boundary or exc is held. F3 `protectStretchMisses`: nothing to simulate; the result card counts it caught if Site `inspect protection` happened at the protected stretch before the event fired and the stretch did not cover `stationFt`. F5 is not authored in these stages; implement the hook, no behaviour.
+- **Conflicts.** Each tick for each (trailing, leader) pair where the trailing crew is working (`mult > 0`, not already blocked by the leader): if `trailing.pos + trailing.rate × trailing.mult × 1 > leader.pos + leader.rate × leader.mult × 1` (would cross within the next day), fire a conflict **once per pair per stage** (decision K7): both crews `arguing` (`mult 0`, billing), speed `slow`, `voice` with the two foremen's `conflict` lines to Site, a facts-only `event` card to Site. Resolved by the next Plan commit that `hold`s or `demob`s the trailing crew (any other commit → nack `"conflict: hold or demobilize the trailing crew"`); the leader resumes at once, the trailing crew per the order. After that first argument, a trailing crew that catches its leader again simply idles against it (`min(pos, leaderPos)`), bills, and its mood rises; it counts in `idleCrewDays`.
+- **Money.** `spentUsd` accrues per tick: Σ billing crews' daily × dt × (1 + overheadRate) + protection daily fees × dt × (1 + overheadRate); purchases, mobilization, `demobFeeUsd`, fines and option costs at face value when charged. Lose when `spentUsd > budgetUsd` or `t > deadlineDay - 1`; the result then carries `lost: "budget" | "deadline"`.
+- **Daily report.** At each integer `t`: `report {day, feetByCrew (floor), spendUsd, notes}` and Plan's `reportedLines` advance. Plan's "today" estimate = reported + rate × elapsed with band ± `uncertaintyBandFt`.
+- **Result.** When back finishes (zone 4 signed) or on a loss: `finishDay` (t), `promisedDay`, `budgetUsd`, `spentUsd`, `idleCrewDays` (sum of per-crew idle), `peakOpenTrenchFt`, `finesUsd`, `deviationsCaught/Missed`, `events[]` (id, day, option chosen, days lost, protection present), `changeLog[]` (every commit with day and ops), `lines {planned, actual}` as polylines per crew. Facts only; no adjectives, no grades.
+- **Voice triggers.** Emit `voice {lineIds, seats}` for `stageStart` (plan + site), `prepRefused` (plan), `holdCommitted` / `demobCommitted` (plan), `orderLanded` (plan), `orderNotDone` (plan), `conflict` (site), `heldDay1..3` (site, when a held crew's mood reaches 1..3), `stageEnd` (plan + site). Look lines up by `trigger` in `scenario.lines`; no line → no message.
+
+### 4. Headless runner (`src/sim/headless.js`)
+
+`node Monitor/src/sim/headless.js <scenario.json> [--script <script.json>] [--out <transcript.json>] [--pure]`
+
+- A script is `[{ "t": 5.1, "seat": "plan", "cmd": {...} }, ...]`, applied when the sim reaches `t` (before the tick).
+- Runs with `dt 0.01`, no pacing, until `sim.done` or `t > deadlineDay + 5` (safety stop, reported in the transcript).
+- Transcript: `{ scenario, seed, snapshots: [sim.view('facilitator') at every integer t], messages: [every drained message with its t], result }`. Numbers rounded to 3 decimals so two runs compare byte-for-byte.
+- Ship three scripts in `test/scripts/`:
+  - `stage1_noaction.json`: empty; must end with `lost: "deadline"` (pipe never cleared), finish absent.
+  - `stage1_pm_play.json`: Site rides to 7+20 before Day 6; at the collapse Site stops work on zone 1, Plan commits `lend` (exc's machine → pipe) + `hold back 2 days`; Site rides to the excavator, finds the lend not carried out (F1), confirms `notDone`, Plan `radio`s it, Site confirms `done`; Site rides to the backfill crew and confirms the hold; at the argument Plan holds back until pipe is 2 days ahead; when the Day 17 forecast lands Plan does not rent the pump (push stage); Plan enters inspection numbers as zones close; nobody buys anything else. Expect: the collapse `event` message at `t = 5.0 ± 0.02`; `finishDay` greater than `promisedDay` (35) and less than `deadlineDay - 1`; no `lost`. Report the actual finish, idle days and spend in NOTES: the design doc's "36 to 38" predates the order-lag and rework rules and will be corrected from your numbers.
+  - `stage2_pull_play.json`: huddle: `setStart back 12`, `protect trench_box 600 900`; Rules holds permits: Plan enters zone 1 and 2 codes at start, 3 and 4 as zones sign; Site stands at the excavator when the zone 2 and 3 boundaries are reached (so F2 cannot fire there); same collapse handling (the box halves the clearing); Plan `pay`s the pump when the Day 17 forecast lands. Expect: `finishDay` less than `deadlineDay - 1`, no `lost`, `idleCrewDays` lower than the Stage 1 script's, `peakOpenTrenchFt` ≤ 3000 (two zones), the collapse card `cardWhenProtected`, `finesUsd` 0. Report the numbers in NOTES.
+
+### 5. Golden harness (`src/sim/goldens.js`)
+
+`node Monitor/src/sim/goldens.js Data/goldens/no_events.json` runs every case in `pure` mode (build a minimal scenario from the case's `startDay` and `machines`, 6,000 ft, `capFt` as the WIP cap), compares `finishDay`, `idleDays` per crew, `crewCostUsd`, `peakOpenTrenchFt` with the tolerances in the file's `_doc`, prints one line per case with PASS/FAIL and the deltas, exits 0 only if all pass.
+
+### 6. Tests (`test/sim*.test.js`)
+
+Unit tests for: order landing (Site present vs absent), `setStart` nacks, `hold` with and without `days`, F1 behaviour and catch, permit gating and the open-zone limit nack, hold point gating, stop-work reach and mood steps, P1 durations by size and under a box (2 → 1 day for Standard), rain rework arithmetic (1,300 ft open → 3 days; with pump → 1.5) and `rainRateRestore`, conflict detection, resolution and the once-per-pair rule, `inspect` answers at a seepage station and at the collapse station, budget/deadline loss, determinism (two headless runs of `stage1_pm_play` produce identical transcripts), view filtering (Plan view has no live positions; Site view has no budget; the words `correct|wrong|score|well done|should have` appear in no Plan or Site view and no host-bound message; the facilitator view and internal ids are exempt).
+
+## Acceptance checks
+
+```
+npm --prefix Monitor test
+node Monitor/src/sim/goldens.js Data/goldens/no_events.json ; echo exit=$?                      # 5 x PASS, exit=0
+node Monitor/src/sim/headless.js Data/Scenarios/stage1_texas.json --script Monitor/test/scripts/stage1_pm_play.json --out Monitor/out/s1a.json
+node Monitor/src/sim/headless.js Data/Scenarios/stage1_texas.json --script Monitor/test/scripts/stage1_pm_play.json --out Monitor/out/s1b.json
+cmp Monitor/out/s1a.json Monitor/out/s1b.json && echo DETERMINISTIC                                # DETERMINISTIC
+node -e "const r=require('./Monitor/out/s1a.json');console.log(r.result.finishDay, r.result.promisedDay, r.result.lost, r.result.idleCrewDays, r.result.spentUsd)"   # finishDay > 35 and < 46, lost undefined
+node Monitor/src/sim/headless.js Data/Scenarios/stage1_texas.json --out Monitor/out/s1n.json && node -e "console.log(require('./Monitor/out/s1n.json').result.lost)"   # deadline
+node Monitor/src/sim/headless.js Data/Scenarios/stage2_texas.json --script Monitor/test/scripts/stage2_pull_play.json --out Monitor/out/s2.json && node -e "const a=require('./Monitor/out/s1a.json').result,b=require('./Monitor/out/s2.json').result;console.log(a.idleCrewDays, b.idleCrewDays, b.peakOpenTrenchFt)"   # second number lower than the first; third <= 3000
+grep -rniE "well done|good job|should have|right choice|correct answer" Monitor/src/sim/ ; echo grep-exit=$?        # grep-exit=1 (no hits); 'wrong'/'score' may appear only in comments and test names
+git status --short     # only Monitor/src/sim, Monitor/test, Monitor/out (gitignored)
+```
+
+(The orchestrator adapts the `node -e` one-liners to the transcript's actual field names; the shape in section 4 is the contract. The transcript is written as a CommonJS-loadable JSON file, so `require` works.)
+
+## Out of scope
+
+No WebSocket, no HTML, no pacing/timers, no C#. Do not edit `Data/`. If a scenario value makes a rule impossible, report it in NOTES with the number you would need.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 420ms:
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:1
++ rg --files -g AGENTS.md -g '*sim-runs*' -g 'slice_*.json' Monitor; Ge ...
++ ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { loadCatalog } from '../src/common/catalog.js';
+import { createSim } from '../src/sim/sim.js';
+import { runHeadless, roundedJSON } from '../src/sim/headless.js';
+import { runGoldens } from '../src/sim/goldens.js';
+
+const catalog = loadCatalog();
+const read = path => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
+const s1 = read('../../Data/Scenarios/stage1_texas.json');
+const s2 = read('../../Data/Scenarios/stage2_texas.json');
+const script1 = read('./scripts/stage1_pm_play.json');
+const script2 = read('./scripts/stage2_pull_play.json');
+const forbidden = /\b(correct|wrong|score|well done|should have)\b/i;
+const events = run => run.messages.filter(x => x.message.t === 'event');
+const nacks = run => run.messages.filter(x => x.message.t === 'nack');
+const collapse = run => events(run).find(x => x.message.eventId === 'ev_p1');
+
+test('all five independent oracle cases pass every tolerance', () => {
+  const results = runGoldens(read('../../Data/goldens/no_events.json'), catalog);
+  assert.equal(results.length, 5);
+  assert.ok(results.every(r => r.pass), JSON.stringify(results));
+});
+
+test('Stage 1 and 2 scripts complete with the specified comparative facts and zero rejected commands', () => {
+  const first = runHeadless(s1, catalog, script1);
+  const second = runHeadless(s2, catalog, script2);
+  assert.deepEqual(nacks(first), []); assert.deepEqual(nacks(second), []);
+  assert.equal(first.result.lost, undefined); assert.equal(second.result.lost, undefined);
+  assert.ok(first.result.finishDay > s1.plan.promisedFinishDay);
+  assert.ok(first.result.finishDay < s1.plan.deadlineDay - 1);
+  assert.ok(second.result.finishDay < s2.plan.deadlineDay - 1);
+  assert.ok(second.result.idleCrewDays < first.result.idleCrewDays);
+  assert.ok(second.result.peakOpenTrenchFt <= 3000);
+  assert.equal(second.result.finesUsd, 0);
+  assert.ok(Math.abs(collapse(first).t - 5) <= .02);
+  assert.deepEqual(collapse(second).message.card, s2.events[0].cardWhenProtected);
+  assert.equal(first.result.deviationsCaught, 1);
+  assert.ok(second.result.events.some(e => e.option === 'drainage_pump'));
+  for (const run of [first, second]) {
+    for (const snapshot of run.snapshots) {
+      assert.equal(snapshot.t % 1, 0);
+      assert.doesNotMatch(JSON.stringify(snapshot.plan), forbidden);
+      assert.doesNotMatch(JSON.stringify(snapshot.site), forbidden);
+      assert.equal(Object.hasOwn(snapshot.plan, 'crews'), false);
+      assert.equal(Object.hasOwn(snapshot.site, 'budget'), false);
+      assert.equal(Object.hasOwn(snapshot.site, 'plan'), false);
+    }
+    for (const message of run.messages) assert.doesNotMatch(JSON.stringify(message), forbidden);
+    assert.equal(run.result.changeLog.length, (run === first ? script1 : script2).filter(x => x.cmd.action === 'commit').length);
+    for (const points of Object.values(run.result.lines.actual)) assert.ok(points.length > 2);
+  }
+});
+
+test('two headless CLI runs produce byte-for-byte identical rounded transcripts', () => {
+  const root = fileURLToPath(new URL('../../', import.meta.url));
+  const args = ['Monitor/src/sim/headless.js', 'Data/Scenarios/stage1_texas.json',
+    '--script', 'Monitor/test/scripts/stage1_pm_play.json'];
+  const run = () => spawnSync(process.execPath, args, { cwd: root, encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 });
+  const a = run(), b = run();
+  assert.ifError(a.error); assert.ifError(b.error);
+  assert.equal(a.status, 0, a.stderr); assert.equal(b.status, 0, b.stderr);
+  assert.equal(a.stdout, b.stdout);
+  const parsed = JSON.parse(a.stdout);
+  assert.equal(parsed.scenario, s1.id); assert.equal(parsed.seed, s1.seed);
+  assert.equal(a.stdout, roundedJSON(parsed));
+});
+
+test('empty Stage 1 script ends on deadline, without a finish day', () => {
+  const run = runHeadless(s1, catalog, read('./scripts/stage1_noaction.json'));
+  assert.equal(run.result.lost, 'deadline'); assert.equal(run.result.finishDay, undefined);
+  assert.equal(run.safetyStop, undefined);
+});
+
+test('Plan sees only last-report feet and elapsed-rate estimates; Site sees live positions without money', () => {
+  const sim = createSim(s1, catalog); sim.tick(.5);
+  const plan = sim.view('plan'), site = sim.view('site');
+  assert.equal(plan.reportedLines.exc.at(-1).ft, 0);
+  assert.ok(site.crews.find(c => c.id === 'exc').stationFt > 100);
+  assert.equal(plan.uncertainty.exc.estimateFt, 110);
+  assert.equal(plan.uncertainty.exc.toFt, 260);
+  assert.doesNotMatch(JSON.stringify(plan), /"(?:pos|stationFt|actualLines|activeEvent)":/);
+  assert.doesNotMatch(JSON.stringify(site), /"(?:budget|budgetUsd|spentUsd|plannedLines|reportedLines|forecast)":/);
+  sim.tick(.5);
+  const report = sim.view('plan');
+  assert.equal(report.reportedLines.exc.at(-1).ft, 220);
+  assert.equal(report.uncertainty.exc.fromFt, report.uncertainty.exc.toFt);
+});
+
+test('headless safety stop is explicit when facilitator leaves the sim paused', () => {
+  const run = runHeadless(s1, catalog, [{ t: 0, seat: 'facilitator', cmd: { t: 'ctrl', action: 'pause' } }]);
+  assert.equal(run.result, null);
+  assert.equal(run.safetyStop.reason, 'paused without a same-time resume');
+});
+[
+  {
+    "t": 0,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterPermit",
+          "zone": 1,
+          "code": "5174-7"
+        }
+      ],
+      "id": "c-1"
+    }
+  },
+  {
+    "t": 0,
+    "seat": "site",
+    "cmd": {
+      "action": "moveTo",
+      "stationFt": 520,
+      "id": "c-2"
+    }
+  },
+  {
+    "t": 0.02,
+    "seat": "site",
+    "cmd": {
+      "action": "dismount",
+      "id": "c-3"
+    }
+  },
+  {
+    "t": 3.8,
+    "seat": "site",
+    "cmd": {
+      "action": "inspect",
+      "target": "wall",
+      "id": "c-4"
+    }
+  },
+  {
+    "t": 3.8,
+    "seat": "site",
+    "cmd": {
+      "action": "inspect",
+      "target": "water",
+      "id": "c-5"
+    }
+  },
+  {
+    "t": 3.9,
+    "seat": "site",
+    "cmd": {
+      "action": "stopWork",
+      "zone": 1,
+      "id": "c-6"
+    }
+  },
+  {
+    "t": 4,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "lend",
+          "machine": "excavator_standard",
+          "toCrew": "pipe",
+          "days": 2
+        }
+      ],
+      "id": "c-7"
+    }
+  },
+  {
+    "t": 4.3,
+    "seat": "site",
+    "cmd": {
+      "action": "listen",
+      "id": "c-8"
+    }
+  },
+  {
+    "t": 4.35,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "hold",
+          "crew": "back",
+          "days": 2
+        }
+      ],
+      "id": "c-9"
+    }
+  },
+  {
+    "t": 5.02,
+    "seat": "site",
+    "cmd": {
+      "action": "mount",
+      "id": "c-10"
+    }
+  },
+  {
+    "t": 5.02,
+    "seat": "site",
+    "cmd": {
+      "action": "moveTo",
+      "stationFt": 1100,
+      "id": "c-11"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "site",
+    "cmd": {
+      "action": "dismount",
+      "id": "c-12"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "site",
+    "cmd": {
+      "action": "inspect",
+      "target": "machine",
+      "id": "c-13"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "site",
+    "cmd": {
+      "action": "confirm",
+      "orderId": "o-2",
+      "outcome": "notDone",
+      "id": "c-14"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "radio",
+          "orderId": "o-2"
+        }
+      ],
+      "id": "c-15"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "site",
+    "cmd": {
+      "action": "confirm",
+      "orderId": "o-2",
+      "outcome": "done",
+      "id": "c-16"
+    }
+  },
+  {
+    "t": 5.06,
+    "seat": "site",
+    "cmd": {
+      "action": "mount",
+      "id": "c-17"
+    }
+  },
+  {
+    "t": 5.06,
+    "seat": "site",
+    "cmd": {
+      "action": "moveTo",
+      "stationFt": 270,
+      "id": "c-18"
+    }
+  },
+  {
+    "t": 5.09,
+    "seat": "site",
+    "cmd": {
+      "action": "dismount",
+      "id": "c-19"
+    }
+  },
+  {
+    "t": 5.09,
+    "seat": "site",
+    "cmd": {
+      "action": "confirm",
+      "orderId": "o-3",
+      "outcome": "done",
+      "id": "c-20"
+    }
+  },
+  {
+    "t": 5.09,
+    "seat": "site",
+    "cmd": {
+      "action": "inspect",
+      "target": "crew",
+      "id": "c-21"
+    }
+  },
+  {
+    "t": 7.5,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterPermit",
+          "zone": 2,
+          "code": "2936-0"
+        }
+      ],
+      "id": "c-22"
+    }
+  },
+  {
+    "t": 8.1,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [],
+      "id": "c-23"
+    }
+  },
+  {
+    "t": 15.7,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterInspection",
+          "zone": 1,
+          "number": "8403-5"
+        }
+      ],
+      "id": "c-24"
+    }
+  },
+  {
+    "t": 23,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterInspection",
+          "zone": 2,
+          "number": "6251-4"
+        }
+      ],
+      "id": "c-25"
+    }
+  }
+]
+[
+  {
+    "t": 0,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "setStart",
+          "crew": "back",
+          "day": 8
+        },
+        {
+          "op": "protect",
+          "kind": "trench_box",
+          "fromFt": 400,
+          "toFt": 700
+        },
+        {
+          "op": "enterPermit",
+          "zone": 1,
+          "code": "5174-7"
+        },
+        {
+          "op": "enterPermit",
+          "zone": 2,
+          "code": "2936-0"
+        }
+      ],
+      "id": "c-1"
+    }
+  },
+  {
+    "t": 0,
+    "seat": "site",
+    "cmd": {
+      "action": "moveTo",
+      "stationFt": 520,
+      "id": "c-2"
+    }
+  },
+  {
+    "t": 0.02,
+    "seat": "site",
+    "cmd": {
+      "action": "dismount",
+      "id": "c-3"
+    }
+  },
+  {
+    "t": 3.8,
+    "seat": "site",
+    "cmd": {
+      "action": "inspect",
+      "target": "protection",
+      "id": "c-4"
+    }
+  },
+  {
+    "t": 3.9,
+    "seat": "site",
+    "cmd": {
+      "action": "stopWork",
+      "zone": 1,
+      "id": "c-5"
+    }
+  },
+  {
+    "t": 4,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "lend",
+          "machine": "excavator_standard",
+          "toCrew": "pipe",
+          "days": 2
+        }
+      ],
+      "id": "c-6"
+    }
+  },
+  {
+    "t": 5.02,
+    "seat": "site",
+    "cmd": {
+      "action": "mount",
+      "id": "c-7"
+    }
+  },
+  {
+    "t": 5.02,
+    "seat": "site",
+    "cmd": {
+      "action": "moveTo",
+      "stationFt": 1100,
+      "id": "c-8"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "site",
+    "cmd": {
+      "action": "dismount",
+      "id": "c-9"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "site",
+    "cmd": {
+      "action": "confirm",
+      "orderId": "o-5",
+      "outcome": "notDone",
+      "id": "c-10"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "radio",
+          "orderId": "o-5"
+        }
+      ],
+      "id": "c-11"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "site",
+    "cmd": {
+      "action": "confirm",
+      "orderId": "o-5",
+      "outcome": "done",
+      "id": "c-12"
+    }
+  },
+  {
+    "t": 7.2,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "pay",
+          "item": "drainage_pump"
+        }
+      ],
+      "id": "c-13"
+    }
+  },
+  {
+    "t": 8.1,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [],
+      "id": "c-14"
+    }
+  },
+  {
+    "t": 10.3,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "hold",
+          "crew": "back",
+          "days": 2
+        }
+      ],
+      "id": "c-17"
+    }
+  },
+  {
+    "t": 15,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterInspection",
+          "zone": 1,
+          "number": "8403-5"
+        }
+      ],
+      "id": "c-15"
+    }
+  },
+  {
+    "t": 22,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterInspection",
+          "zone": 2,
+          "number": "6251-4"
+        }
+      ],
+      "id": "c-16"
+    }
+  }
+]
+[
+  {
+    "t": 0,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterPermit",
+          "zone": 1,
+          "code": "5174-7"
+        }
+      ],
+      "id": "c-1"
+    }
+  },
+  {
+    "t": 4,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "lend",
+          "machine": "excavator_standard",
+          "toCrew": "pipe",
+          "days": 2
+        }
+      ],
+      "id": "c-7"
+    }
+  },
+  {
+    "t": 4.35,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "hold",
+          "crew": "back",
+          "days": 2
+        }
+      ],
+      "id": "c-9"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "radio",
+          "orderId": "o-2"
+        }
+      ],
+      "id": "c-15"
+    }
+  },
+  {
+    "t": 7.5,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterPermit",
+          "zone": 2,
+          "code": "2936-0"
+        }
+      ],
+      "id": "c-22"
+    }
+  },
+  {
+    "t": 8.1,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [],
+      "id": "c-23"
+    }
+  },
+  {
+    "t": 15.7,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterInspection",
+          "zone": 1,
+          "number": "8403-5"
+        }
+      ],
+      "id": "c-24"
+    }
+  },
+  {
+    "t": 23,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterInspection",
+          "zone": 2,
+          "number": "6251-4"
+        }
+      ],
+      "id": "c-25"
+    }
+  }
+]
+
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-ChildItem -LiteralPath Monitor -Recurse -Filter AGENTS.md | Select-Object -ExpandProperty FullName; Get-Content -LiteralPath Monitor/src/sim/sim.js; Get-Content -LiteralPath Monitor/src/sim/common.js; Get-Content -LiteralPath Monitor/src/sim/deviations.js; Select-String -Path Monitor/src/sim/*.js -Pattern 'idleCrewDays|peakOpen|idleDays|result =|finishDay' -Context 2,4" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -LiteralPath Docs/VR_SLICE.md -Encoding UTF8 -TotalCount 54; Select-String -LiteralPath Docs/DECISIONS.md -Pattern 'O10|O11|O13|K8|K17|K18|K19'; "'$wo = Get-Content -LiteralPath Docs/WORK_ORDERS/WO-02.md -Encoding UTF8; $start = ($wo | Select-String '"'"'^### 3'"\\.').LineNumber; "'$end = ($wo | Select-String '"'"'^### 5'"\\.|"'^## Acceptance'"').LineNumber | Select-Object -First 1; if ("'$start) { $wo[($start-1)..($end-2)] } else { $wo | Select-String -Pattern '"'"'^#|Orders|Hold|Lend|Stop work|Deviations'"' -Context 0,6 }" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 119ms:
+# VR_SLICE.md — a playable three-minute slice with the headset
+
+Written October 20, 2026, after Phase 0. Section A (testing today's browser build with a team on a LAN) and the slice numbers stand. Sections B to E (the headset as a client of a LAN host) are superseded by `Docs/SHOWCASE.md`, which embeds the simulation in the headset; they are kept because WO-S3 and WO-S4 reuse their specifications. The design, protocol and rules do not change; the slice is a shorter scenario and a Unity client.
+
+## The slice
+
+`Data/Scenarios/slice_texas.json`: the Stage 1 world cut in half. 3,000 ft, two zones of 1,500 ft, Standard machines, excavation Day 1, pipe Day 2, backfill Day 4, promise Day 18, deadline Day 30, budget $172,320. Rules holds both permit cards. Every mechanic fires once, in this order (measured with the scripted plays in `Monitor/test/scripts/`):
+
+| Sim day | What happens | Who acts | Procedure |
+| --- | --- | --- | --- |
+| Huddle (host paused) | Plan enters zone 1's permit code; Site rides to the seepage at 4+00 to 7+00 and looks | Plan, Site, Rules | P-2 |
+| 4 (t 3.89) | Collapse at 5+20; Site stops work on zone 1; Rules reads P1; Plan lends the excavator | all | P-1 |
+| 5 (t 4.1) | Backfill catches the stopped pipe crew; the foremen argue; Plan holds backfill | Site, Plan | P-6 |
+| 5 to 6 | The lend went out by radio and was not carried out (F1); Site finds the excavator still digging, Plan radios again | Site, Plan | P-1 line 6 |
+| 8 | Forecast in Plan's inbox; towers to the south in VR; zone 2's permit is due before excavation reaches 15+00 | Plan, Rules | P-2 |
+| 9 to 10 | Rain, every crew at half speed; afterwards pipe laying waits for the rework (3 days unpermitted, 1.5 with a pump) | — | A2 page |
+| 16 | Backfill reaches the end of zone 1: inspection handshake | Site, Rules, Plan | P-3 |
+| 24 | Finish, result card | — | — |
+
+| Scripted play | Finish day | Idle crew-days (exc / pipe / back) | Spent | Peak open trench | Collapse days lost | Rain days lost |
+| --- | --- | --- | --- | --- | --- | --- |
+| Push as the PM wrote it (`slice_play.json`) | 23.85 | 18.1 (3.1 / 6.2 / 8.9) | $128,357 | 1,281 ft | 3.18 | 3.0 |
+| Pull in the huddle: backfill Day 8, trench box 4+00 to 7+00, pump at the forecast (`slice_pull_play.json`) | 22.35 | 9.1 (1.1 / 4.7 / 3.4) | $128,262 | 1,820 ft | 2.18 | 2.5 |
+| Plan on autopilot, Site does nothing (`slice_autoplan.json`) | 24.8 | 20.0 | — | — | F1 missed | — |
+
+Wall clock at the slice's pace (4 s per day, 15 s per day while an event waits for Plan): 96 s of full speed plus however long the three seats take to resolve the collapse, the argument and the rain. Three minutes when the team moves; five when it talks. The real stages keep 5 and 20 s.
+
+## A. Test what exists today (browser seats, no headset)
+
+Exact steps, Windows PC, PowerShell in `C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER`. Close the Unity Editor first.
+
+1. One-time: `git add -A; git commit -m "Slice scenario, table-test docs, WO-05a"` (the slice files are untracked until then). Print `Paper\out\slice_texas\manual.pdf` (double-sided), `cards.pdf` and `tokens.pdf` (card stock), `ledger.pdf` (landscape), `jobsign.pdf`.
+2. Voice placeholders for the slice (optional; the pages show the line text when a WAV is missing): `.venv\Scripts\python Tools\voice\make_voice.py Data\Scenarios\slice_texas.json`.
+3. Start the host: `npm --prefix Monitor run host -- Data/Scenarios/slice_texas.json`. It prints the port (7331). Find the PC's LAN address with `ipconfig` (IPv4). If a phone cannot connect, allow node through the Windows firewall on 7331.
+4. Open on the host PC: `http://localhost:7331/facilitator.html` (you). On the Plan laptop: `http://<PC-IP>:7331/plan.html`. On the Site laptop or phone: `http://<PC-IP>:7331/site.html`. Rules sits with the printed kit and nothing else.
+5. The host starts paused. Say only: three jobs, talking is the game, the manual is Rules's, nothing will say whether a choice was right. Tell Rules to issue zone 1 (P-2) and Plan to type the code now; tell Site to ride the line and look at the walls. That is the huddle.
+6. Press Start. Do not help. When the result card appears, press Reset for a second run with a pulled plan (backfill Day 8, a trench box over the seepage, the pump when the forecast lands) if the team wants to try it; the overlay in a reset run has no previous lines (that is Stage 2's feature), so compare the two result cards by hand.
+7. Quick solo smoke without a team: start the host, open the facilitator page and the Plan page on the PC and the Site page on your phone, press Start, and play Site from the phone while glancing at Plan; nobody enters the permit for zone 2, so excavation idles at 15+00 from about Day 9 until you type `2936-0` on the Plan keypad. That alone shows the loop.
+
+Until WO-05a is accepted, Plan must enter zone 1's code while the host is paused (DECISIONS O10) and a stop-work is lifted the instant Plan commits (O11). Neither affects the slice's chain.
+
+## B. What the VR seat is, in this slice
+
+The Quest is a client of the same Node host, on the same protocol as `site.html`. Nothing is simulated on the headset. The Site player:
+
+- stands in the cab of the site truck on the haul road beside the trench, 1 ft = 0.3048 m, 30.5 m between station stakes; rides by picking a stake on the dashboard (fade, engine sound, arrive; no smooth vection), dismounts to stand at the stake; snap turns only;
+- sees what the design says only Site sees: trench walls and water per station, pipe in the trench, protection, the three machines (LOB-Game's Excavator, Crane and Backfill prefabs with their animators) with a plate on each, crews of LOB-Game workers whose animation and posture follow the state (`working`, `idle`, `held`, `stopped`, `arguing` with the ConflictTalk clip, `demobilized`), mood 0 to 3, the zone boards with the permit number, the sky (clear, towers to the south, rain with LOB-Game's rain bed), the gate with trucks, the trailer board (live actual lines and the permit limits), the job sign;
+- looks at a thing for two seconds to inspect it (wall, water, machine plate, pipe, protection, board, sky, ticket, crew); the clipboard on the left wrist shows the host's text and plays it if a WAV exists;
+- has three physical buttons on the wrist, pressed by pointing the right controller and pulling the trigger: Flag (plants a flag at the stake), Stop work (the zone), Confirm (Done / Not carried out, for the order landed at this crew); Listen is automatic within 10 m of arguing or held crews (their lines play);
+- hears the PM and the radio on the Plan page, not in the headset; event cards appear as a card on the dashboard with the facts and nothing else.
+
+What is left out of the slice on purpose: hand tracking, the Unity host, the C# simulation, Stage 3 cities, recorded voice, the result overlay in VR (the Plan page shows it).
+
+## C. Your manual steps (about 40 minutes, once)
+
+Docs\DECISIONS.md:16:| K8 | After a stop-work, any Plan commit lifts it for the zone's crews unless the commit holds 
+them | The doc's "stands until Plan commits a plan or resumes" | WO-02 |
+Docs\DECISIONS.md:25:| K17 | F2 requires a boundary between zones; an unpermitted excavator at 0 ft idles and bills, 
+with no overshoot or fine | O10: preserve F2 for the first real boundary | WO-05a |
+Docs\DECISIONS.md:26:| K18 | A Plan commit lifts stop-work through resume orders with normal order lag, unless it 
+holds the crew | O11: stop-work lifts follow the same delivery and confirmation rules as other orders | WO-05a, K8 |
+Docs\DECISIONS.md:27:| K19 | An empty Plan commit acknowledges no change, restores full speed and records a no-change 
+log entry | O13: Plan can close office time without changing its draft | WO-05a |
+### 3. The full model (rules; every constant comes from the scenario or the catalog, never from code)
+
+- **Speed.** `full` normally; `slow` from the moment an event fires until the next Plan `commit`; `paused` by facilitator `ctrl`. Speed is the host's pacing concern; the sim only exposes it.
+- **Orders.** A `commit` turns each op into an `Order {id, op, crew, issuedT, landsT, status}`. `landsT = issuedT` if the Site truck is dismounted within 100 ft of that crew's current position, else the next shift boundary `Math.floor(issuedT) + 1`. Orders apply when they land. `setStart`, `enterPermit`, `enterInspection` and `pay` apply at once (office actions). `radio` re-issues an order with a fresh `landsT` by the same rule. A commit is all-or-none: validate every op first (nack reasons below), then apply.
+- **setStart.** `setStart {crew, day}`: nack `"plan locked"` when `plan.locked` or the crew's `locked` is true, nack `"crew already started"` when `t >= crew.startDay - 1`; otherwise the crew's `startDay` becomes `day` (whole days, `>= displayDay`).
+- **Hold / resume.** `hold {crew, fromDay?, days?}`: from landing (or from `fromDay` if later) the crew's `mult` is 0 and it bills; with `days` the hold ends by itself after `days`, without it the hold stands until `resume`. `resume` lifts a hold or a stop-work for that crew. Any Plan `commit` after a stop-work lifts the stop-work for the zone's crews unless the commit holds them (design: "stands until Plan commits a plan or resumes").
+- **Lend.** `lend {machine, toCrew, days}`: the lender's `mult` is 0 from landing; the machine moves along the haul road and arrives at `toCrew` after `|Δft| / 1500 / 24` days (same day; the city's remobilization delay applies only to `remob` and to hired machines, decision K15). A `lend` of the excavation crew's machine to `pipe` while a P1 is active is the `clear_own` response: the arrival starts the clearing, the lender stays at 0 for the clearing days (`lenderLosesSameDays`), then the machine returns the same way. Otherwise the machine works for `toCrew` for `days` (the receiving crew's rate becomes the lent machine's rate while it has no machine of its own; a crew with its own machine plus a lent one adds the lent rate) and returns.
+- **Order a machine.** `order {machine}`: price + `mobilizationUsd` charged at commit; arrives after `leadDays.normal + cities[city].leadDelayDays`; on arrival it replaces the crew's machine (the old one is released at half its price). `pay {item: "hire_excavator", machine}` during an active P1 is the hired-clearing response: same charges and lead time, it clears the collapse in the clearing days for its `sizeClass`, then is released at half price. Rush orders are not exposed (catalog `rushExposedToPlayers: false`).
+- **Protect.** `protect {kind, fromFt, toFt}`: price at commit, daily cost while any crew works inside the stretch; `trench_slope` refused in `slopeRefused` cities; `preparationAllowed: false` → nack `"not in the budget"` plus the `prepRefused` voice trigger for `protect` and `order` at any time in that stage (the PM refuses purchases ahead; `pay` for an active or forecast event's options is always allowed).
+- **Pay.** `pay {item, machine?}`: `item` must be an `options[].key` of an event that is active, or whose `forecast.inboxDay` has passed (so a pump can be rented when the forecast lands); charges `cost.usd` at once and `cost.perDayUsd` daily to the end of the stage; applies `effect` as this WO describes per event. Unknown or inactive item → nack `"no such response now"`.
+- **Demob / remob.** `demob`: billing stops from the next day boundary after landing; `remob`: `demobFeeUsd`, the crew returns after `remobilizationDelayDays`.
+- **Permits.** Exc may not pass a zone's end into a zone whose permit is not entered; it idles there (`idleNoPermit`) and bills. `enterPermit` with a code not on the zone's card → nack `"code not on file"`. Entering a permit when open zones (entered and not yet signed) already equal `openZoneLimit` → nack `"city limit: N zones open"`. Stage 1 (`heldBy: "pm"`) starts with all permits entered.
+- **Hold points.** Back may not pass a zone's end until `enterInspection` for that zone with the card's number; it idles (`idleHoldPoint`) and bills. The compaction result (`"passed"` in both Texas stages) appears in Plan's inbox when backfill first reaches the zone end. Finishing the job requires zone 4's inspection entered.
+- **Stop work.** `stopWork {zone}` (Site dismounted anywhere in that zone): crews in the zone go to `mult 0` after `stopWorkReachHours / 24` days, bill, and their mood rises one level per `moodStepDays` up to 3. Lifted as under Hold / resume.
+- **Site actions.** `moveTo {stationFt}`: the truck arrives after `|Δft| / 1500 / 24` days; `mount`/`dismount` only while not moving. `inspect {target}` answers from state at the truck's station (nearest 100 ft stake), with these fixed sources, no invented text: `wall` → the covering `ground.segments[].indicator.wall`, else `ground.defaultIndicator.wall`; `"Wall slumped into the trench."` at a collapse station until cleared; `"Not excavated here yet."` where exc has not passed. `water` → the segment's `indicator.water`, else the default; `"Standing water in the trench bottom."` at a collapse station, and at every open station during rain and rework. `machine` → the nearest crew within 100 ft: `"<crew name>: <catalog label>, plate <sizeClass>"`, else `"No machine within sight."`. `protection` → `"<catalog label> in place, <from> to <to>"` or `"No protection here."`. `board` → `"Zone N board: permit <number>"` / `"Zone N board: no permit posted"` plus `"inspection <number>"` when signed. `sky` → `"Clear."` / `"Towers building to the south."` / `"Rain."`. `ticket` → an order in transit: `"Delivery ticket: <label>, due Day N"`, else `"No truck at the gate."`. `crew` → nearest crew: `"Working."` / `"Idle, waiting on <leader>."` / `"Held by the office since Day N."` / `"Stopped: stop-work."` / `"Arguing with <crew>."` / `"Demobilized."` followed by the mood word `calm | grumbling | angry | furious` for levels 0–3. `pipe` → `"No pipe here yet."` / `"Pipe laid, open trench."` / `"Backfilled."`. Per-station trench state for the Site view: `undug` until exc passes the stake, `open` until pipe passes, `piped` until back passes, then `backfilled`; `water` is `seep` at open stations inside a seepage segment, `standing` at the collapse station and at open stations during rain and rework, else `none`; `wall` is `slumped` at the collapse station until cleared. `flag {stationFt, note}` adds `{stationFt, day, note}` to Plan's `flags[]`. `listen` at arguing crews returns the two `conflict` lines; at a held crew its `heldDayN` line for its mood; else `"Nothing to hear."`. `confirm {orderId, outcome}` needs the order landed at a crew within 100 ft.
+- **Events.** Check triggers each tick (`crewReaches` fires when the crew's pos first reaches `ft`; `day` fires at `t = day - 1`). On firing: speed `slow`; emit `event` to `visibleTo` seats (card = `card`, or `cardWhenProtected` when protection covers `stationFt`); apply `rateDrop` to `hits` for `durationDays`. P1: pipe stays at `mult 0` until a response resolves it: `clear_own` (a `lend` of exc's machine to pipe, see Lend) → clearing days by that excavator's `sizeClass` (× `severityByProtection[kind]` if protection covers the station, rounded to 0.5), pipe resumes after; `pay emergency_shoring` → resumes after `resumeAfterDays`; `pay hire_excavator {machine}` → resumes after lead days + clearing days by the hired size; no response → stays stopped (the slow clock is the pressure). A2: all crews × 0.5 for 2 days; at the rain's start record `openFt = exc.pos - back.pos`; at the rain's end `reworkDays = ceil(openFt / 500) × daysPer500Ft × (a pump paid for before the rain ends ? 0.5 : 1)`; pipe `mult 0` for `reworkDays` after the rain ends. The pump's `rainRateRestore` sets the listed crews' rain multiplier back to 1 for the rest of the rain. Forecast: the inbox item on `forecast.inboxDay` is generated from `forecast.text` (not listed in `inbox[]`), Site `sky` becomes `towersSouth` from `skyFromDay`, `rain` during.
+- **Deviations.** F1 `firstRadioOrder`: the first order (in commit order, first matching op in the first commit that has one) with `op` in `ops` whose `landsT > issuedT` lands but is not applied; it applies when Plan `radio`s it (new landing by the normal rule). Caught if Site `confirm notDone` on it before the next day boundary. F2 `firstUnpermittedBoundary`: the first time exc reaches an unpermitted boundary it continues `overshootFt` into the zone, then idles; `permitFineUsd` is charged; not if Site is dismounted within 100 ft of the boundary or exc is held. F3 `protectStretchMisses`: nothing to simulate; the result card counts it caught if Site `inspect protection` happened at the protected stretch before the event fired and the stretch did not cover `stationFt`. F5 is not authored in these stages; implement the hook, no behaviour.
+- **Conflicts.** Each tick for each (trailing, leader) pair where the trailing crew is working (`mult > 0`, not already blocked by the leader): if `trailing.pos + trailing.rate × trailing.mult × 1 > leader.pos + leader.rate × leader.mult × 1` (would cross within the next day), fire a conflict **once per pair per stage** (decision K7): both crews `arguing` (`mult 0`, billing), speed `slow`, `voice` with the two foremen's `conflict` lines to Site, a facts-only `event` card to Site. Resolved by the next Plan commit that `hold`s or `demob`s the trailing crew (any other commit → nack `"conflict: hold or demobilize the trailing crew"`); the leader resumes at once, the trailing crew per the order. After that first argument, a trailing crew that catches its leader again simply idles against it (`min(pos, leaderPos)`), bills, and its mood rises; it counts in `idleCrewDays`.
+- **Money.** `spentUsd` accrues per tick: Σ billing crews' daily × dt × (1 + overheadRate) + protection daily fees × dt × (1 + overheadRate); purchases, mobilization, `demobFeeUsd`, fines and option costs at face value when charged. Lose when `spentUsd > budgetUsd` or `t > deadlineDay - 1`; the result then carries `lost: "budget" | "deadline"`.
+- **Daily report.** At each integer `t`: `report {day, feetByCrew (floor), spendUsd, notes}` and Plan's `reportedLines` advance. Plan's "today" estimate = reported + rate × elapsed with band ± `uncertaintyBandFt`.
+- **Result.** When back finishes (zone 4 signed) or on a loss: `finishDay` (t), `promisedDay`, `budgetUsd`, `spentUsd`, `idleCrewDays` (sum of per-crew idle), `peakOpenTrenchFt`, `finesUsd`, `deviationsCaught/Missed`, `events[]` (id, day, option chosen, days lost, protection present), `changeLog[]` (every commit with day and ops), `lines {planned, actual}` as polylines per crew. Facts only; no adjectives, no grades.
+- **Voice triggers.** Emit `voice {lineIds, seats}` for `stageStart` (plan + site), `prepRefused` (plan), `holdCommitted` / `demobCommitted` (plan), `orderLanded` (plan), `orderNotDone` (plan), `conflict` (site), `heldDay1..3` (site, when a held crew's mood reaches 1..3), `stageEnd` (plan + site). Look lines up by `trigger` in `scenario.lines`; no line → no message.
+
+### 4. Headless runner (`src/sim/headless.js`)
+
+`node Monitor/src/sim/headless.js <scenario.json> [--script <script.json>] [--out <transcript.json>] [--pure]`
+
+- A script is `[{ "t": 5.1, "seat": "plan", "cmd": {...} }, ...]`, applied when the sim reaches `t` (before the tick).
+- Runs with `dt 0.01`, no pacing, until `sim.done` or `t > deadlineDay + 5` (safety stop, reported in the transcript).
+- Transcript: `{ scenario, seed, snapshots: [sim.view('facilitator') at every integer t], messages: [every drained message with its t], result }`. Numbers rounded to 3 decimals so two runs compare byte-for-byte.
+- Ship three scripts in `test/scripts/`:
+  - `stage1_noaction.json`: empty; must end with `lost: "deadline"` (pipe never cleared), finish absent.
+  - `stage1_pm_play.json`: Site rides to 7+20 before Day 6; at the collapse Site stops work on zone 1, Plan commits `lend` (exc's machine → pipe) + `hold back 2 days`; Site rides to the excavator, finds the lend not carried out (F1), confirms `notDone`, Plan `radio`s it, Site confirms `done`; Site rides to the backfill crew and confirms the hold; at the argument Plan holds back until pipe is 2 days ahead; when the Day 17 forecast lands Plan does not rent the pump (push stage); Plan enters inspection numbers as zones close; nobody buys anything else. Expect: the collapse `event` message at `t = 5.0 ± 0.02`; `finishDay` greater than `promisedDay` (35) and less than `deadlineDay - 1`; no `lost`. Report the actual finish, idle days and spend in NOTES: the design doc's "36 to 38" predates the order-lag and rework rules and will be corrected from your numbers.
+  - `stage2_pull_play.json`: huddle: `setStart back 12`, `protect trench_box 600 900`; Rules holds permits: Plan enters zone 1 and 2 codes at start, 3 and 4 as zones sign; Site stands at the excavator when the zone 2 and 3 boundaries are reached (so F2 cannot fire there); same collapse handling (the box halves the clearing); Plan `pay`s the pump when the Day 17 forecast lands. Expect: `finishDay` less than `deadlineDay - 1`, no `lost`, `idleCrewDays` lower than the Stage 1 script's, `peakOpenTrenchFt` ≤ 3000 (two zones), the collapse card `cardWhenProtected`, `finesUsd` 0. Report the numbers in NOTES.
+
+
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 234ms:
+import { makeRng } from '../common/rng.js';
+import { CREW_IDS, DT, EPS, copy, draftState, emit, voice } from './common.js';
+import { refreshCrews, moveCrews, updateMood } from './crews.js';
+import { detectConflicts, resolveConflicts, validateConflictCommit } from './conflict.js';
+import { updateEvents } from './events.js';
+import { accrue } from './money.js';
+import { issueOrder, updateOrders, validateOp } from './orders.js';
+import { finalInspectionEntered, updateHoldPoints } from './permits.js';
+import { plannedPolylines } from './planning.js';
+import { applySite, updateTruck } from './site.js';
+import { view } from './views.js';
+
+// WO-05a: these authored Texas switches have no alternative implementation.
+const SUPPORTED_RULES = {
+  orderLagShifts: 1, heldCrewBills: true, conflictRule: 'crossWithinNextDay',
+  conflictBehaviour: 'stopAndArgue', unpermittedBoundary: 'idleAndBill',
+  pumpHalvesRework: true, likelihoodRollsApply: false,
+};
+const SUPPORTED_SHIFTS_PER_DAY = 1; // Authored scenario time.shiftsPerDay.
+
+function initialState(scenario, catalog, pure) {
+  const crews = Object.fromEntries(CREW_IDS.map(id => {
+    const crew = scenario.crews.find(c => c.id === id);
+    return [id, { ...crew, pos: 0, work: 0, onsite: 0, finishT: null,
+      rate: catalog.machines[crew.machine]?.rateFtPerDay ?? 0, mult: 0, status: 'idle',
+      mood: 0, waitDays: 0, workingDays: 0, hold: null, stop: null, arguing: false, demobilized: false, lentAway: false }];
+  }));
+  const state = {
+    scenario, catalog, pure, rngState: makeRng(scenario.seed).state(),
+    t: 0, speed: 'full', pausedSpeed: 'full', done: false, result: null, crews,
+    capFt: scenario.capFt ?? null, orders: [], nextOrderId: 1, loans: [], deliveries: [], payments: [],
+    protections: [], events: copy(scenario.events ?? []), deviations: copy(scenario.deviations ?? []), conflicts: [], pendingStops: {},
+    permits: Object.fromEntries(scenario.job.zones.map(z => [z.id, { entered: pure || scenario.permits.heldBy === 'pm',
+      signed: false, number: scenario.permits.cards.find(c => c.zone === z.id)?.number }])),
+    inspections: Object.fromEntries(scenario.job.zones.map(z => [z.id, { cleared: pure || !scenario.inspections.required,
+      reported: false, number: scenario.inspections.cards.find(c => c.zone === z.id)?.number }])),
+    truck: { stationFt: 0, moving: false, dismounted: false }, flags: [], inbox: [], inboxDelivered: [], pmLines: [],
+    messages: [], changeLog: [], spentUsd: 0, crewCostUsd: 0, finesUsd: 0, peakOpenTrenchFt: 0,
+    actualLines: Object.fromEntries(CREW_IDS.map(id => [id, [{ t: 0, ft: 0 }]])),
+    plannedLines: Object.fromEntries(CREW_IDS.map(id => [id, { startDay: crews[id].startDay, rate: crews[id].rate, holds: [],
+      segments: [{ fromT: crews[id].startDay - 1, rate: crews[id].rate }] }])),
+    reportedLines: Object.fromEntries(CREW_IDS.map(id => [id, [{ t: 0, ft: 0 }]])),
+  };
+  if (!pure) { voice(state, 'stageStart', ['plan', 'site']); updateEvents(state); }
+  refreshCrews(state);
+  return state;
+}
+
+function recordActual(s) {
+  for (const id of CREW_IDS) {
+    if (s.actualLines[id].at(-1).t !== s.t) s.actualLines[id].push({ t: s.t, ft: s.crews[id].pos });
+  }
+}
+
+function report(s) {
+  const feetByCrew = Object.fromEntries(CREW_IDS.map(id => [id, Math.floor(s.crews[id].pos + EPS)]));
+  const notes = CREW_IDS.map(id => `${s.crews[id].name}: ${feetByCrew[id] - s.reportedLines[id].at(-1).ft} ft today`);
+  for (const id of CREW_IDS) s.reportedLines[id].push({ t: s.t, ft: feetByCrew[id] });
+  const item = { day: s.t, feetByCrew, spendUsd: s.spentUsd, notes };
+  s.inbox.push({ ...item, from: 'Daily report', subject: `Day ${s.t}` });
+  emit(s, 'report', { ...item, seats: ['plan', 'facilitator'] });
+}
+
+function finish(s) {
+  const lost = s.pure ? null : s.spentUsd > s.scenario.plan.budgetUsd ? 'budget'
+    : s.t > s.scenario.plan.deadlineDay - 1 + EPS ? 'deadline' : null;
+  const complete = s.crews.back.finishT != null && (s.pure || finalInspectionEntered(s));
+  if (!lost && !complete) return;
+  recordActual(s);
+  const idleDays = Object.fromEntries(CREW_IDS.map(id => [id, Math.max(0, s.crews[id].onsite - s.crews[id].work)]));
+  const planned = plannedPolylines(s);
+  s.done = true;
+  s.result = {
+    ...(lost ? { lost } : { finishDay: s.crews.back.finishT }), promisedDay: s.scenario.plan.promisedFinishDay,
+    budgetUsd: s.scenario.plan.budgetUsd, spentUsd: s.spentUsd, crewCostUsd: s.crewCostUsd,
+    idleDays, idleCrewDays: CREW_IDS.reduce((total, id) => total + idleDays[id], 0),
+    peakOpenTrenchFt: s.peakOpenTrenchFt, finesUsd: s.finesUsd,
+    deviationsCaught: s.deviations.filter(d => d.triggered && d.caught).length,
+    deviationsMissed: s.deviations.filter(d => d.triggered && !d.caught).length,
+    events: s.events.filter(e => e.fired).map(e => ({ id: e.id, day: e.firedT, option: e.option ?? null,
+      daysLost: e.type === 'A2' ? e.durationDays * e.rateDrop + (e.reworkDays ?? 0)
+        : ((e.resolvedT ?? s.t) - e.firedT) * e.rateDrop, protection: e.protection })),
+    changeLog: copy(s.changeLog), lines: { planned, actual: copy(s.actualLines) },
+  };
+  if (!s.pure) {
+    voice(s, 'stageEnd', ['plan', 'site']);
+    emit(s, 'result', { stage: s.scenario.id, ...s.result, seats: ['plan', 'site', 'facilitator'] });
+  }
+}
+
+export function tickState(state, dt) {
+  if (state.done || state.speed === 'paused') return state;
+  const s = draftState(state);
+  if (!s.pure) { updateTruck(s); updateOrders(s); updateEvents(s); }
+  refreshCrews(s);
+  if (!s.pure) detectConflicts(s);
+  moveCrews(s, dt);
+  accrue(s, dt);
+  if (!s.pure) updateMood(s, dt);
+  // Quantizing arithmetic noise preserves exact shift boundaries across JS engines.
+  s.t = Number((s.t + dt).toFixed(10));
+  if (!s.pure) {
+    updateTruck(s); updateOrders(s); updateHoldPoints(s); updateEvents(s);
+    refreshCrews(s);
+  }
+  if (Math.floor(s.t + EPS) > Math.floor(state.t + EPS)) {
+    recordActual(s);
+    if (!s.pure) report(s);
+  }
+  finish(s);
+  return s;
+}
+
+function commit(state, ops) {
+  if (!Array.isArray(ops)) return { reason: 'invalid commit' };
+  const conflictReason = validateConflictCommit(state, ops);
+  if (conflictReason) return { reason: conflictReason };
+  const s = draftState(state);
+  for (const op of ops) {
+    const reason = validateOp(s, op);
+    if (reason) return { reason };
+    // Staging on the draft validates sequential office actions without any partial commit.
+    issueOrder(s, op);
+  }
+  resolveConflicts(s);
+  for (const id of CREW_IDS) {
+    if (s.crews[id].stop && !ops.some(op => ['hold', 'resume'].includes(op.op) && op.crew === id)
+      && !s.orders.some(order => order.op.op === 'resume' && order.crew === id && order.appliedT == null)) {
+      issueOrder(s, { op: 'resume', crew: id });
+    }
+  }
+  s.pendingStops = {};
+  updateOrders(s);
+  updateHoldPoints(s);
+  if (s.crews.back.finishT == null && s.crews.back.pos >= s.scenario.job.lengthFt - EPS
+    && finalInspectionEntered(s)) s.crews.back.finishT = s.t;
+  refreshCrews(s);
+  s.changeLog.push({ day: s.t, ops: copy(ops), ...(ops.length ? {} : { note: 'no change' }) });
+  if (s.speed === 'paused') s.pausedSpeed = 'full'; else s.speed = 'full';
+  finish(s);
+  return { state: s };
+}
+
+export function createSim(scenario, catalog, { pure = false } = {}) {
+  // The pure oracle omits full-model switches; explicitly changed values still fail.
+  for (const [key, expected] of Object.entries(SUPPORTED_RULES)) {
+    const actual = scenario.rules?.[key];
+    if (!(pure && actual === undefined) && actual !== expected) {
+      throw new Error(`Unsupported rules.${key}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+    }
+  }
+  const shifts = scenario.time?.shiftsPerDay;
+  if (!(pure && shifts === undefined) && shifts !== SUPPORTED_SHIFTS_PER_DAY) {
+    throw new Error(`Unsupported time.shiftsPerDay: expected ${SUPPORTED_SHIFTS_PER_DAY}, got ${JSON.stringify(shifts)}`);
+  }
+  // JSON copying also accepts the WO-01 loader's frozen scenario with derived functions.
+  const source = copy(scenario), fleet = copy(catalog);
+  let state = initialState(source, fleet, pure);
+  return {
+    get t() { return state.t; }, get speed() { return state.speed; },
+    get done() { return state.done; }, get result() { return copy(state.result); },
+    tick(dt = DT) {
+      if (!Number.isFinite(dt) || dt <= 0) throw new RangeError('dt must be positive');
+      let remaining = dt;
+      while (remaining > EPS && !state.done && state.speed !== 'paused') {
+        const step = Math.min(DT, remaining);
+        state = tickState(state, step);
+        remaining -= step;
+      }
+    },
+    apply(seat, cmd) {
+      if (!cmd || typeof cmd !== 'object') return { ok: false, reason: 'invalid command' };
+      if (seat === 'facilitator') {
+        if (cmd.action === 'load' && cmd.stage !== source.id) return { ok: false, reason: 'stage not loaded' };
+        if (cmd.action === 'reset' || cmd.action === 'load') state = initialState(source, fleet, pure);
+        else if (cmd.action === 'pause') {
+          state = draftState(state);
+          if (state.speed !== 'paused') state.pausedSpeed = state.speed;
+          state.speed = 'paused';
+        } else if (cmd.action === 'start' || cmd.action === 'resume') {
+          state = draftState(state); state.speed = state.pausedSpeed;
+        } else return { ok: false, reason: 'unknown control' };
+        return { ok: true, appliedDay: state.t };
+      }
+      if (state.done) return { ok: false, reason: 'stage ended' };
+      if (seat === 'plan' && cmd.action === 'commit') {
+        const result = commit(state, cmd.ops);
+        if (result.reason) {
+          if (result.reason === 'not in the budget') {
+            state = draftState(state); voice(state, 'prepRefused', ['plan']);
+          }
+          return { ok: false, reason: result.reason };
+        }
+        state = result.state;
+      } else if (seat === 'site') {
+        const draft = draftState(state), reason = applySite(draft, cmd);
+        if (reason) return { ok: false, reason };
+        state = draft;
+      } else return { ok: false, reason: 'action unavailable for seat' };
+      return { ok: true, appliedDay: state.t };
+    },
+    view: seat => view(state, seat),
+    drain() { const messages = copy(state.messages); state = { ...state, messages: [] }; return messages; },
+    serialize: () => copy(state),
+  };
+}
+// WO-02 crew order, precision, haul-road speed, proximity and mood conventions.
+export const CREW_IDS = ['exc', 'pipe', 'back'];
+export const LEADER = { pipe: 'exc', back: 'pipe' };
+export const DT = 0.01;
+export const EPS = 1e-6;
+export const NEAR_FT = 100;
+export const HAUL_FT_PER_HOUR = 1500;
+export const HOURS_PER_DAY = 24;
+export const MAX_MOOD = 3;
+export const MOODS = ['calm', 'grumbling', 'angry', 'furious'];
+// WO-02: conflicts look one day ahead; P1 durations round to half days.
+export const CONFLICT_LOOKAHEAD_DAYS = 1;
+export const CLEARING_DAY_STEP = 0.5;
+export const travelDays = (a, b) => Math.abs(a - b) / HAUL_FT_PER_HOUR / HOURS_PER_DAY;
+export const displayDay = t => Math.floor(t + EPS) + 1;
+export const nextBoundary = t => Math.floor(t + EPS) + 1;
+export const copy = value => JSON.parse(JSON.stringify(value));
+export const zoneAt = (s, ft) => s.scenario.job.zones.find(z => ft >= z.fromFt
+  && (ft < z.toFt || ft === s.scenario.job.lengthFt));
+export const nearby = (s, ft) => s.truck.dismounted && !s.truck.moving
+  && Math.abs(s.truck.stationFt - ft) <= NEAR_FT;
+export const crewAt = s => CREW_IDS.map(id => s.crews[id])
+  .filter(c => Math.abs(c.pos - s.truck.stationFt) <= NEAR_FT)
+  .sort((a, b) => Math.abs(a.pos - s.truck.stationFt) - Math.abs(b.pos - s.truck.stationFt))[0];
+export const protectionAt = (s, ft) => Number.isFinite(ft)
+  ? s.protections.find(p => ft >= p.fromFt && ft <= p.toFt) : undefined;
+export const activeCollapse = s => s.events.find(e => e.type === 'P1' && e.fired && !e.resolved);
+export const emit = (s, type, fields) => s.messages.push({ t: type, v: 1, day: s.t, ...fields });
+
+export function voice(s, trigger, seats, crewIds) {
+  const lines = s.scenario.lines.filter(line => line.trigger === trigger
+    && (!crewIds || crewIds.includes(line.speaker.replace('foreman_', ''))));
+  if (!lines.length) return;
+  emit(s, 'voice', { lineIds: lines.map(line => line.id), seats });
+  s.pmLines.push(...lines.filter(line => line.speaker === 'pm').map(line => line.text));
+}
+
+// Reducers own this draft; source state and caller-owned scenario/catalog stay untouched.
+// Histories are append-only, so copying their outer arrays avoids repeatedly cloning points.
+export function draftState(s) {
+  const { scenario, catalog, actualLines, plannedLines, inbox, changeLog, messages, ...dynamic } = s;
+  return {
+    ...structuredClone(dynamic), scenario, catalog,
+    actualLines: Object.fromEntries(CREW_IDS.map(id => [id, [...actualLines[id]]])),
+    plannedLines: copy(plannedLines), inbox: [...inbox], changeLog: [...changeLog], messages: [...messages],
+  };
+}
+import { EPS, nearby, nextBoundary, protectionAt } from './common.js';
+
+export function markFirstRadio(s, order) {
+  const d = s.deviations.find(d => d.type === 'F1' && !d.triggered
+    && d.when.ops.includes(order.op.op) && order.landsT > order.issuedT);
+  if (d) {
+    d.triggered = true;
+    d.orderId = order.id;
+    order.ignored = true;
+  }
+}
+
+export function confirmDeviation(s, order, outcome) {
+  const d = s.deviations.find(d => d.type === 'F1' && d.orderId === order.id);
+  if (d && outcome === 'notDone' && s.t < nextBoundary(order.landedT) - EPS) d.caught = true;
+}
+
+export function boundaryAllowance(s, zone) {
+  // WO-05a O10: F2 requires crossing from another zone, not starting the job.
+  if (!s.scenario.job.zones.some(previous => previous.toFt === zone.fromFt)) return zone.fromFt;
+  const d = s.deviations.find(d => d.type === 'F2');
+  if (!d) return zone.fromFt;
+  if (d.triggered) return d.zone === zone.id && !d.caught ? zone.fromFt + d.overshootFt : zone.fromFt;
+  d.triggered = true;
+  d.zone = zone.id;
+  d.caught = nearby(s, zone.fromFt) || !!s.crews.exc.hold || !!s.crews.exc.stop;
+  if (!d.caught) {
+    s.finesUsd += s.scenario.rules.permitFineUsd;
+    s.spentUsd += s.scenario.rules.permitFineUsd;
+  }
+  return d.caught ? zone.fromFt : zone.fromFt + d.overshootFt;
+}
+
+export function inspectProtection(s, stationFt) {
+  const p = protectionAt(s, stationFt);
+  if (!p) return;
+  for (const d of s.deviations.filter(d => d.type === 'F3')) {
+    const e = s.events.find(e => e.id === d.when.eventId);
+    if (!e?.fired && !(e.stationFt >= p.fromFt && e.stationFt <= p.toFt)) d.inspected = true;
+  }
+}
+
+export function eventDeviations(s, event) {
+  for (const d of s.deviations.filter(d => d.type === 'F3' && d.when.eventId === event.id)) {
+    const missedStretch = s.protections.some(p => event.stationFt < p.fromFt || event.stationFt > p.toFt);
+    if (missedStretch && !protectionAt(s, event.stationFt)) {
+      d.triggered = true;
+      d.caught = !!d.inspected;
+    }
+  }
+}
+
+// WO-02 reserves F5's firstLend hook but specifies no delay behaviour in these stages.
+export function firstLend(s) {
+  for (const d of s.deviations.filter(d => d.type === 'F5' && !d.triggered)) d.triggered = true;
+}
+
+  Monitor\src\sim\crews.js:70:      && (id !== 'back' || s.pure || finalInspectionEntered(s))) c.finishT = s.t + dt;
+  Monitor\src\sim\crews.js:71:  }
+> Monitor\src\sim\crews.js:72:  s.peakOpenTrenchFt = Math.max(s.peakOpenTrenchFt, s.crews.exc.pos - s.crews.back.pos);
+  Monitor\src\sim\crews.js:73:}
+  Monitor\src\sim\crews.js:74:
+  Monitor\src\sim\crews.js:75:export function updateMood(s, dt) {
+  Monitor\src\sim\crews.js:76:  for (const id of CREW_IDS) {
+  Monitor\src\sim\goldens.js:21:    while (!sim.done && sim.t < 300) sim.tick(goldens.dt);
+  Monitor\src\sim\goldens.js:22:    const actual = sim.result, expected = entry.expected;
+> Monitor\src\sim\goldens.js:23:    const deltas = actual ? { finishDay: actual.finishDay - expected.finishDay,
+> Monitor\src\sim\goldens.js:24:      idleDays: Object.fromEntries(CREW_IDS.map(id => [id, actual.idleDays[id] - 
+expected.idleDays[id]])),
+> Monitor\src\sim\goldens.js:25:      crewCostUsd: actual.crewCostUsd - expected.crewCostUsd, peakOpenTrenchFt: 
+actual.peakOpenTrenchFt - expected.peakOpenTrenchFt } : null;
+> Monitor\src\sim\goldens.js:26:    const pass = !!deltas && Math.abs(deltas.finishDay) <= TOLERANCE.days
+> Monitor\src\sim\goldens.js:27:      && CREW_IDS.every(id => Math.abs(deltas.idleDays[id]) <= TOLERANCE.days)
+> Monitor\src\sim\goldens.js:28:      && Math.abs(deltas.crewCostUsd) <= TOLERANCE.cost && 
+Math.abs(deltas.peakOpenTrenchFt) <= TOLERANCE.feet;
+  Monitor\src\sim\goldens.js:29:    return { name, pass, deltas };
+  Monitor\src\sim\goldens.js:30:  });
+  Monitor\src\sim\goldens.js:31:}
+  Monitor\src\sim\goldens.js:32:
+  Monitor\src\sim\goldens.js:36:    for (const { name, pass, deltas } of results) console.log(`${pass ? 'PASS' : 
+'FAIL'} ${name} deltas=${JSON.stringify(deltas,
+  Monitor\src\sim\goldens.js:37:      (key, value) => typeof value === 'number' ? Number(value.toFixed(3)) : value)}`);
+> Monitor\src\sim\goldens.js:38:    process.exitCode = results.every(result => result.pass) ? 0 : 1;
+  Monitor\src\sim\goldens.js:39:  } catch (error) { console.error(error.message); process.exitCode = 1; }
+  Monitor\src\sim\goldens.js:40:}
+  Monitor\src\sim\headless.js:36:    drain();
+  Monitor\src\sim\headless.js:37:  }
+> Monitor\src\sim\headless.js:38:  transcript.result = sim.result;
+  Monitor\src\sim\headless.js:39:  if (!sim.done && !transcript.safetyStop) transcript.safetyStop = { t: sim.t, 
+reason: 'time limit' };
+  Monitor\src\sim\headless.js:40:  return transcript;
+  Monitor\src\sim\headless.js:41:}
+  Monitor\src\sim\headless.js:42:
+  Monitor\src\sim\headless.js:60:    mkdirSync(dirname(resolve(out)), { recursive: true });
+  Monitor\src\sim\headless.js:61:    writeFileSync(out, roundedJSON(transcript));
+> Monitor\src\sim\headless.js:62:    console.log(`${scenario.id}: ${transcript.result?.lost ?? 'finished'} 
+t=${transcript.result?.finishDay ?? transcript.snapshots.at(-1)?.t}`);
+  Monitor\src\sim\headless.js:63:  } else process.stdout.write(roundedJSON(transcript));
+  Monitor\src\sim\headless.js:64:  return transcript.safetyStop ? 1 : 0;
+  Monitor\src\sim\headless.js:65:}
+  Monitor\src\sim\headless.js:66:
+  Monitor\src\sim\sim.js:36:      reported: false, number: scenario.inspections.cards.find(c => c.zone === 
+z.id)?.number }])),
+  Monitor\src\sim\sim.js:37:    truck: { stationFt: 0, moving: false, dismounted: false }, flags: [], inbox: [], 
+inboxDelivered: [], pmLines: [],
+> Monitor\src\sim\sim.js:38:    messages: [], changeLog: [], spentUsd: 0, crewCostUsd: 0, finesUsd: 0, 
+peakOpenTrenchFt: 0,
+  Monitor\src\sim\sim.js:39:    actualLines: Object.fromEntries(CREW_IDS.map(id => [id, [{ t: 0, ft: 0 }]])),
+  Monitor\src\sim\sim.js:40:    plannedLines: Object.fromEntries(CREW_IDS.map(id => [id, { startDay: 
+crews[id].startDay, rate: crews[id].rate, holds: [],
+  Monitor\src\sim\sim.js:41:      segments: [{ fromT: crews[id].startDay - 1, rate: crews[id].rate }] }])),
+  Monitor\src\sim\sim.js:42:    reportedLines: Object.fromEntries(CREW_IDS.map(id => [id, [{ t: 0, ft: 0 }]])),
+  Monitor\src\sim\sim.js:68:  if (!lost && !complete) return;
+  Monitor\src\sim\sim.js:69:  recordActual(s);
+> Monitor\src\sim\sim.js:70:  const idleDays = Object.fromEntries(CREW_IDS.map(id => [id, Math.max(0, 
+s.crews[id].onsite - s.crews[id].work)]));
+  Monitor\src\sim\sim.js:71:  const planned = plannedPolylines(s);
+  Monitor\src\sim\sim.js:72:  s.done = true;
+> Monitor\src\sim\sim.js:73:  s.result = {
+> Monitor\src\sim\sim.js:74:    ...(lost ? { lost } : { finishDay: s.crews.back.finishT }), promisedDay: 
+s.scenario.plan.promisedFinishDay,
+  Monitor\src\sim\sim.js:75:    budgetUsd: s.scenario.plan.budgetUsd, spentUsd: s.spentUsd, crewCostUsd: s.crewCostUsd,
+> Monitor\src\sim\sim.js:76:    idleDays, idleCrewDays: CREW_IDS.reduce((total, id) => total + idleDays[id], 0),
+> Monitor\src\sim\sim.js:77:    peakOpenTrenchFt: s.peakOpenTrenchFt, finesUsd: s.finesUsd,
+  Monitor\src\sim\sim.js:78:    deviationsCaught: s.deviations.filter(d => d.triggered && d.caught).length,
+  Monitor\src\sim\sim.js:79:    deviationsMissed: s.deviations.filter(d => d.triggered && !d.caught).length,
+  Monitor\src\sim\sim.js:80:    events: s.events.filter(e => e.fired).map(e => ({ id: e.id, day: e.firedT, option: 
+e.option ?? null,
+  Monitor\src\sim\sim.js:81:      daysLost: e.type === 'A2' ? e.durationDays * e.rateDrop + (e.reworkDays ?? 0)
+  Monitor\src\sim\sim.js:185:      if (state.done) return { ok: false, reason: 'stage ended' };
+  Monitor\src\sim\sim.js:186:      if (seat === 'plan' && cmd.action === 'commit') {
+> Monitor\src\sim\sim.js:187:        const result = commit(state, cmd.ops);
+  Monitor\src\sim\sim.js:188:        if (result.reason) {
+  Monitor\src\sim\sim.js:189:          if (result.reason === 'not in the budget') {
+  Monitor\src\sim\sim.js:190:            state = draftState(state); voice(state, 'prepRefused', ['plan']);
+  Monitor\src\sim\sim.js:191:          }
+  Monitor\src\sim\views.js:91:    reportedLines: s.reportedLines,
+  Monitor\src\sim\views.js:92:    budget: { budgetUsd: s.scenario.plan.budgetUsd, spentUsd: s.spentUsd, committedUsd: 
+s.spentUsd,
+> Monitor\src\sim\views.js:93:      deadlineDay: s.scenario.plan.deadlineDay, promisedDay: 
+s.scenario.plan.promisedFinishDay },
+  Monitor\src\sim\views.js:94:    inbox: s.inbox, radioLog: s.orders.map(publicOrder),
+  Monitor\src\sim\views.js:95:    catalog: { machines: 
+Object.fromEntries(Object.entries(s.catalog.machines).filter(([key]) => !key.startsWith('_'))
+  Monitor\src\sim\views.js:96:      .map(([key, machine]) => [key, { ...clean(machine), leadDays: { normal: 
+machine.leadDays.normal
+  Monitor\src\sim\views.js:97:        + s.catalog.cities[s.scenario.city].leadDelayDays } }])), protection: 
+clean(s.catalog.protection) },
+
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+Step 1 of 4 done: Amendment 1 allows the slice scripts and their tests to change. The scripts still assume immediate stop-work lifts; I’ll add the backfill visit before the lift and move the F1 confirmation visit to the excavator’s actual position.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "@'
+import { readFileSync } from 'node:fs';
+import { loadCatalog } from './Monitor/src/common/catalog.js';
+import { runHeadless, roundedJSON } from './Monitor/src/sim/headless.js';
+const read = path => JSON.parse(readFileSync(path, 'utf8'));
+const scenario = read('Data/Scenarios/slice_texas.json');
+const catalog = loadCatalog();
+for (const name of ['slice_play', 'slice_pull_play', 'slice_autoplan']) {
+  const script = read("'`Monitor/test/scripts/${name}.json`);
+  if (name === '"'slice_play') {
+    script.splice(6, 0,
+      { t: 3.91, seat: 'site', cmd: { action: 'mount', id: 'c-26' } },
+      { t: 3.91, seat: 'site', cmd: { action: 'moveTo', stationFt: 270, id: 'c-27' } },
+      { t: 3.93, seat: 'site', cmd: { action: 'dismount', id: 'c-28' } });
+    script.find(x => x.cmd.id === 'c-11').cmd.stationFt = 900;
+    script.find(x => x.cmd.id === 'c-20').cmd.orderId = 'o-6';
+  }
+  if (name === 'slice_pull_play') script.find(x => x.cmd.id === 'c-8').cmd.stationFt = 900;
+  const run = runHeadless(scenario, catalog, script);
+  const { finishDay, lost, idleCrewDays, idleDays, spentUsd, peakOpenTrenchFt, deviationsCaught, deviationsMissed, events } = run.result;
+  console.log(name, roundedJSON({ finishDay, lost, idleCrewDays, idleDays, spentUsd, peakOpenTrenchFt, deviationsCaught, deviationsMissed, events,
+    nacks: run.messages.filter(x => x.message.t === 'nack'),
+    cards: run.messages.filter(x => x.message.t === 'event').map(x => ({ t: x.t, id: x.message.eventId, title: x.message.card.title })),
+    listen: run.messages.filter(x => x.t === 4.3) }));
+}
+'@ | node --input-type=module" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 617ms:
+slice_play {
+  "finishDay": 23,
+  "idleCrewDays": 17.247,
+  "idleDays": {
+    "exc": 4.074,
+    "pipe": 5.173,
+    "back": 8
+  },
+  "spentUsd": 125533.2,
+  "peakOpenTrenchFt": 1058.6,
+  "deviationsCaught": 1,
+  "deviationsMissed": 0,
+  "events": [
+    {
+      "id": "ev_p1",
+      "day": 3.89,
+      "option": "clear_own",
+      "daysLost": 3.17,
+      "protection": null
+    },
+    {
+      "id": "ev_a2",
+      "day": 8,
+      "option": null,
+      "daysLost": 2,
+      "protection": null
+    }
+  ],
+  "nacks": [],
+  "cards": [
+    {
+      "t": 3.89,
+      "id": "ev_p1",
+      "title": "Trench wall collapse at 5+20"
+    },
+    {
+      "t": 4.14,
+      "id": "conflict_back_pipe",
+      "title": "Crews stopped"
+    },
+    {
+      "t": 8,
+      "id": "ev_a2",
+      "title": "Heavy rain"
+    }
+  ],
+  "listen": [
+    {
+      "t": 4.3,
+      "message": {
+        "t": "ack",
+        "v": 1,
+        "id": "c-8",
+        "ok": true,
+        "appliedDay": 4.3
+      }
+    },
+    {
+      "t": 4.3,
+      "message": {
+        "t": "voice",
+        "v": 1,
+        "day": 4.3,
+        "lineIds": [
+          "foreman_pipe_arg_slice",
+          "foreman_back_arg_01"
+        ],
+        "seats": [
+          "site"
+        ]
+      }
+    }
+  ]
+}
+
+slice_pull_play {
+  "finishDay": 22.34,
+  "idleCrewDays": 10.087,
+  "idleDays": {
+    "exc": 2.074,
+    "pipe": 4.673,
+    "back": 3.34
+  },
+  "spentUsd": 129743.28,
+  "peakOpenTrenchFt": 1450.6,
+  "deviationsCaught": 1,
+  "deviationsMissed": 0,
+  "events": [
+    {
+      "id": "ev_p1",
+      "day": 3.89,
+      "option": "clear_own",
+      "daysLost": 2.17,
+      "protection": "trench_box"
+    },
+    {
+      "id": "ev_a2",
+      "day": 8,
+      "option": "drainage_pump",
+      "daysLost": 2.5,
+      "protection": null
+    }
+  ],
+  "nacks": [],
+  "cards": [
+    {
+      "t": 3.89,
+      "id": "ev_p1",
+      "title": "Wall movement at 5+20"
+    },
+    {
+      "t": 8,
+      "id": "ev_a2",
+      "title": "Heavy rain"
+    },
+    {
+      "t": 10.2,
+      "id": "conflict_back_pipe",
+      "title": "Crews stopped"
+    }
+  ],
+  "listen": []
+}
+
+slice_autoplan {
+  "finishDay": 24.8,
+  "idleCrewDays": 19.967,
+  "idleDays": {
+    "exc": 3.034,
+    "pipe": 7.133,
+    "back": 9.8
+  },
+  "spentUsd": 132709.2,
+  "peakOpenTrenchFt": 1462.3,
+  "deviationsCaught": 0,
+  "deviationsMissed": 1,
+  "events": [
+    {
+      "id": "ev_p1",
+      "day": 3.89,
+      "option": "clear_own",
+      "daysLost": 4.14,
+      "protection": null
+    },
+    {
+      "id": "ev_a2",
+      "day": 8,
+      "option": null,
+      "daysLost": 3,
+      "protection": null
+    }
+  ],
+  "nacks": [],
+  "cards": [
+    {
+      "t": 3.89,
+      "id": "ev_p1",
+      "title": "Trench wall collapse at 5+20"
+    },
+    {
+      "t": 4.09,
+      "id": "conflict_back_pipe",
+      "title": "Crews stopped"
+    },
+    {
+      "t": 8,
+      "id": "ev_a2",
+      "title": "Heavy rain"
+    }
+  ],
+  "listen": []
+}
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -LiteralPath Monitor/src/sim/conflicts.js; Get-Content -LiteralPath Monitor/e2e/stage1.e2e.js -TotalCount 70; Get-Content -LiteralPath Paper/make_kit.py -TotalCount 45; Get-ChildItem -LiteralPath Paper -Filter AGENTS.md -Recurse | Select-Object -ExpandProperty FullName; Get-Content -LiteralPath Docs/WORK_ORDERS/WO-02.md -Encoding UTF8 | Select-String -Pattern '"'^### 4'"\\.' -Context 0,23" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 166ms:
+Get-Content : Cannot find path 'Monitor/src/sim/conflicts.js' because it does not exist.
+At line:2 char:1
++ Get-Content -LiteralPath Monitor/src/sim/conflicts.js; Get-Content -L ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (Monitor/src/sim/conflicts.js:String) [Get-Content], ItemNotFoundExcepti 
+   on
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetContentCommand
+ 
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
+import { mkdir, readFile, readdir } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { chromium } from 'playwright';
+
+const root = fileURLToPath(new URL('../../', import.meta.url));
+const output = fileURLToPath(new URL('../out/e2e/', import.meta.url));
+const scenario = JSON.parse(await readFile(new URL('../../Data/Scenarios/stage1_texas.json', import.meta.url), 'utf8'));
+
+async function clickAck(page, locator) {
+  const reply = page.evaluate(() => new Promise(resolve => {
+    const listener = event => {
+      const message = JSON.parse(event.data);
+      if (message.t === 'ack' || message.t === 'nack') { socket.removeEventListener('message', listener); resolve(message); }
+    };
+    socket.addEventListener('message', listener);
+  }));
+  await locator.click();
+  const message = await reply;
+  assert.equal(message.t, 'ack', message.reason);
+  return message;
+}
+async function hold(plan, days) {
+  await plan.locator('#hold-crew').selectOption('back');
+  await plan.locator('#hold-days').fill(String(days));
+  await plan.locator('#add-hold').click();
+}
+async function ride(site, ft) {
+  if (await site.evaluate(() => state.view.truck.dismounted)) await clickAck(site, site.locator('#mount'));
+  await site.locator('#destination').fill(`${Math.floor(ft / 100)}+${String(Math.round(ft % 100)).padStart(2, '0')}`);
+  await clickAck(site, site.locator('#move'));
+  await site.waitForFunction(() => !state.view.truck.moving);
+  await clickAck(site, site.locator('#mount'));
+  assert.equal(await site.evaluate(() => state.view.truck.dismounted), true);
+}
+async function signInspection(plan, card) {
+  await plan.waitForFunction(zone => state.view.inbox.some(item => item.subject === `Zone ${zone} compaction`), card.zone, { timeout: 40_000 });
+  await plan.locator('#key-zone').selectOption(String(card.zone));
+  await plan.locator('#inspection-number').fill(card.number);
+  await clickAck(plan, plan.locator('#enter-inspection'));
+  console.log(`Inspection posted: zone ${card.zone}`);
+}
+
+test('Stage 1: three-seat field loop, daily report, argument and final overlay', { timeout: 180_000 }, async t => {
+  await mkdir(output, { recursive: true });
+  const before = new Set(await readdir(new URL('../out/', import.meta.url)));
+  const host = spawn(process.execPath, ['Monitor/src/host/server.js', 'Data/Scenarios/stage1_texas.json', '--port', '0'], {
+    cwd: root, env: { ...process.env, INIT_CWD: root, NODE_ENV: 'test' }, windowsHide: true,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  let stderr = '', browser;
+  host.stderr.on('data', data => { stderr += data; });
+  try {
+    const port = await new Promise((resolve, reject) => {
+      let stdout = '';
+      host.stdout.on('data', data => { stdout += data; const match = stdout.match(/listening on (\d+)/); if (match) resolve(Number(match[1])); });
+      host.once('error', reject);host.once('exit', code => reject(new Error(`Host exited ${code}: ${stderr}`)));
+    });
+    browser = await chromium.launch({ headless: true });
+    const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const pages = {}, errors = [];
+    for (const name of ['plan', 'site', 'facilitator']) {
+      const page = await context.newPage();pages[name] = page;
+      page.on('pageerror', error => errors.push(`${name}: ${error.message}`));
+      await page.goto(`http://127.0.0.1:${port}/${name}.html`);
+      await page.waitForFunction(() => !!state);
+    }
+"""Typeset the authored field manual and scenario cards: python Paper/make_kit.py SCENARIO."""
+
+import argparse
+import json
+import re
+from pathlib import Path
+from xml.sax.saxutils import escape
+
+import reportlab
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import landscape, letter
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import Paragraph, Table, TableStyle
+
+
+PAPER = Path(__file__).resolve().parent
+ROOT = PAPER.parent
+MARGIN = 42
+WIDTH, HEIGHT = letter
+TEXT_WIDTH = WIDTH - 2 * MARGIN
+STATION_LABEL_FT = 500  # WO-04: ledger labels every 500 ft.
+TOKEN_DIAMETER = 2 * inch  # WO-04: two-inch circles, printed at actual size.
+CARDS_PER_PAGE = 4  # WO-04: four permit/inspection cards per sheet.
+TOKENS_PER_PAGE = 12  # Letter layout: three columns of four two-inch circles.
+SEATS = "Site / Plan / Rules"  # WO-04: the three seats on the cover.
+RETURN_INSTRUCTION = (
+    "Read the code to Plan. Return this card when the zone is backfilled and signed."
+)
+SECTION = re.compile(r"^## (.+?) \(([^)]+)\)\s*$", re.MULTILINE)
+PLACEHOLDER = re.compile(r"\{\{([^{}]+)\}\}")
+
+
+def register_fonts():
+    # ReportLab ships these fonts; embedding keeps the manual's math glyphs printable.
+    font_dir = Path(reportlab.__file__).parent / "fonts"
+    for name, filename in (
+        ("KitSans", "Vera.ttf"), ("KitSans-Bold", "VeraBd.ttf"),
+        ("KitSans-Italic", "VeraIt.ttf"), ("KitSans-BoldItalic", "VeraBI.ttf"),
+    ):
+        pdfmetrics.registerFont(TTFont(name, str(font_dir / filename)))
+    pdfmetrics.registerFontFamily(
+
+> ### 4. Headless runner (`src/sim/headless.js`)
+  
+  `node Monitor/src/sim/headless.js <scenario.json> [--script <script.json>] [--out <transcript.json>] [--pure]`
+  
+  - A script is `[{ "t": 5.1, "seat": "plan", "cmd": {...} }, ...]`, applied when the sim reaches `t` (before the 
+tick).
+  - Runs with `dt 0.01`, no pacing, until `sim.done` or `t > deadlineDay + 5` (safety stop, reported in the 
+transcript).
+  - Transcript: `{ scenario, seed, snapshots: [sim.view('facilitator') at every integer t], messages: [every drained 
+message with its t], result }`. Numbers rounded to 3 decimals so two runs compare byte-for-byte.
+  - Ship three scripts in `test/scripts/`:
+    - `stage1_noaction.json`: empty; must end with `lost: "deadline"` (pipe never cleared), finish absent.
+    - `stage1_pm_play.json`: Site rides to 7+20 before Day 6; at the collapse Site stops work on zone 1, Plan commits 
+`lend` (exc's machine → pipe) + `hold back 2 days`; Site rides to the excavator, finds the lend not carried out (F1), 
+confirms `notDone`, Plan `radio`s it, Site confirms `done`; Site rides to the backfill crew and confirms the hold; at 
+the argument Plan holds back until pipe is 2 days ahead; when the Day 17 forecast lands Plan does not rent the pump 
+(push stage); Plan enters inspection numbers as zones close; nobody buys anything else. Expect: the collapse `event` 
+message at `t = 5.0 ± 0.02`; `finishDay` greater than `promisedDay` (35) and less than `deadlineDay - 1`; no `lost`. 
+Report the actual finish, idle days and spend in NOTES: the design doc's "36 to 38" predates the order-lag and rework 
+rules and will be corrected from your numbers.
+    - `stage2_pull_play.json`: huddle: `setStart back 12`, `protect trench_box 600 900`; Rules holds permits: Plan 
+enters zone 1 and 2 codes at start, 3 and 4 as zones sign; Site stands at the excavator when the zone 2 and 3 
+boundaries are reached (so F2 cannot fire there); same collapse handling (the box halves the clearing); Plan `pay`s 
+the pump when the Day 17 forecast lands. Expect: `finishDay` less than `deadlineDay - 1`, no `lost`, `idleCrewDays` 
+lower than the Stage 1 script's, `peakOpenTrenchFt` ≤ 3000 (two zones), the collapse card `cardWhenProtected`, 
+`finesUsd` 0. Report the numbers in NOTES.
+  
+  ### 5. Golden harness (`src/sim/goldens.js`)
+  
+  `node Monitor/src/sim/goldens.js Data/goldens/no_events.json` runs every case in `pure` mode (build a minimal 
+scenario from the case's `startDay` and `machines`, 6,000 ft, `capFt` as the WIP cap), compares `finishDay`, 
+`idleDays` per crew, `crewCostUsd`, `peakOpenTrenchFt` with the tolerances in the file's `_doc`, prints one line per 
+case with PASS/FAIL and the deltas, exits 0 only if all pass.
+  
+  ### 6. Tests (`test/sim*.test.js`)
+  
+  Unit tests for: order landing (Site present vs absent), `setStart` nacks, `hold` with and without `days`, F1 
+behaviour and catch, permit gating and the open-zone limit nack, hold point gating, stop-work reach and mood steps, P1 
+durations by size and under a box (2 → 1 day for Standard), rain rework arithmetic (1,300 ft open → 3 days; with pump 
+→ 1.5) and `rainRateRestore`, conflict detection, resolution and the once-per-pair rule, `inspect` answers at a 
+seepage station and at the collapse station, budget/deadline loss, determinism (two headless runs of `stage1_pm_play` 
+produce identical transcripts), view filtering (Plan view has no live positions; Site view has no budget; the words 
+`correct|wrong|score|well done|should have` appear in no Plan or Site view and no host-bound message; the facilitator 
+view and internal ids are exempt).
+  
+  ## Acceptance checks
+  
+  ```
+  npm --prefix Monitor test
+
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+apply patch
+patch: completed
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\test\scripts\slice_play.json
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\test\scripts\slice_pull_play.json
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Monitor\test\sim-runs.test.js
+diff --git a/Monitor/test/scripts/slice_play.json b/Monitor/test/scripts/slice_play.json
+index 1c47480993fc1c8e5679b832e4e3f9d24c2d232b..fdf75c82be9b5f49f8b86b60f0bad8c7915225f9
+--- a/Monitor/test/scripts/slice_play.json
++++ b/Monitor/test/scripts/slice_play.json
+@@ -59,6 +59,31 @@
+     }
+   },
+   {
++    "t": 3.91,
++    "seat": "site",
++    "cmd": {
++      "action": "mount",
++      "id": "c-26"
++    }
++  },
++  {
++    "t": 3.91,
++    "seat": "site",
++    "cmd": {
++      "action": "moveTo",
++      "stationFt": 270,
++      "id": "c-27"
++    }
++  },
++  {
++    "t": 3.93,
++    "seat": "site",
++    "cmd": {
++      "action": "dismount",
++      "id": "c-28"
++    }
++  },
++  {
+     "t": 4,
+     "seat": "plan",
+     "cmd": {
+@@ -110,7 +135,7 @@
+     "seat": "site",
+     "cmd": {
+       "action": "moveTo",
+-      "stationFt": 1100,
++      "stationFt": 900,
+       "id": "c-11"
+     }
+   },
+@@ -195,7 +220,7 @@
+     "seat": "site",
+     "cmd": {
+       "action": "confirm",
+-      "orderId": "o-3",
++      "orderId": "o-6",
+       "outcome": "done",
+       "id": "c-20"
+     }
+diff --git a/Monitor/test/scripts/slice_pull_play.json b/Monitor/test/scripts/slice_pull_play.json
+index 1a247a7c637266eb43f9e6e6f04978ba96b144b9..f8d5e7ba1cda44f954e9261d3655ae086a97aea3
+--- a/Monitor/test/scripts/slice_pull_play.json
++++ b/Monitor/test/scripts/slice_pull_play.json
+@@ -94,7 +94,7 @@
+     "seat": "site",
+     "cmd": {
+       "action": "moveTo",
+-      "stationFt": 1100,
++      "stationFt": 900,
+       "id": "c-8"
+     }
+   },
+diff --git a/Monitor/test/sim-runs.test.js b/Monitor/test/sim-runs.test.js
+index e5f7e97d6a33650d125b8de7c0e87fb32202194c..8067702529646049711d493af8fab2f64618d3ad
+--- a/Monitor/test/sim-runs.test.js
++++ b/Monitor/test/sim-runs.test.js
+@@ -14,6 +14,10 @@
+ const s2 = read('../../Data/Scenarios/stage2_texas.json');
+ const script1 = read('./scripts/stage1_pm_play.json');
+ const script2 = read('./scripts/stage2_pull_play.json');
++const slice = read('../../Data/Scenarios/slice_texas.json');
++const slicePlay = read('./scripts/slice_play.json');
++const slicePull = read('./scripts/slice_pull_play.json');
++const sliceAutoplan = read('./scripts/slice_autoplan.json');
+ const forbidden = /\b(correct|wrong|score|well done|should have)\b/i;
+ const events = run => run.messages.filter(x => x.message.t === 'event');
+ const nacks = run => run.messages.filter(x => x.message.t === 'nack');
+@@ -55,6 +59,63 @@
+   }
+ });
+ 
++test('slice push plays collapse, argument, listen, hold and rain with F1 caught and no rejected commands', () => {
++  const run = runHeadless(slice, catalog, slicePlay);
++  assert.deepEqual(nacks(run), []);
++  assert.equal(run.result.lost, undefined);
++  assert.ok(run.result.finishDay >= 22.5 && run.result.finishDay <= 25.5);
++  const cards = events(run);
++  assert.deepEqual(cards.map(x => x.message.eventId), ['ev_p1', 'conflict_back_pipe', 'ev_a2']);
++  assert.equal(cards[0].t, 3.89);
++  assert.deepEqual(cards[0].message.card, slice.events[0].card);
++  const argument = cards[1];
++  assert.equal(argument.message.card.title, 'Crews stopped');
++  assert.ok(argument.t >= 4 && argument.t < 5);
++  assert.equal(cards[2].t, 8);
++  const listen = slicePlay.find(x => x.cmd.action === 'listen');
++  const hold = slicePlay.find(x => x.cmd.ops?.some(op => op.op === 'hold' && op.crew === 'back'));
++  assert.ok(listen.t > argument.t && hold.t > listen.t);
++  const conflictLines = slice.lines.filter(line => line.trigger === 'conflict').map(line => line.id);
++  assert.ok(run.messages.some(x => x.t === listen.t && x.message.t === 'voice'
++    && x.message.lineIds.some(id => conflictLines.includes(id))), 'Site hears the argument at the listen stop');
++  assert.equal(run.result.deviationsCaught, 1);
++  assert.equal(run.result.deviationsMissed, 0);
++});
++
++test('slice pull finishes before push with less idle time, timely holds and no rejected commands', () => {
++  const push = runHeadless(slice, catalog, slicePlay);
++  const pull = runHeadless(slice, catalog, slicePull);
++  assert.deepEqual(nacks(pull), []);
++  assert.equal(pull.result.lost, undefined);
++  assert.ok(pull.result.finishDay < push.result.finishDay);
++  assert.ok(pull.result.idleCrewDays < push.result.idleCrewDays);
++  assert.equal(collapse(pull).t, 3.89);
++  assert.deepEqual(collapse(pull).message.card, slice.events[0].cardWhenProtected);
++  assert.equal(events(pull).find(x => x.message.eventId === 'ev_a2').t, 8);
++  for (const argument of events(pull).filter(x => x.message.card.title === 'Crews stopped')) {
++    const hold = slicePull.find(x => x.t > argument.t
++      && x.cmd.ops?.some(op => op.op === 'hold' && op.crew === 'back'));
++    assert.ok(hold && hold.t - argument.t <= .5, 'Plan holds backfill within half a day of the argument');
++  }
++  assert.equal(pull.result.deviationsCaught, 1);
++  assert.equal(pull.result.deviationsMissed, 0);
++  assert.ok(pull.result.events.some(e => e.option === 'drainage_pump'));
++});
++
++test('slice autoplan retains its event chain, finish and idle time with F1 missed and no rejected commands', () => {
++  const run = runHeadless(slice, catalog, sliceAutoplan);
++  assert.deepEqual(nacks(run), []);
++  assert.equal(run.result.lost, undefined);
++  // WO-05a Amendment 1: the no-Site baseline remains unchanged.
++  assert.ok(Math.abs(run.result.finishDay - 24.8) <= .05);
++  assert.ok(Math.abs(run.result.idleCrewDays - 19.967) <= .001);
++  assert.deepEqual(events(run).map(x => [x.message.eventId, x.t]), [
++    ['ev_p1', 3.89], ['conflict_back_pipe', 4.09], ['ev_a2', 8],
++  ]);
++  assert.equal(run.result.deviationsCaught, 0);
++  assert.equal(run.result.deviationsMissed, 1);
++});
++
+ test('two headless CLI runs produce byte-for-byte identical rounded transcripts', () => {
+   const root = fileURLToPath(new URL('../../', import.meta.url));
+   const args = ['Monitor/src/sim/headless.js', 'Data/Scenarios/stage1_texas.json',
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+Step 2 of 4 done: the revised choreography produces collapse at t=3.89, the argument at t=4.14, and rain at t=8, with zero rejected commands. Push finishes at 23.00; pull finishes at 22.34 with less idle time. Three regression tests are added; I’ll now run the full acceptance set.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'node Monitor/src/sim/goldens.js Data/goldens/no_events.json; Write-Output "exit=$LASTEXITCODE"' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'npm.cmd --prefix Monitor test' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'node Monitor/src/sim/headless.js Data/Scenarios/stage2_texas.json --out Monitor/out/s2n.json
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+node -e "const r=require('"'./Monitor/out/s2n.json');console.log(r.result.finesUsd, r.snapshots[1].deviations ? JSON.stringify(r.snapshots[1].deviations) : 'see facilitator view')\"
+node Monitor/src/sim/headless.js Data/Scenarios/stage1_texas.json --script Monitor/test/scripts/stage1_pm_play.json --out Monitor/out/s1a.json
+if ("'$LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+node Monitor/src/sim/headless.js Data/Scenarios/stage1_texas.json --script Monitor/test/scripts/stage1_pm_play.json --out Monitor/out/s1b.json
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+node -e "const fs=require('"'node:fs');require('node:assert/strict').deepEqual(fs.readFileSync('Monitor/out/s1a.json'),fs.readFileSync('Monitor/out/s1b.json'));console.log('DETERMINISTIC')\"
+if ("'$LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+node -e "const r=require('"'./Monitor/out/s1a.json').result;console.log(r.finishDay, r.lost, r.idleCrewDays)\"
+node Monitor/src/sim/headless.js Data/Scenarios/stage2_texas.json --script Monitor/test/scripts/stage2_pull_play.json --out Monitor/out/s2.json
+if ("'$LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+node -e "const r=require('"'./Monitor/out/s2.json').result;console.log(r.finishDay, r.finesUsd, r.idleCrewDays)\"" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'python Paper/make_kit.py Data/Scenarios/stage2_texas.json
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+@'"'
+from pathlib import Path
+lines = Path('Paper/out/stage2_texas/manual.txt').read_text(encoding='utf-8').splitlines()
+formatted = sum('"'$10,000'"' in line for line in lines)
+unformatted = sum('"'$10000'"' in line for line in lines)
+print('"'$10,000 count='"' + str(formatted))
+print('"'$10000 count='"' + str(unformatted) + ', grep-exit=' + str(0 if unformatted else 1))
+assert formatted >= 1
+assert unformatted == 0
+'@ | python -" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'node Monitor/src/sim/headless.js Data/Scenarios/slice_texas.json --script Monitor/test/scripts/slice_play.json --out Monitor/out/sp.json
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+node Monitor/src/sim/headless.js Data/Scenarios/slice_texas.json --script Monitor/test/scripts/slice_pull_play.json --out Monitor/out/spp.json
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+node Monitor/src/sim/headless.js Data/Scenarios/slice_texas.json --script Monitor/test/scripts/slice_autoplan.json --out Monitor/out/sa.json
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+node -e "for (const n of ['"'sp','spp','sa']) { const r=require('./Monitor/out/'+n+'.json'); console.log(n, r.result.finishDay, r.result.lost, r.result.idleCrewDays, 'nacks', r.messages.filter(m=>m.message.t==='nack').length, 'events', r.messages.filter(m=>m.message.t==='event').map(m=>m.t+':'+m.message.card.title).join(', ')) }\"" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 556ms:
+PASS push_1_2_3 deltas={"finishDay":0.04,"idleDays":{"exc":0.007,"pipe":0.007,"back":0.04},"crewCostUsd":0,"peakOpenTrenchFt":-0.2}
+PASS pm_plan_1_2_5 deltas={"finishDay":0.04,"idleDays":{"exc":0.007,"pipe":0.007,"back":0.04},"crewCostUsd":0,"peakOpenTrenchFt":-0.2}
+PASS pull_time_1_2_12 deltas={"finishDay":0,"idleDays":{"exc":0.007,"pipe":0.007,"back":0},"crewCostUsd":-23.6,"peakOpenTrenchFt":-2}
+PASS pull_slope_small_backfill deltas={"finishDay":0.04,"idleDays":{"exc":0.007,"pipe":0.007,"back":0.007},"crewCostUsd":0.2,"peakOpenTrenchFt":-0.2}
+PASS pull_distance_1000_small_backfill deltas={"finishDay":0.04,"idleDays":{"exc":0.017,"pipe":0.007,"back":0.007},"crewCostUsd":-0.2,"peakOpenTrenchFt":0.2}
+exit=0
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 689ms:
+stage2_texas: wrote 5 PDFs, manual.txt and kit_index.txt to C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Paper\out\stage2_texas
+Unresolved placeholders: none
+$10,000 count=1
+$10000 count=0, grep-exit=1
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 1142ms:
+slice_texas: finished t=23
+slice_texas: finished t=22.34
+slice_texas: finished t=24.8
+sp 23 undefined 17.247 nacks 0 events 3.89:Trench wall collapse at 5+20, 4.14:Crews stopped, 8:Heavy rain
+spp 22.34 undefined 10.087 nacks 0 events 3.89:Wall movement at 5+20, 8:Heavy rain, 10.2:Crews stopped
+sa 24.8 undefined 19.967 nacks 0 events 3.89:Trench wall collapse at 5+20, 4.09:Crews stopped, 8:Heavy rain
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+ succeeded in 2369ms:
+stage2_texas: deadline t=46
+0 [{"id":"f3_box_misplaced","type":"F3","when":{"kind":"protectStretchMisses","eventId":"ev_p1"},"behaviour":"nothingHappens","caughtWhen":"inspectProtectionAtWrongStretchBeforeEvent","_note":"If Plan buys a trench box for a stretch that does not cover 7+20, the box is placed exactly where Plan said. Only Site can see that it is in the wrong place.","state":"armed"},{"id":"f2_push_ahead","type":"F2","when":{"kind":"firstUnpermittedBoundary"},"behaviour":"crossOnce","overshootFt":100,"caughtWhen":"stopWorkOrHoldBeforeCrossing","_note":"The excavation foreman does not like idling at a boundary. The first time excavation reaches a zone without a posted permit, it digs 100 ft into it before stopping, unless Site is standing at the boundary or Plan has held the crew. The city fines it.","state":"armed"}]
+stage1_texas: finished t=41.41
+stage1_texas: finished t=41.41
+DETERMINISTIC
+41.41 undefined 24.484
+stage2_texas: finished t=38.87
+38.87 0 11.774
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+ succeeded in 3916ms:
+
+> monitor@1.0.0 test
+> node --test
+
+✔ host: static files, seat ownership, request routing, pacing and stage controls (1056.7578ms)
+✔ pacing: 1,000 ms at full accounts for delayed timers and callback work (1.0225ms)
+✔ pacing: 1,000 ms at slow accounts for delayed timers and callback work (0.5877ms)
+✔ pacing: repeated sync preserves elapsed time and fractional steps (0.1769ms)
+✔ pacing: pause, resume, reset, completion and close discard inactive time (0.1112ms)
+✔ pacing: an event changes the rate before more catch-up steps run (0.1136ms)
+✔ pacing: a stall caps catch-up at 20 steps and carries only the remainder (0.0825ms)
+✔ pacing: fast uses 2 ms steps and completion stops a catch-up batch (0.1024ms)
+✔ default catalog contains the authored machines and Texas delay (1.3064ms)
+✔ catalog also loads from an explicit path (1.8165ms)
+✔ named helpers return the matching catalog entries (0.4954ms)
+✔ all helpers reject unknown and inherited keys clearly (0.6189ms)
+✔ same seed produces the same first 100 values in [0, 1) (0.8296ms)
+✔ different seeds produce different sequences (0.7055ms)
+✔ JSON state round-trip resumes the sequence after mixed draws (1.1016ms)
+✔ integer draws include both bounds and pick returns array members (0.7609ms)
+✔ stage1_texas validates, reports separate review notes, and loads frozen derived values (6.659ms)
+✔ stage1_texas CLI exits 0 with separate scenario/catalog lists and final OK (71.4354ms)
+✔ stage2_texas validates, reports separate review notes, and loads frozen derived values (2.3322ms)
+✔ stage2_texas CLI exits 0 with separate scenario/catalog lists and final OK (74.2178ms)
+✔ zone lookup uses half-open boundaries and includes the job endpoint (2.1554ms)
+✔ derived fleet and rates use the supplied catalog without retaining mutable references (0.9094ms)
+✔ check digits accept leading zeroes and reject wrong digits and malformed codes (0.8364ms)
+✔ combined fixture catches every requested rule with stable ids and paths (1.8329ms)
+✔ bad-check-digit fixture has only that problem and the loader rejects it (2.3678ms)
+✔ zones reject gaps, overlaps, missing endpoints, empty spans, and wrong ids separately (3.5881ms)
+✔ both card sets reject missing, duplicate, extra, unknown-zone and malformed codes (5.071ms)
+✔ catalog lookup rejects inherited and metadata keys (1.2187ms)
+✔ numeric constraints do not coerce strings or accept nulls, infinities, or limit fractions (3.018ms)
+✔ schema enum lists, crew all, and absent/null event locations are accepted (0.8282ms)
+✔ event locations share loader boundary semantics and reject out-of-range stations (1.3648ms)
+✔ metadata stays out of domain validation; review notes retain source, JSON path and text (1.5196ms)
+✔ forbidden keys are found in catalog metadata too (0.8278ms)
+✔ malformed structures report problems instead of throwing (0.7016ms)
+✔ CLI reports problems first, notes second, FAIL last, and exits 1 (143.8716ms)
+✔ CLI returns usage 2 and file/JSON errors 1 without stack traces (289.6529ms)
+✔ CLI resolves the catalog from Monitor and importing it has no CLI side effects (112.3193ms)
+✔ O10: Stage 2 idles and bills at 0 ft, then spends F2 only at the first boundary between zones (165.1543ms)
+✔ O11: stop-work lift lands at 6.0 with Site at 7+20 (48.9564ms)
+✔ O11: stop-work lift lands at 5.2 with Site at backfill (40.2884ms)
+✔ O11: a hold replaces stop-work at landing without an implicit resume for that crew (8.3615ms)
+✔ O13: empty commit acknowledges no change, restores full speed and records the note (34.7674ms)
+✔ (a) an argument preserves held mood; only a full working day resets it (11.4188ms)
+✔ (b) a delayed remob charges its fee at commit, once, before landing and the return delay (16.8144ms)
+✔ (c) a radioed order disappears from Site while in transit and reappears on landing (9.1102ms)
+✔ (d) pending pay clear_own and lend reserve the machine across and within commits (33.23ms)
+✔ (e) a crew with no machine works at the lent rate, and stops when the loan ends (10.6348ms)
+✔ (f) an unstarted crew ignores stop-work until its start day, then idles and bills if it still stands (23.55ms)
+✔ scenario switches reject every unsupported authored alternative, including orderLagShifts (3.5275ms)
+✔ all five independent oracle cases pass every tolerance (454.1147ms)
+✔ Stage 1 and 2 scripts complete with the specified comparative facts and zero rejected commands (787.8023ms)
+✔ slice push plays collapse, argument, listen, hold and rain with F1 caught and no rejected commands (174.6138ms)
+✔ slice pull finishes before push with less idle time, timely holds and no rejected commands (344.4302ms)
+✔ slice autoplan retains its event chain, finish and idle time with F1 missed and no rejected commands (210.2226ms)
+✔ two headless CLI runs produce byte-for-byte identical rounded transcripts (899.0938ms)
+✔ empty Stage 1 script ends on deadline, without a finish day (292.5715ms)
+✔ Plan sees only last-report feet and elapsed-rate estimates; Site sees live positions without money (4.6609ms)
+✔ headless safety stop is explicit when facilitator leaves the sim paused (0.6675ms)
+✔ orders land at next shift, or immediately with Site dismounted within 100 ft (12.4055ms)
+✔ setStart checks plan lock, crew lock, started crews and whole display days (2.2259ms)
+✔ a rejected commit rolls back earlier purchases, permits, messages and order IDs (2.0059ms)
+✔ finite holds expire, future holds start later, indefinite holds require resume (28.859ms)
+✔ F1 selects the first matching delayed op, ignores its landing, and can be caught and radioed (8.764ms)
+✔ F1 ignores present Site orders, and confirmation after the next report is not caught (15.4703ms)
+✔ permits gate excavation and a multi-op commit cannot exceed the open-zone limit (69.6575ms)
+✔ hold points post a compaction result, release an open-zone slot only when closed, and gate finishing (1.7443ms)
+✔ F2 overshoots only once and charges one fine; Site at the boundary prevents it (12.0389ms)
+✔ stop-work reaches crews after one hour, bills, raises mood, and a commit releases it (16.4053ms)
+✔ P1 clearing times use machine size and half-day protection rounding (1.1164ms)
+✔ own-machine clearing waits for haul travel, stops lender, resumes pipe, then returns (14.9328ms)
+✔ ordinary lending adds rate for the chosen days, with same-day transport in congested cities (7.4719ms)
+✔ machine purchases charge at commit, arrive after city lead time, and release the old machine (23.7913ms)
+✔ purchases are refused throughout Stage 1 with prep voice; active event payments remain allowed (8.8315ms)
+✔ hired clearing uses lead plus size duration and refunds the released machine (43.6011ms)
+✔ demobilization ends billing next boundary; remobilization bills after the city delay and fee (17.1901ms)
+✔ rain rework uses commenced 500-ft chunks; a timely pump halves it and restores only listed crews (24.655ms)
+✔ conflicts stop both crews, require a hold or demob, release the leader immediately, and fire once (41.056ms)
+✔ a finished leader cannot cause an argument at the job endpoint (0.68ms)
+✔ inspection and trench state use authored seepage indicators and the collapse station stake (2.3067ms)
+✔ all Site inspection targets and local confirmations obey position and mount state (2.9361ms)
+✔ F3 records a misplaced protection inspection before its event, and F5 has an inert lend hook (3.8779ms)
+✔ strict budget and deadline loss omit finishDay (2.0777ms)
+✔ facilitator pause/resume/reset and same-stage load are deterministic (2.057ms)
+✔ reducers and public views do not mutate source state or caller-owned configuration (1.7812ms)
+✔ issued machine, hold, resume and lend plans project rates without field truth (2.5322ms)
+✔ slope refusal comes from the city and finished crews do not keep protection billing (0.978ms)
+✔ station examples format and parse in integer feet (1.0513ms)
+✔ display days advance only at integer day boundaries (0.1827ms)
+✔ USD example uses dollars and comma grouping (3.8449ms)
+ℹ tests 89
+ℹ suites 0
+ℹ pass 89
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3337.039
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'npm.cmd --prefix Monitor run e2e' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "node -e \"for (const n of ['sp','spp','sa','s1a','s2']) { const r=require('./Monitor/out/'+n+'.json').result; console.log(n, JSON.stringify({finishDay:r.finishDay,idleCrewDays:r.idleCrewDays,idleDays:r.idleDays,spentUsd:r.spentUsd,peakOpenTrenchFt:r.peakOpenTrenchFt,deviationsCaught:r.deviationsCaught,deviationsMissed:r.deviationsMissed,events:r.events})); }\"" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'git diff --check; git diff --stat; git status --short; git diff -- Monitor/test/scripts/slice_play.json Monitor/test/scripts/slice_pull_play.json Monitor/test/sim-runs.test.js' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 143ms:
+sp {"finishDay":23,"idleCrewDays":17.247,"idleDays":{"exc":4.074,"pipe":5.173,"back":8},"spentUsd":125533.2,"peakOpenTrenchFt":1058.6,"deviationsCaught":1,"deviationsMissed":0,"events":[{"id":"ev_p1","day":3.89,"option":"clear_own","daysLost":3.17,"protection":null},{"id":"ev_a2","day":8,"option":null,"daysLost":2,"protection":null}]}
+spp {"finishDay":22.34,"idleCrewDays":10.087,"idleDays":{"exc":2.074,"pipe":4.673,"back":3.34},"spentUsd":129743.28,"peakOpenTrenchFt":1450.6,"deviationsCaught":1,"deviationsMissed":0,"events":[{"id":"ev_p1","day":3.89,"option":"clear_own","daysLost":2.17,"protection":"trench_box"},{"id":"ev_a2","day":8,"option":"drainage_pump","daysLost":2.5,"protection":null}]}
+sa {"finishDay":24.8,"idleCrewDays":19.967,"idleDays":{"exc":3.034,"pipe":7.133,"back":9.8},"spentUsd":132709.2,"peakOpenTrenchFt":1462.3,"deviationsCaught":0,"deviationsMissed":1,"events":[{"id":"ev_p1","day":3.89,"option":"clear_own","daysLost":4.14,"protection":null},{"id":"ev_a2","day":8,"option":null,"daysLost":3,"protection":null}]}
+s1a {"finishDay":41.41,"idleCrewDays":24.484,"idleDays":{"exc":3.997,"pipe":7.077,"back":13.41},"spentUsd":230880,"peakOpenTrenchFt":1825.2,"deviationsCaught":1,"deviationsMissed":0,"events":[{"id":"ev_p1","day":5,"option":"clear_own","daysLost":3.06,"protection":null},{"id":"ev_a2","day":17,"option":null,"daysLost":4,"protection":null}]}
+s2 {"finishDay":38.87,"idleCrewDays":11.774,"idleDays":{"exc":3.367,"pipe":4.537,"back":3.87},"spentUsd":221499.45,"peakOpenTrenchFt":1982.2,"deviationsCaught":1,"deviationsMissed":0,"events":[{"id":"ev_p1","day":5,"option":"clear_own","daysLost":2.02,"protection":"trench_box"},{"id":"ev_a2","day":17,"option":"drainage_pump","daysLost":2.5,"protection":null}]}
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 175ms:
+ Monitor/test/scripts/slice_play.json      | 29 ++++++++++++++-
+ Monitor/test/scripts/slice_pull_play.json |  2 +-
+ Monitor/test/sim-runs.test.js             | 61 +++++++++++++++++++++++++++++++
+ 3 files changed, 89 insertions(+), 3 deletions(-)
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+ M Monitor/test/scripts/slice_play.json
+ M Monitor/test/scripts/slice_pull_play.json
+ M Monitor/test/sim-runs.test.js
+?? Docs/WORK_ORDERS/logs/WO-05a.20261020-151041.log
+diff --git a/Monitor/test/scripts/slice_play.json b/Monitor/test/scripts/slice_play.json
+index 1c47480..fdf75c8 100644
+--- a/Monitor/test/scripts/slice_play.json
++++ b/Monitor/test/scripts/slice_play.json
+@@ -58,6 +58,31 @@
+       "id": "c-6"
+     }
+   },
++  {
++    "t": 3.91,
++    "seat": "site",
++    "cmd": {
++      "action": "mount",
++      "id": "c-26"
++    }
++  },
++  {
++    "t": 3.91,
++    "seat": "site",
++    "cmd": {
++      "action": "moveTo",
++      "stationFt": 270,
++      "id": "c-27"
++    }
++  },
++  {
++    "t": 3.93,
++    "seat": "site",
++    "cmd": {
++      "action": "dismount",
++      "id": "c-28"
++    }
++  },
+   {
+     "t": 4,
+     "seat": "plan",
+@@ -110,7 +135,7 @@
+     "seat": "site",
+     "cmd": {
+       "action": "moveTo",
+-      "stationFt": 1100,
++      "stationFt": 900,
+       "id": "c-11"
+     }
+   },
+@@ -195,7 +220,7 @@
+     "seat": "site",
+     "cmd": {
+       "action": "confirm",
+-      "orderId": "o-3",
++      "orderId": "o-6",
+       "outcome": "done",
+       "id": "c-20"
+     }
+diff --git a/Monitor/test/scripts/slice_pull_play.json b/Monitor/test/scripts/slice_pull_play.json
+index 1a247a7..f8d5e7b 100644
+--- a/Monitor/test/scripts/slice_pull_play.json
++++ b/Monitor/test/scripts/slice_pull_play.json
+@@ -94,7 +94,7 @@
+     "seat": "site",
+     "cmd": {
+       "action": "moveTo",
+-      "stationFt": 1100,
++      "stationFt": 900,
+       "id": "c-8"
+     }
+   },
+diff --git a/Monitor/test/sim-runs.test.js b/Monitor/test/sim-runs.test.js
+index e5f7e97..8067702 100644
+--- a/Monitor/test/sim-runs.test.js
++++ b/Monitor/test/sim-runs.test.js
+@@ -14,6 +14,10 @@ const s1 = read('../../Data/Scenarios/stage1_texas.json');
+ const s2 = read('../../Data/Scenarios/stage2_texas.json');
+ const script1 = read('./scripts/stage1_pm_play.json');
+ const script2 = read('./scripts/stage2_pull_play.json');
++const slice = read('../../Data/Scenarios/slice_texas.json');
++const slicePlay = read('./scripts/slice_play.json');
++const slicePull = read('./scripts/slice_pull_play.json');
++const sliceAutoplan = read('./scripts/slice_autoplan.json');
+ const forbidden = /\b(correct|wrong|score|well done|should have)\b/i;
+ const events = run => run.messages.filter(x => x.message.t === 'event');
+ const nacks = run => run.messages.filter(x => x.message.t === 'nack');
+@@ -55,6 +59,63 @@ test('Stage 1 and 2 scripts complete with the specified comparative facts and ze
+   }
+ });
+ 
++test('slice push plays collapse, argument, listen, hold and rain with F1 caught and no rejected commands', () => {
++  const run = runHeadless(slice, catalog, slicePlay);
++  assert.deepEqual(nacks(run), []);
++  assert.equal(run.result.lost, undefined);
++  assert.ok(run.result.finishDay >= 22.5 && run.result.finishDay <= 25.5);
++  const cards = events(run);
++  assert.deepEqual(cards.map(x => x.message.eventId), ['ev_p1', 'conflict_back_pipe', 'ev_a2']);
++  assert.equal(cards[0].t, 3.89);
++  assert.deepEqual(cards[0].message.card, slice.events[0].card);
++  const argument = cards[1];
++  assert.equal(argument.message.card.title, 'Crews stopped');
++  assert.ok(argument.t >= 4 && argument.t < 5);
++  assert.equal(cards[2].t, 8);
++  const listen = slicePlay.find(x => x.cmd.action === 'listen');
++  const hold = slicePlay.find(x => x.cmd.ops?.some(op => op.op === 'hold' && op.crew === 'back'));
++  assert.ok(listen.t > argument.t && hold.t > listen.t);
++  const conflictLines = slice.lines.filter(line => line.trigger === 'conflict').map(line => line.id);
++  assert.ok(run.messages.some(x => x.t === listen.t && x.message.t === 'voice'
++    && x.message.lineIds.some(id => conflictLines.includes(id))), 'Site hears the argument at the listen stop');
++  assert.equal(run.result.deviationsCaught, 1);
++  assert.equal(run.result.deviationsMissed, 0);
++});
++
++test('slice pull finishes before push with less idle time, timely holds and no rejected commands', () => {
++  const push = runHeadless(slice, catalog, slicePlay);
++  const pull = runHeadless(slice, catalog, slicePull);
++  assert.deepEqual(nacks(pull), []);
++  assert.equal(pull.result.lost, undefined);
++  assert.ok(pull.result.finishDay < push.result.finishDay);
++  assert.ok(pull.result.idleCrewDays < push.result.idleCrewDays);
++  assert.equal(collapse(pull).t, 3.89);
++  assert.deepEqual(collapse(pull).message.card, slice.events[0].cardWhenProtected);
++  assert.equal(events(pull).find(x => x.message.eventId === 'ev_a2').t, 8);
++  for (const argument of events(pull).filter(x => x.message.card.title === 'Crews stopped')) {
++    const hold = slicePull.find(x => x.t > argument.t
++      && x.cmd.ops?.some(op => op.op === 'hold' && op.crew === 'back'));
++    assert.ok(hold && hold.t - argument.t <= .5, 'Plan holds backfill within half a day of the argument');
++  }
++  assert.equal(pull.result.deviationsCaught, 1);
++  assert.equal(pull.result.deviationsMissed, 0);
++  assert.ok(pull.result.events.some(e => e.option === 'drainage_pump'));
++});
++
++test('slice autoplan retains its event chain, finish and idle time with F1 missed and no rejected commands', () => {
++  const run = runHeadless(slice, catalog, sliceAutoplan);
++  assert.deepEqual(nacks(run), []);
++  assert.equal(run.result.lost, undefined);
++  // WO-05a Amendment 1: the no-Site baseline remains unchanged.
++  assert.ok(Math.abs(run.result.finishDay - 24.8) <= .05);
++  assert.ok(Math.abs(run.result.idleCrewDays - 19.967) <= .001);
++  assert.deepEqual(events(run).map(x => [x.message.eventId, x.t]), [
++    ['ev_p1', 3.89], ['conflict_back_pipe', 4.09], ['ev_a2', 8],
++  ]);
++  assert.equal(run.result.deviationsCaught, 0);
++  assert.equal(run.result.deviationsMissed, 1);
++});
++
+ test('two headless CLI runs produce byte-for-byte identical rounded transcripts', () => {
+   const root = fileURLToPath(new URL('../../', import.meta.url));
+   const args = ['Monitor/src/sim/headless.js', 'Data/Scenarios/stage1_texas.json',
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+Step 3 of 4: all 89 tests, five golden cases, stage runs, determinism checks, and currency checks pass. The browser end-to-end test is still running. The diff contains only the two slice scripts and `sim-runs.test.js`.
+
+ succeeded in 75312ms:
+
+> monitor@1.0.0 e2e
+> node --test e2e/stage1.e2e.js
+
+Field loop complete; next report pipe 720 ft
+Inspection posted: zone 1
+Argument addressed with hold back 3; starting fast pacing
+Inspection posted: zone 2
+Inspection posted: zone 3
+Inspection posted: zone 4
+✔ Stage 1: three-seat field loop, daily report, argument and final overlay (74580.1593ms)
+ℹ Next daily report: pipe 720 ft, day 7
+ℹ finishDay=42.04; lost=absent; 43 snapshots; desktop and phone screenshots saved
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 74849.5756
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+Step 3 of 4 done: the browser end-to-end test passed, 1/1. All acceptance checks now pass; I’ll finish with the scope check and report the measured slice results for the orchestrator.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'git diff --check
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+git status --short' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 77ms:
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+ M Monitor/test/scripts/slice_play.json
+ M Monitor/test/scripts/slice_pull_play.json
+ M Monitor/test/sim-runs.test.js
+?? Docs/WORK_ORDERS/logs/WO-05a.20261020-151041.log
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+STATUS: DONE  
+WO: WO-05a — Amendment 1; step 4 of 4 complete.
+
+CHANGED:
+
+- `Monitor/test/scripts/slice_play.json` — added backfill visit; corrected excavator station and hold order ID.
+- `Monitor/test/scripts/slice_pull_play.json` — corrected excavator station.
+- `Monitor/test/sim-runs.test.js` — added three slice regression tests.
+
+TESTS:
+
+- `npm.cmd --prefix Monitor test` → `tests 89`, `pass 89`, `fail 0`. `npm.cmd --prefix Monitor run e2e` → `tests 1`, `pass 1`, `fail 0`.
+- `node Monitor/src/sim/goldens.js Data/goldens/no_events.json` → five `PASS`, `exit=0`.
+- All seven prescribed headless CLI runs and result checks passed. Byte comparison → `DETERMINISTIC`. Stage 1 → `41.41 undefined 24.484`; Stage 2 → `38.87 0 11.774`. No-action Stage 2: fines `0`, F2 `armed`. All three slices: `lost undefined`, `nacks 0`.
+- `python Paper/make_kit.py Data/Scenarios/stage2_texas.json` → `Unresolved placeholders: none`. Python equivalents of grep → `$10,000 count=1`; `$10000 count=0, grep-exit=1`.
+- `git diff --check` passed. `git status --short` shows only the three files above plus the ignored dispatch log.
+
+NOTES:
+
+| Script | Finish day | Idle total (exc / pipe / back) | Spent | Peak open trench | Collapse days lost | Rain days lost | Deviation |
+|---|---:|---|---:|---:|---:|---:|---|
+| slice_play | 23.00 | 17.247 (4.074 / 5.173 / 8.000) | $125,533.20 | 1,058.6 ft | 3.17 | 2.00 | F1 caught |
+| slice_pull_play | 22.34 | 10.087 (2.074 / 4.673 / 3.340) | $129,743.28 | 1,450.6 ft | 2.17 | 2.50 | F1 caught |
+| slice_autoplan | 24.80 | 19.967 (3.034 / 7.133 / 9.800) | $132,709.20 | 1,462.3 ft | 4.14 | 3.00 | F1 missed |
+
+- Push: collapse t=3.89; argument t=4.14; listen t=4.30; hold t=4.35; rain t=8.
+- Pull: argument t=10.20; hold t=10.30, within half a day.
+- Plan operations and autoplan unchanged. No simulation fixes, Data changes, dependencies, or commits.
+- Next action (under 2 minutes): orchestrator copies these measurements into the `Docs/VR_SLICE.md` table.
+hook: Stop
+hook: Stop
+hook: Stop Completed
+hook: Stop Completed
+tokens used
+69,446
+STATUS: DONE  
+WO: WO-05a — Amendment 1; step 4 of 4 complete.
+
+CHANGED:
+
+- `Monitor/test/scripts/slice_play.json` — added backfill visit; corrected excavator station and hold order ID.
+- `Monitor/test/scripts/slice_pull_play.json` — corrected excavator station.
+- `Monitor/test/sim-runs.test.js` — added three slice regression tests.
+
+TESTS:
+
+- `npm.cmd --prefix Monitor test` → `tests 89`, `pass 89`, `fail 0`. `npm.cmd --prefix Monitor run e2e` → `tests 1`, `pass 1`, `fail 0`.
+- `node Monitor/src/sim/goldens.js Data/goldens/no_events.json` → five `PASS`, `exit=0`.
+- All seven prescribed headless CLI runs and result checks passed. Byte comparison → `DETERMINISTIC`. Stage 1 → `41.41 undefined 24.484`; Stage 2 → `38.87 0 11.774`. No-action Stage 2: fines `0`, F2 `armed`. All three slices: `lost undefined`, `nacks 0`.
+- `python Paper/make_kit.py Data/Scenarios/stage2_texas.json` → `Unresolved placeholders: none`. Python equivalents of grep → `$10,000 count=1`; `$10000 count=0, grep-exit=1`.
+- `git diff --check` passed. `git status --short` shows only the three files above plus the ignored dispatch log.
+
+NOTES:
+
+| Script | Finish day | Idle total (exc / pipe / back) | Spent | Peak open trench | Collapse days lost | Rain days lost | Deviation |
+|---|---:|---|---:|---:|---:|---:|---|
+| slice_play | 23.00 | 17.247 (4.074 / 5.173 / 8.000) | $125,533.20 | 1,058.6 ft | 3.17 | 2.00 | F1 caught |
+| slice_pull_play | 22.34 | 10.087 (2.074 / 4.673 / 3.340) | $129,743.28 | 1,450.6 ft | 2.17 | 2.50 | F1 caught |
+| slice_autoplan | 24.80 | 19.967 (3.034 / 7.133 / 9.800) | $132,709.20 | 1,462.3 ft | 4.14 | 3.00 | F1 missed |
+
+- Push: collapse t=3.89; argument t=4.14; listen t=4.30; hold t=4.35; rain t=8.
+- Pull: argument t=10.20; hold t=10.30, within half a day.
+- Plan operations and autoplan unchanged. No simulation fixes, Data changes, dependencies, or commits.
+- Next action (under 2 minutes): orchestrator copies these measurements into the `Docs/VR_SLICE.md` table.
+
+=== codex exit code: 0
+=== finished 20261020-151519
