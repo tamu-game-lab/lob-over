@@ -1,0 +1,2 @@
+# Unity's root ignore excludes generated projects; these projects are authored.
+!*.csproj
