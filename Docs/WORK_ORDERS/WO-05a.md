@@ -48,3 +48,34 @@ git status --short      # only Monitor/src/sim, Monitor/test, Monitor/web/plan.h
 ## Out of scope
 
 No new verbs, no page work beyond the Commit button, no scenario number changes, no changes to `Docs/WORK_ORDERS/WO-02.md`. If a follow-up turns out to need a design decision, leave it, say so in NOTES, and finish the rest.
+
+## Amendment 1 (orchestrator, 2026-10-20): the slice scripts
+
+`Monitor/test/scripts/slice_*.json` and `Docs/VR_SLICE.md` were added on 2026-10-20, after this work order was written; item 8 names only the two stage scripts. Everything above is committed (7e9e9c3) and stands; this is not a rejection round. Under the rules above (chiefly O11: a stop-work lift lands by the order-lag rule) the two slice play scripts no longer play the chain `Docs/VR_SLICE.md` describes and measured (collapse Day 4, argument Day 5, rain Day 9, finish about Day 24).
+
+Observed with `node Monitor/src/sim/headless.js Data/Scenarios/slice_texas.json --script Monitor/test/scripts/<name>.json --out Monitor/out/<name>.json`:
+
+- `slice_play`: lost at the deadline (t 29), idle 72.2 crew-days; before 7e9e9c3 it finished at 23.85 with 18.1 idle and $128,357 spent. Cause: the `stopWork` at t 3.9 now holds exc (869 ft) and back (238 ft) until the lift's `resume` orders land at t 5.0 (Site stands at 5+20, within 100 ft of pipe only); the "Crews stopped" argument moves from t 4.14 to t 7.14, after the script's `listen` (4.3) and `hold back` (4.35), so pipe and back argue to the deadline and every later commit is nacked `conflict: hold or demobilize the trailing crew` (c-22, c-23, c-24, c-25). Also at t 5.05 Site stands at 11+00 while exc is at about 880 ft, so `confirm o-2` (c-14, c-16) and `confirm o-3` (c-20) are nacked `order not landed here`, and the radioed lend lands at 6.0 instead of 5.05. The order ids also shifted: the lift's resume orders are o-3, o-4, o-5 and the hold is o-6.
+- `slice_pull_play`: finish 23.4, idle 12.2, $134,801 (before: 22.35, 9.1, $128,262); `confirm o-5` at 5.05 (c-10, c-12) nacked `order not landed here` for the same reason, the lend lands at 6.0, the argument moves from 10.2 to 9.8.
+- `slice_autoplan`: unchanged (24.8, idle 19.967).
+
+### Build (continued)
+
+9. Re-choreograph `slice_play.json` and `slice_pull_play.json` so that, under the rules above, they play the chain VR_SLICE.md describes. Commands only (times, stations, order ids, an extra ride, mount/dismount or listen), as item 8 allows; keep each script's plan ops (the pushed plan with its lend and hold in `slice_play`; `setStart back 8`, the trench box 4+00 to 7+00, both permits at the start, the pump at the forecast and the hold in `slice_pull_play`), the `stopWork` at the collapse, and the F1 flow at the excavator (`confirm notDone`, `radio`, `confirm done`). Target outcomes:
+   - `slice_play`: collapse card at t 3.89 (unchanged); "Crews stopped" fires with t < 5.0 (Day 5; for that, Site can ride to the backfill crew and dismount before Plan's commit so the lift lands there at once); Site `listen`s and Plan holds the trailing crew after the argument, not before; heavy rain at t 8 (unchanged); `finishDay` between 22.5 and 25.5; `lost` undefined; no `nack` message in the transcript.
+   - `slice_pull_play`: no `nack`; finishes before `slice_play` with fewer idle crew-days; if the argument still occurs, the hold answers it within half a day.
+   - `slice_autoplan`: unchanged (24.8) unless the lend's order id in a no-Site run is no longer o-2; then fix the id only.
+10. Add to `Monitor/test/sim-runs.test.js` one test per slice script asserting these outcomes (event `t`s, zero nacks, finish and idle relations, autoplan finish 24.8 within 0.05), so the slice chain is guarded like the stage scripts.
+11. In NOTES report, per slice script, the new measured finish day, idle crew-days (total and exc / pipe / back), spend, peak open trench and the deviation outcome, in the columns of the VR_SLICE.md table; the orchestrator refreshes that table.
+
+### Acceptance checks (in addition to the ones above, which must still pass)
+
+```
+npm --prefix Monitor test                                                                              # all pass, including the three slice-chain tests
+node Monitor/src/sim/headless.js Data/Scenarios/slice_texas.json --script Monitor/test/scripts/slice_play.json --out Monitor/out/sp.json
+node Monitor/src/sim/headless.js Data/Scenarios/slice_texas.json --script Monitor/test/scripts/slice_pull_play.json --out Monitor/out/spp.json
+node Monitor/src/sim/headless.js Data/Scenarios/slice_texas.json --script Monitor/test/scripts/slice_autoplan.json --out Monitor/out/sa.json
+node -e "for (const n of ['sp','spp','sa']) { const r=require('./Monitor/out/'+n+'.json'); console.log(n, r.result.finishDay, r.result.lost, r.result.idleCrewDays, 'nacks', r.messages.filter(m=>m.message.t==='nack').length, 'events', r.messages.filter(m=>m.message.t==='event').map(m=>m.t+':'+m.message.card.title).join(', ')) }"
+   # sp: finish 22.5..25.5, lost undefined, nacks 0, events 3.89 collapse / <5.0 Crews stopped / 8 Heavy rain; spp: finish < sp's, idle < sp's, nacks 0; sa: 24.8 undefined 19.967 nacks 0
+git status --short      # only Monitor/test/scripts/slice_*.json and Monitor/test/sim-runs.test.js (plus files of the original scope only if a slice outcome needs a rule fix, which you then list in NOTES)
+```

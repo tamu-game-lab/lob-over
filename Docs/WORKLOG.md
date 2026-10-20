@@ -117,3 +117,17 @@ Status: WO-00 ACCEPTED 38e5473, WO-01 ACCEPTED 822a83b, WO-02 ACCEPTED 369c38a, 
 
 Toolchain (step 0, ORCHESTRATOR_SHOWCASE.md): node v24.14.1, npm 11.19.1, dotnet SDK 9.0.313 with runtimes 8.0.26 and 9.0.15 and the 8.0.26 targeting pack, python 3.14.3 (reportlab 5.0.1, pypdf 6.20.1), git 2.53.0, Playwright 1.64.1 with chromium, ws 8.22.0. Codex: the desktop app's bundled binary moved to %LOCALAPPDATA%\OpenAI\Codex\bin\896a0166b774037a (codex-cli 0.163.0-alpha.10.2; no --full-auto, so CODEX_FLAGS="--sandbox workspace-write -c approval_policy=never" as before; model gpt-6-astra from ~/.codex/config.toml). Unity Editor: not open on this project (no Temp/UnityLockfile; 9.1 GB free of 33.4 GB).
 Pre-installed for Astra's offline sandbox: PeerJS 1.5.4 fetched from unpkg (sha256 ad5d8870…36fe5) to vendor into Monitor/web/lib/ before WO-S1; NuGet cache warmed with Newtonsoft.Json 13.0.3, xunit 2.9.2, xunit.runner.visualstudio 2.8.2, Microsoft.NET.Test.Sdk 17.12.0, coverlet.collector 6.0.2 for net8.0 and netstandard2.1 before WO-S2.
+WO-05a DISPATCHED 2026-10-20 14:49 log=Docs/WORK_ORDERS/logs/WO-05a.20261020-144950.log (Astra STATUS DONE in 10 min, 137k tokens)
+WO-05a CHECK npm test -> PASS (86 tests; 12 new in sim-review.test.js: O10, O11 x2 + hold-replaces-stop, O13, (a)-(f), rule-switch guard)
+WO-05a CHECK goldens -> PASS (5 x PASS, exit 0; worst deltas unchanged: finish 0.04 d, cost $23.6, peak 2 ft)
+WO-05a CHECK stage2 no codes -> PASS (0 fines; F2 and F3 armed)
+WO-05a CHECK determinism -> PASS (two stage1_pm_play transcripts byte-identical)
+WO-05a CHECK stage1 pm_play -> PASS (41.41, no loss, idle 24.484; was 23.58 before the O11 lag; spend $230,880)
+WO-05a CHECK stage2 pull_play -> PASS (38.87, fines 0, idle 11.774 < 24.484)
+WO-05a CHECK e2e -> PASS (1/1 in 74 s, finishDay 41.72)
+WO-05a CHECK kit currency -> PASS ($10,000 x1; $10000 x0, grep-exit 1)
+WO-05a CHECK verdict grep -> PASS (only Paper/test_make_kit.py's own regex)
+WO-05a CHECK git status scope -> PASS (Monitor/src/sim x7, Monitor/test/scripts x2, sim-review.test.js, plan.html, make_kit.py, DECISIONS.md)
+WO-05a CHECK diffs -> PASS (DECISIONS: O10, O11 to K17, K18, K19 for O13, nothing else; scripts: Site's t 6.02 ride 1313/1309 -> 1115 ft because the excavator now honours the stop until the lift lands, as item 8 allows; plan.html: Commit button label and enabled state only, seen in Monitor/out/e2e/plan.png as "Commit (no change)"; make_kit: one currency regex)
+WO-05a COMMITTED 2026-10-20 15:03 commit=7e9e9c3 (all listed checks pass); transcripts generated and committed a0f2d6d; PeerJS 1.5.4 vendored fb0a1cd
+WO-05a AMENDED 2026-10-20 15:20: generating the transcripts showed the slice scripts (added 2026-10-20, after the WO) no longer play VR_SLICE.md's chain under the new rules: slice_play lost at the deadline (was 23.85) because the stop-work lift now lands at t 5.0 and the argument moved from 4.14 to 7.14, after the script's listen and hold; slice_pull_play 23.4 (was 22.35) with two "order not landed here" nacks; slice_autoplan unchanged. Not a sim bug (radio and order landing follow WO-02's rule) and not a rejection round: Amendment 1 appended to WO-05a.md (re-choreograph the two slice scripts, add slice-chain tests, report the re-measured numbers), re-dispatched. The transcripts will be regenerated after it.
