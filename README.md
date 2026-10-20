@@ -1,5 +1,7 @@
 # LOB, Over — kickoff kit (v0, October 14, 2026)
 
+Play it in the browser: https://tamu-game-lab.github.io/lob-over/ (the field manual PDF is linked on the landing page)
+
 Three-seat cooperative spin-off of LOB-Game. A VR field inspector (Site), a web scheduler (Plan) and a paper spec-keeper (Rules) deliver one 6,000 ft pipeline job on the PM's pushed plan, then on their own pulled plan, on the same seeded site. The lesson is push versus pull, learned from consequences; nothing in the game says right or wrong.
 
 This folder is everything the orchestrator (Claude Code, Fable 5.1) and the implementer (Codex, Astra) need to start. Its contents go into the root of the new Unity project, beside `Assets/`. Setup is `Docs/SETUP_CHECKLIST.md`; the launch is section D there.
