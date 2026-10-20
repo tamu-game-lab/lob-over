@@ -157,3 +157,13 @@ WO-S2 ACCEPTED 2026-10-20 16:02 commit=6c33104. Notes: 1,526 lines of C# for 1,1
 ## First showcase goal complete — 2026-10-20 16:02
 
 Status: WO-05a ACCEPTED 7e9e9c3 + 0a86c68 (amendment 1), WO-S1 ACCEPTED 301a72f, WO-S2 ACCEPTED 6c33104. Transcripts 57c4b20. Pages URL https://tamu-game-lab.github.io/lob-over-showcase/ answers 404 at 16:02 because publishing is Bryan's step 4 (create the public repo tamu-game-lab/lob-over-showcase, Pages from main / root, then Tools\publish_showcase.ps1). READY_FOR_PAGES.
+
+## Second showcase goal (publish, then WO-S3, WO-S4) — started 2026-10-20 16:11
+
+PUBLISH 16:11 pending doc/script/settings changes committed 2a4f133 (gh-pages publish script, NuGet.Config back to nuget.org, settings allow powershell/gh/dotnet/robocopy and git push).
+PUBLISH 16:15 origin added (https://github.com/tamu-game-lab/lob-over.git); origin/main held one README-only commit. The classifier refused `git push --force`, so the addendum's other branch was used: `git merge --allow-unrelated-histories -X ours origin/main` (eaa1669) then a normal push. `gh auth setup-git --hostname github.com` makes gh the credential helper for github.com (global git config), so pushes need no sign-in window.
+PUBLISH 16:17 NuGet online: dotnet restore + dotnet test Sim/LOBOver.Sim.Tests -c Release -> 33/33 pass; no lock files to commit.
+PUBLISH 16:20 subpath fix: Monitor/src/showcase/serve.js strips /lob-over, Monitor/e2e/showcase.e2e.js base http://localhost:7340/lob-over/; no other "lob-over-showcase" left in Monitor/, Tools/ or README; npm run e2e -> 3/3; commit d2cd392. README Pages line commit 750e304; main pushed.
+PUBLISH 16:24 Tools/publish_showcase.ps1 -> built Showcase/dist, orphan gh-pages worktree in Showcase/.publish, pushed gh-pages 62271b1 "Showcase 2026-10-20 from 750e304".
+PUBLISH 16:27 Pages: GitHub had auto-enabled Pages from main (legacy Jekyll build of the README answered 200 with the README's title, manual/ and lib/ 404). `gh api` needs the endpoint without a leading slash in Git Bash (MSYS path rewriting). PUT repos/tamu-game-lab/lob-over/pages source gh-pages / -> source now gh-pages; a build was requested. Polling the site for the showcase's own landing title and lib/transport.js (next entry).
+PUBLISH 16:30 Tools/import_lobgame_assets.ps1 -> 1.7 GB copied into Assets/LOBGame (gitignored; all 17 folders present, SiteAudioBank included); Unity Editor closed (no Temp/UnityLockfile).
