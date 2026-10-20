@@ -1,0 +1,398 @@
+{
+  "schemaVersion": 1,
+  "_source": "LOB-Game equipment_catalog.json and site_catalog_v2, as recorded in MD Files/_pmo_P1_spec.md, _sim_l0_audit_fleet.md and _sim_l0_audit_protection.md (read October 14, 2026). Reused unchanged; additions are marked _validate.",
+  "machines": {
+    "excavator_small": {
+      "crew": "exc",
+      "label": "Excavator Small",
+      "sizeClass": "small",
+      "rateFtPerDay": 165,
+      "dailyUsd": 900,
+      "priceUsd": 18000,
+      "leadDays": {
+        "normal": 3,
+        "rush": 2
+      }
+    },
+    "excavator_standard": {
+      "crew": "exc",
+      "label": "Excavator Standard",
+      "sizeClass": "standard",
+      "rateFtPerDay": 220,
+      "dailyUsd": 1200,
+      "priceUsd": 30000,
+      "leadDays": {
+        "normal": 5,
+        "rush": 3
+      }
+    },
+    "excavator_large": {
+      "crew": "exc",
+      "label": "Excavator Large",
+      "sizeClass": "large",
+      "rateFtPerDay": 330,
+      "dailyUsd": 1800,
+      "priceUsd": 55000,
+      "leadDays": {
+        "normal": 7,
+        "rush": 4
+      },
+      "_note": "The workbook's P1 calls this size Heavy; same machine."
+    },
+    "crane_standard": {
+      "crew": "pipe",
+      "label": "Crane Standard",
+      "sizeClass": "standard",
+      "rateFtPerDay": 180,
+      "dailyUsd": 1800,
+      "priceUsd": 45000,
+      "leadDays": {
+        "normal": 7,
+        "rush": 4
+      }
+    },
+    "crane_heavy": {
+      "crew": "pipe",
+      "label": "Crane Heavy",
+      "sizeClass": "large",
+      "rateFtPerDay": 270,
+      "dailyUsd": 2800,
+      "priceUsd": 80000,
+      "leadDays": {
+        "normal": 10,
+        "rush": 5
+      }
+    },
+    "backfill_small": {
+      "crew": "back",
+      "label": "Backfill Small",
+      "sizeClass": "small",
+      "rateFtPerDay": 180,
+      "dailyUsd": 1400,
+      "priceUsd": 20000,
+      "leadDays": {
+        "normal": 3,
+        "rush": 2
+      }
+    },
+    "backfill_standard": {
+      "crew": "back",
+      "label": "Backfill Standard",
+      "sizeClass": "standard",
+      "rateFtPerDay": 250,
+      "dailyUsd": 1800,
+      "priceUsd": 30000,
+      "leadDays": {
+        "normal": 5,
+        "rush": 3
+      }
+    },
+    "backfill_large": {
+      "crew": "back",
+      "label": "Backfill Large",
+      "sizeClass": "large",
+      "rateFtPerDay": 375,
+      "dailyUsd": 2600,
+      "priceUsd": 50000,
+      "leadDays": {
+        "normal": 7,
+        "rush": 4
+      }
+    }
+  },
+  "orders": {
+    "mobilizationUsd": 25000,
+    "rushPriceMultiplier": 1.75,
+    "rushExposedToPlayers": false,
+    "releaseRefundFraction": 0.5,
+    "_note": "Rush orders exist in the catalog but are not exposed in the LOB-Game UI; keep them hidden in Phase 0 too."
+  },
+  "protection": {
+    "trench_slope": {
+      "label": "Slope the trench",
+      "priceUsd": 6000,
+      "dailyUsd": 0,
+      "likelihood": 0.45,
+      "severity": 0.7,
+      "refusedInCities": [
+        "new_york",
+        "los_angeles",
+        "bangkok"
+      ]
+    },
+    "trench_box": {
+      "label": "Trench box",
+      "priceUsd": 14000,
+      "dailyUsd": 90,
+      "likelihood": 0.35,
+      "severity": 0.5,
+      "benefitHalvedInRunningSand": true
+    },
+    "trench_shoring": {
+      "label": "Trench shoring",
+      "priceUsd": 32000,
+      "dailyUsd": 180,
+      "likelihood": 0.2,
+      "severity": 0.4
+    },
+    "emergency_shoring": {
+      "label": "Emergency shoring",
+      "priceUsd": 18000,
+      "dailyUsd": 150,
+      "reactOnly": true,
+      "resumeAfterDays": 1
+    },
+    "ground_support": {
+      "label": "Ground support",
+      "priceUsd": 16000,
+      "dailyUsd": 110,
+      "_note": "LOB-Game Training 8 only; not offered in the Texas stages."
+    },
+    "drainage_pump": {
+      "label": "Drainage pump",
+      "priceUsd": 4000,
+      "dailyUsd": 60,
+      "halvesRainRework": true,
+      "_validate": "price and daily cost; the workbook names the pump as an A2 response without a figure"
+    }
+  },
+  "cities": {
+    "texas": {
+      "label": "Texas",
+      "leadDelayDays": 0,
+      "remobilizationDelayDays": 1,
+      "logisticsRating": "Low",
+      "hazard": {
+        "soilCohesion": "V.High",
+        "bedrockDepth": "Low",
+        "groundwaterTable": "High",
+        "precipitationIntensity": "V.High",
+        "temperatureExtremes": "Med",
+        "trafficCongestion": "Med"
+      },
+      "situationsPossible": [
+        "E1",
+        "P1",
+        "P2",
+        "P3",
+        "B1",
+        "A1",
+        "A2"
+      ],
+      "openTrenchLimitZones": 2,
+      "_validate": "open-trench limit for a Texas city; examples elsewhere are 300 ft (Sacramento County, end of day) and 200 ft (Framingham)",
+      "signature": "Soft saturated clay over a shallow water table. No rock at all.",
+      "_hazard_source": "Hazard Matrix sheet; V.High = severe hazard (soil cohesion V.High means dangerously weak ground; bedrock depth Low means rock too deep to matter)",
+      "_situations_validate": "no E2: bedrock depth Low means no rock"
+    },
+    "florida": {
+      "label": "Florida",
+      "leadDelayDays": 0,
+      "remobilizationDelayDays": 1,
+      "logisticsRating": "Low",
+      "hazard": {
+        "soilCohesion": "V.High",
+        "bedrockDepth": "Med",
+        "groundwaterTable": "V.High",
+        "precipitationIntensity": "High",
+        "temperatureExtremes": "Low",
+        "trafficCongestion": "Low"
+      },
+      "situationsPossible": [
+        "E1",
+        "P1",
+        "P2",
+        "P3",
+        "B1",
+        "A1",
+        "A2"
+      ],
+      "runningSand": true,
+      "openTrenchLimitZones": 1,
+      "_validate": "lead delay, remobilization delay, open-trench limit and the situation list are game hypotheses; the hazard row is the workbook's",
+      "signature": "Running sand below the water table. Everything is a dewatering problem.",
+      "_hazard_source": "Hazard Matrix sheet; V.High = severe hazard (soil cohesion V.High means dangerously weak ground; bedrock depth Low means rock too deep to matter)"
+    },
+    "las_vegas": {
+      "label": "Las Vegas",
+      "leadDelayDays": 1,
+      "remobilizationDelayDays": 2,
+      "logisticsRating": "Medium",
+      "hazard": {
+        "soilCohesion": "Med",
+        "bedrockDepth": "V.High",
+        "groundwaterTable": "Low",
+        "precipitationIntensity": "Low",
+        "temperatureExtremes": "V.High",
+        "trafficCongestion": "Low"
+      },
+      "situationsPossible": [
+        "E1",
+        "E2",
+        "P2",
+        "P3",
+        "B1",
+        "A2"
+      ],
+      "openTrenchLimitZones": 2,
+      "_validate": "lead delay, remobilization delay, open-trench limit and the situation list are game hypotheses; the hazard row is the workbook's",
+      "signature": "Caliche hardpan and extreme heat. Bone-dry, no water hazards at all.",
+      "_hazard_source": "Hazard Matrix sheet; V.High = severe hazard (soil cohesion V.High means dangerously weak ground; bedrock depth Low means rock too deep to matter)",
+      "_situations_validate": "A2 here is extreme heat, not rain; no A1 (no water)"
+    },
+    "los_angeles": {
+      "label": "Los Angeles",
+      "leadDelayDays": 2,
+      "remobilizationDelayDays": 3,
+      "logisticsRating": "High",
+      "hazard": {
+        "soilCohesion": "Med",
+        "bedrockDepth": "Med",
+        "groundwaterTable": "Low",
+        "precipitationIntensity": "Low",
+        "temperatureExtremes": "Med",
+        "trafficCongestion": "V.High"
+      },
+      "situationsPossible": [
+        "E1",
+        "P1",
+        "P2",
+        "P3",
+        "B1"
+      ],
+      "slopeRefused": true,
+      "limitedShiftHours": true,
+      "openTrenchLimitZones": 1,
+      "_validate": "lead delay, remobilization delay, open-trench limit and the situation list are game hypotheses; the hazard row is the workbook's",
+      "signature": "Logistics level. Kind ground, brutal traffic, deep water table.",
+      "_hazard_source": "Hazard Matrix sheet; V.High = severe hazard (soil cohesion V.High means dangerously weak ground; bedrock depth Low means rock too deep to matter)"
+    },
+    "new_york": {
+      "label": "New York",
+      "leadDelayDays": 2,
+      "remobilizationDelayDays": 3,
+      "logisticsRating": "High",
+      "slopeRefused": true,
+      "_note": "Catalog city, not a Stage 3 candidate.",
+      "hazard": {
+        "soilCohesion": "Low",
+        "bedrockDepth": "V.High",
+        "groundwaterTable": "Low",
+        "precipitationIntensity": "Med",
+        "temperatureExtremes": "Med",
+        "trafficCongestion": "V.High"
+      },
+      "signature": "Shallow schist and extreme congestion. Stable ground, hostile surface.",
+      "_hazard_source": "Hazard Matrix sheet; V.High = severe hazard (soil cohesion V.High means dangerously weak ground; bedrock depth Low means rock too deep to matter)"
+    },
+    "bangkok": {
+      "label": "Bangkok",
+      "leadDelayDays": 2,
+      "remobilizationDelayDays": 3,
+      "logisticsRating": "High",
+      "slopeRefused": true,
+      "_note": "Catalog city, not a Stage 3 candidate.",
+      "hazard": {
+        "soilCohesion": "V.High",
+        "bedrockDepth": "Low",
+        "groundwaterTable": "V.High",
+        "precipitationIntensity": "V.High",
+        "temperatureExtremes": "Med",
+        "trafficCongestion": "V.High"
+      },
+      "signature": "Soft marine clay, subsidence, monsoon, congestion. Hardest level.",
+      "_hazard_source": "Hazard Matrix sheet; V.High = severe hazard (soil cohesion V.High means dangerously weak ground; bedrock depth Low means rock too deep to matter)"
+    },
+    "chicago": {
+      "label": "Chicago",
+      "_note": "Catalog city from the Hazard Matrix, not a Stage 3 candidate.",
+      "hazard": {
+        "soilCohesion": "Med",
+        "bedrockDepth": "High",
+        "groundwaterTable": "Med",
+        "precipitationIntensity": "Med",
+        "temperatureExtremes": "V.High",
+        "trafficCongestion": "High"
+      },
+      "signature": "Dolomite plus hard freeze. Rock and thermometer decide this level.",
+      "_hazard_source": "Hazard Matrix sheet; V.High = severe hazard (soil cohesion V.High means dangerously weak ground; bedrock depth Low means rock too deep to matter)"
+    },
+    "seoul": {
+      "label": "Seoul",
+      "_note": "Catalog city from the Hazard Matrix, not a Stage 3 candidate.",
+      "hazard": {
+        "soilCohesion": "Med",
+        "bedrockDepth": "V.High",
+        "groundwaterTable": "Med",
+        "precipitationIntensity": "V.High",
+        "temperatureExtremes": "High",
+        "trafficCongestion": "High"
+      },
+      "signature": "Granite plus monsoon plus winter freeze. Won on the calendar.",
+      "_hazard_source": "Hazard Matrix sheet; V.High = severe hazard (soil cohesion V.High means dangerously weak ground; bedrock depth Low means rock too deep to matter)"
+    }
+  },
+  "money": {
+    "overheadRate": 0.3,
+    "deadlineSlackDays": 12,
+    "budgetFormula": "promisedFinishDay * dailyFleetUsd * 1.3 + 60000",
+    "_source": "LOB-Game Sandbox: deadline = default plan finish + 12 days; budget = finish x daily fleet cost x 1.3 + $60,000"
+  },
+  "workbookDurations": {
+    "_source": "LOB Disruption Event Library Final7, Response Option sheet (Base Rate Drop, Duration). rateDrop is the fraction LOST: the crew works at (1 - rateDrop). Where the Situations sheet disagrees (E1 1 day, P3 1-2 days, B1 2 days) the game uses the Response Option sheet's value.",
+    "E1": {
+      "name": "Buried utility or existing pipeline strike",
+      "hits": "exc",
+      "rateDrop": 0.4,
+      "durationDays": 3
+    },
+    "E2": {
+      "name": "Unforeseen ground conditions, hard rock refusal",
+      "hits": "exc",
+      "rateDrop": 0.6,
+      "durationDays": 2
+    },
+    "P1": {
+      "name": "Trench collapse / cave-in",
+      "hits": "pipe",
+      "rateDrop": 1.0,
+      "durationDaysByExcavator": {
+        "small": 3,
+        "standard": 2,
+        "large": 1
+      },
+      "lenderLosesSameDays": true,
+      "_validate": "the sheet's Day column reads 2/1/0 for option A (own machine) and 3/2/1 for option C (hired); the game uses 3/2/1 clearing days for both, lender loses the same days"
+    },
+    "P2": {
+      "name": "Late pipe delivery / supply chain lag",
+      "hits": "pipe",
+      "rateDrop": 0.5,
+      "durationDays": 3
+    },
+    "P3": {
+      "name": "Pipe dropped during lifting / rigging failure",
+      "hits": "pipe",
+      "rateDrop": 0.8,
+      "durationDays": 2
+    },
+    "B1": {
+      "name": "Poor backfill compaction density / QC test failure",
+      "hits": "back",
+      "rateDrop": 0.3,
+      "durationDays": 3
+    },
+    "A1": {
+      "name": "Trench movement and water-driven settlement",
+      "hits": "all",
+      "rateDrop": 0.3,
+      "durationDays": 2
+    },
+    "A2": {
+      "name": "Extreme weather",
+      "hits": "all",
+      "rateDrop": 0.5,
+      "durationDays": 2
+    }
+  }
+}

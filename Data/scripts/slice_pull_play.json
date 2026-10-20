@@ -1,0 +1,211 @@
+[
+  {
+    "t": 0,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "setStart",
+          "crew": "back",
+          "day": 8
+        },
+        {
+          "op": "protect",
+          "kind": "trench_box",
+          "fromFt": 400,
+          "toFt": 700
+        },
+        {
+          "op": "enterPermit",
+          "zone": 1,
+          "code": "5174-7"
+        },
+        {
+          "op": "enterPermit",
+          "zone": 2,
+          "code": "2936-0"
+        }
+      ],
+      "id": "c-1"
+    }
+  },
+  {
+    "t": 0,
+    "seat": "site",
+    "cmd": {
+      "action": "moveTo",
+      "stationFt": 520,
+      "id": "c-2"
+    }
+  },
+  {
+    "t": 0.02,
+    "seat": "site",
+    "cmd": {
+      "action": "dismount",
+      "id": "c-3"
+    }
+  },
+  {
+    "t": 3.8,
+    "seat": "site",
+    "cmd": {
+      "action": "inspect",
+      "target": "protection",
+      "id": "c-4"
+    }
+  },
+  {
+    "t": 3.9,
+    "seat": "site",
+    "cmd": {
+      "action": "stopWork",
+      "zone": 1,
+      "id": "c-5"
+    }
+  },
+  {
+    "t": 4,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "lend",
+          "machine": "excavator_standard",
+          "toCrew": "pipe",
+          "days": 2
+        }
+      ],
+      "id": "c-6"
+    }
+  },
+  {
+    "t": 5.02,
+    "seat": "site",
+    "cmd": {
+      "action": "mount",
+      "id": "c-7"
+    }
+  },
+  {
+    "t": 5.02,
+    "seat": "site",
+    "cmd": {
+      "action": "moveTo",
+      "stationFt": 900,
+      "id": "c-8"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "site",
+    "cmd": {
+      "action": "dismount",
+      "id": "c-9"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "site",
+    "cmd": {
+      "action": "confirm",
+      "orderId": "o-5",
+      "outcome": "notDone",
+      "id": "c-10"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "radio",
+          "orderId": "o-5"
+        }
+      ],
+      "id": "c-11"
+    }
+  },
+  {
+    "t": 5.05,
+    "seat": "site",
+    "cmd": {
+      "action": "confirm",
+      "orderId": "o-5",
+      "outcome": "done",
+      "id": "c-12"
+    }
+  },
+  {
+    "t": 7.2,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "pay",
+          "item": "drainage_pump"
+        }
+      ],
+      "id": "c-13"
+    }
+  },
+  {
+    "t": 8.1,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [],
+      "id": "c-14"
+    }
+  },
+  {
+    "t": 10.3,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "hold",
+          "crew": "back",
+          "days": 2
+        }
+      ],
+      "id": "c-17"
+    }
+  },
+  {
+    "t": 15,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterInspection",
+          "zone": 1,
+          "number": "8403-5"
+        }
+      ],
+      "id": "c-15"
+    }
+  },
+  {
+    "t": 22,
+    "seat": "plan",
+    "cmd": {
+      "action": "commit",
+      "ops": [
+        {
+          "op": "enterInspection",
+          "zone": 2,
+          "number": "6251-4"
+        }
+      ],
+      "id": "c-16"
+    }
+  }
+]

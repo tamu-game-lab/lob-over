@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LOB · Site</title><style>
+:root{font:14px/1.45 system-ui,sans-serif;color:#283942;background:#eeeae2}*{box-sizing:border-box}body{margin:0}header{padding:18px 26px;background:#2b3d43;color:white;display:flex;justify-content:space-between;align-items:center}h1{font-size:21px;margin:0}h2{font-size:15px;margin:0 0 12px}.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#d5dfe4}main{padding:18px 24px;max-width:1600px;margin:auto}.panel{padding:16px;background:#fffdf8;border:1px solid #c7cec9;margin-bottom:16px}.layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(300px,1fr);gap:16px}.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.row label{display:flex;flex-direction:column;font-size:12px}.row input{width:125px}button,input{font:inherit;padding:8px 10px;border:1px solid #8b999f;border-radius:3px;background:#fffdf8;color:inherit}button{cursor:pointer}button:hover{background:#e7edf0}button:disabled{opacity:.45;cursor:default}.primary{background:#2d4754;color:white}#strip-scroll{overflow-x:auto;margin:12px 0;border:1px solid #bac5c7}#strip{position:relative;width:2400px;height:250px;background:#f1f0e8}.zone-board{position:absolute;top:0;height:50px;padding:7px;border-left:1px solid #879ba3;font-size:12px;background:#e3e8e6}.cell{position:absolute;top:80px;height:80px;border:1px solid #aab8b8;border-radius:0;font:11px ui-monospace,monospace;padding:3px;color:#263941}.cell span{background:#fffdf8e8}.undug{background:#e3e0d7}.open{background:repeating-linear-gradient(45deg,#f8f5eb 0 6px,#b3aa91 6px 8px)}.piped{background:repeating-linear-gradient(0deg,#e3e9e8 0 7px,#839aa4 7px 10px)}.backfilled{background:repeating-linear-gradient(45deg,#b6c0b9 0 3px,#e7ece5 3px 6px)}.crew{position:absolute;top:53px;font-size:12px;white-space:nowrap;pointer-events:none;transform:translateX(-15%)}#truck{position:absolute;top:191px;transition:left .25s linear;white-space:nowrap;font-size:18px;transform:translateX(-15%)}.road{position:absolute;top:186px;left:0;width:100%;height:42px;background:#ddd8c9;border-block:1px dashed #9e9d92}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px}.swatch{display:inline-block;width:24px;height:14px;border:1px solid #aab8b8;vertical-align:middle;margin-right:3px}#crew-list{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.crew-card{padding:9px 12px;border:1px solid #c8d0cd;background:#f2f3ed}.mood{font-family:monospace}#feedback{min-height:22px}#events:empty{display:none}.event{border-left:3px solid #647e8b;padding:8px 12px;margin-bottom:10px;background:#edf1f1}.event h3{font-size:15px;margin:0}.event p{margin:5px 0}.item{border-bottom:1px solid #d5dcd8;padding:10px 0}.item p{margin:4px 0}#clipboard{min-height:100px;background:repeating-linear-gradient(#faf7ed 0 27px,#d7dfd9 27px 28px);padding:10px;line-height:28px;white-space:pre-line}#actual{width:100%;height:230px}#actual text{font:11px system-ui;fill:#344955}.board{padding:9px 0;border-bottom:1px solid #d5dcd8}#sky-drawing{width:70px;height:40px}#listen-lines{max-height:200px;overflow:auto}@media(max-width:750px){main{padding:10px}.layout{grid-template-columns:1fr}header{padding:14px}.panel{padding:12px}.row{gap:7px}.row button{min-height:42px}}
+button.primary:hover{background:#365568}
+</style></head><body><header><div><div class="eyebrow">LOB, Over / Field inspector</div><h1 id="title">Site</h1></div><div><div id="today"></div><small id="connection">Connecting</small></div></header>
+<main><section class="panel"><div class="row"><h2 style="margin:0;flex:1">The line</h2><svg id="sky-drawing" viewBox="0 0 70 40" aria-hidden="true"></svg><span id="sky"></span></div><div class="legend"><span><i class="swatch undug"></i>undug</span><span><i class="swatch open"></i>open</span><span><i class="swatch piped"></i>piped</span><span><i class="swatch backfilled"></i>backfilled</span><span>≈ water · ∕ wall · □ protection</span></div>
+<div id="strip-scroll"><div id="strip"><div id="zones"></div><div id="cells"></div><div id="crew-icons"></div><div class="road"></div><div id="truck">▣ Truck</div></div></div>
+<div class="row"><label>Station<input id="destination" placeholder="7+20" autocomplete="off"></label><button id="move">Move to station</button><button id="mount" class="primary">Dismount</button><span id="truck-location"></span></div><div id="crew-list"></div><p id="feedback" role="status"></p></section>
+<div class="layout"><div><section id="events" class="panel"></section><section class="panel"><h2>Inspect</h2><div id="inspect-buttons" class="row"></div><h3>Clipboard</h3><div id="clipboard"></div><div class="row" style="margin-top:12px"><button id="listen">Listen</button><label><input id="read-aloud" type="checkbox">Read clipboard aloud</label></div><div id="listen-lines"></div></section>
+<section class="panel"><h2>Field actions</h2><div class="row"><label>Flag station<input id="flag-station" placeholder="7+20"></label><label>Note · 40 characters<input id="flag-note" maxlength="40" style="width:250px"></label><button id="flag">Flag</button><button id="stop-work">Stop work</button></div></section></div>
+<aside><section class="panel"><h2>Confirm</h2><div id="orders"></div></section><section class="panel"><h2>Trailer board</h2><div class="legend"><span>━ exc</span><span>┄ pipe</span><span>┈ back</span><span>Live actual</span></div><svg id="actual" viewBox="0 0 420 240" role="img" aria-label="Live actual lines"></svg><div id="boards"></div><p id="gate"></p></section></aside></div></main>
+<script src="lib/transport.js"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id),esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const station=ft=>{ft=Math.round(ft);return Math.floor(ft/100)+'+'+String(ft%100).padStart(2,'0');};
+const parseStation=text=>text.includes('+')?Number(text.split('+')[0])*100+Number(text.split('+')[1]):Number(text);
+const html=(id,value)=>{if($(id).innerHTML!==value)$(id).innerHTML=value;};
+const TARGETS=['wall','water','pipe','machine','protection','board','sky','ticket','crew'];
+// Protocol mood levels 0–3, expressed without decision colors.
+const MOODS=['○','◔','◑','●'];
+let state, result, stage, lastDay=0, sequence=0;
+const cards=new Map();
+const socket=LobTransport.connect();
+socket.onopen=()=>socket.send(JSON.stringify({t:'hello',v:1,seat:'site',client:'web'}));
+socket.onclose=()=>{$('connection').textContent='Disconnected';};
+function command(action,fields={}){if(socket.readyState!==WebSocket.OPEN)return;$('feedback').textContent='';socket.send(JSON.stringify({t:'cmd',v:1,id:'s-'+(++sequence),seat:'site',action,...fields}));}
+$('move').onclick=()=>command('moveTo',{stationFt:parseStation($('destination').value)});
+$('mount').onclick=()=>command(state.view.truck.dismounted?'mount':'dismount');
+$('listen').onclick=()=>command('listen');
+$('flag').onclick=()=>command('flag',{stationFt:parseStation($('flag-station').value),note:$('flag-note').value});
+function zoneAt(ft){const job=state.view.project.job;return job.zones.find(z=>ft>=z.fromFt&&(ft<z.toFt||ft===job.lengthFt));}
+$('stop-work').onclick=()=>command('stopWork',{zone:zoneAt(state.view.truck.stationFt).id});
+html('inspect-buttons',TARGETS.map(target=>`<button data-inspect="${target}">${target}</button>`).join(''));
+$('inspect-buttons').onclick=e=>{if(e.target.dataset.inspect)command('inspect',{target:e.target.dataset.inspect});};
+$('orders').onclick=e=>{if(e.target.dataset.order)command('confirm',{orderId:e.target.dataset.order,outcome:e.target.dataset.outcome});};
+$('cells').onclick=e=>{const button=e.target.closest('[data-station]');if(button)command('moveTo',{stationFt:Number(button.dataset.station)});};
+function render(){
+  const v=state.view,job=v.project.job,scale=2400/job.lengthFt;
+  $('title').textContent=v.project.title+' / Site';$('today').textContent='Day '+state.displayDay;
+  $('truck').style.left=Math.min(2340,v.truck.stationFt*scale)+'px';
+  $('truck-location').textContent=station(v.truck.stationFt)+(v.truck.moving?' · moving':v.truck.dismounted?' · on foot':' · mounted');
+  $('mount').textContent=v.truck.dismounted?'Mount':'Dismount';
+  $('mount').disabled=v.truck.moving;$('move').disabled=v.truck.moving||v.truck.dismounted;
+  const fieldDisabled=v.truck.moving||!v.truck.dismounted;
+  for(const button of document.querySelectorAll('[data-inspect],#listen,#flag,#stop-work'))button.disabled=fieldDisabled;
+  html('zones',job.zones.map(z=>{const b=v.boards.find(b=>b.zone===z.id);return `<div class="zone-board" style="left:${z.fromFt*scale}px;width:${(z.toFt-z.fromFt)*scale}px">Zone ${z.id} · ${station(z.fromFt)}–${station(z.toFt)}<br>Permit ${esc(b.permitNumber??'—')}</div>`;}).join(''));
+  html('cells',v.trench.filter(c=>c.stationFt<job.lengthFt).map(c=>`<button class="cell ${c.state}" data-station="${c.stationFt}" aria-label="Station ${station(c.stationFt)}" title="${esc([c.state,c.water,c.wall,c.protection].filter(Boolean).join(' · '))}" style="left:${c.stationFt*scale}px;width:${job.stationEveryFt*scale}px" ${v.truck.moving||v.truck.dismounted?'disabled':''}><span>${station(c.stationFt)}</span><br>${c.water&&c.water!=='none'?'≈':''}${c.wall==='slumped'?' ∕':''}${c.protection!=='none'?' □':''}</button>`).join(''));
+  html('crew-icons',v.crews.map((c,i)=>`<div class="crew" style="left:${Math.min(2320,c.stationFt*scale)}px;top:${53+i*9}px" title="${esc(c.machinePlate)}">◆ ${c.id} ${MOODS[c.moodLevel]}</div>`).join(''));
+  html('crew-list',v.crews.map(c=>`<div class="crew-card" data-crew="${c.id}" title="Plate: ${esc(c.machinePlate)}"><b>${c.id}</b> · ${station(c.stationFt)} · <span class="crew-status">${esc(c.status)}</span> <span class="mood" aria-label="Mood ${c.moodLevel}">${MOODS[c.moodLevel]} ${c.moodLevel}</span></div>`).join(''));
+  html('orders',v.orders.map(o=>`<div class="item" data-order="${o.id}"><b>${esc(o.crew)} · ${esc(o.op.op)}</b><p>${esc(o.id)} · ${esc(o.status==='notCarriedOut'?'not carried out':o.status)}</p><button data-order="${o.id}" data-outcome="done" ${fieldDisabled?'disabled':''}>Done</button> <button data-order="${o.id}" data-outcome="notDone" ${fieldDisabled?'disabled':''}>Not carried out</button></div>`).join('')||(v.truck.moving?'Truck moving':'No orders at this station.'));
+  html('boards',v.boards.map(b=>`<div class="board"><b>Zone ${b.zone}</b> · Permit ${esc(b.permitNumber??'—')}<br>Inspection ${esc(b.inspectionNumber??'—')}</div>`).join(''));
+  $('gate').textContent='Trucks waiting: '+v.gate.trucksWaiting;
+  $('sky').textContent={clear:'clear',towersSouth:'towers to the south',rain:'rain'}[v.sky];
+  $('sky-drawing').innerHTML=v.sky==='clear'?'<circle cx="35" cy="20" r="11" fill="none" stroke="#516e7a" stroke-width="2"/><path d="M35 2v4m0 28v4M17 20h-4m44 0h-4M22 7l3 3m20 20l3 3M22 33l3-3M45 10l3-3" stroke="#516e7a"/>':'<path d="M12 25c-8-15 10-19 15-10 0-19 25-17 25 0 15 0 14 15 3 15H16" fill="#d0dadc" stroke="#516e7a"/>'+(v.sky==='rain'?'<path d="M20 31l-4 7m18-7l-4 7m18-7l-4 7" stroke="#516e7a"/>':'');
+  if(v.activeEvent?.card)cards.set(v.activeEvent.id,v.activeEvent.card);
+  html('events',[...cards.values()].reverse().map(card=>`<article class="event"><h3>${esc(card.title)}</h3>${card.facts.map(f=>`<p>${esc(f)}</p>`).join('')}</article>`).join(''));
+  drawActual();
+}
+function drawActual(){
+  const job=state.view.project.job,maxT=Math.max(1,Math.ceil(state.day)),x=ft=>35+ft/job.lengthFt*345,y=t=>205-t/maxT*170;
+  let s='<text x="5" y="16">Day</text><text x="180" y="237">Station</text>';
+  for(const z of [...job.zones.map(z=>z.fromFt),job.lengthFt])s+=`<line x1="${x(z)}" y1="28" x2="${x(z)}" y2="205" stroke="#d1dcd7"/><text x="${x(z)}" y="222" text-anchor="middle">${station(z)}</text>`;
+  s+=`<text x="4" y="205">1</text><text x="4" y="35">${maxT+1}</text>`;
+  for(const [i,id] of ['exc','pipe','back'].entries())s+=`<polyline points="${state.view.actualLines[id].map(p=>`${x(p.ft)},${y(p.t)}`).join(' ')}" fill="none" stroke="#324f60" stroke-width="2" stroke-dasharray="${['','8 4','2 4'][i]}"/>`;
+  $('actual').innerHTML=s;
+}
+socket.onmessage=event=>{
+  const message=JSON.parse(event.data);
+  if(message.t==='welcome'){$('connection').textContent=message.mirror?'Mirror · read only':'Connected';acceptState(message.state);}
+  else if(message.t==='state')acceptState(message);
+  else if(message.t==='nack')$('feedback').textContent=message.reason;
+  else if(message.t==='inspection'){$('clipboard').textContent=message.text;if($('read-aloud').checked&&'speechSynthesis'in window)speechSynthesis.speak(new SpeechSynthesisUtterance(message.text));}
+  else if(message.t==='event'){cards.set(message.eventId,message.card);render();}
+  else if(message.t==='voice')html('listen-lines',(message.lines??[]).map(line=>`<p><b>${esc(line.speaker==='pm'?'PM':line.speaker.replace('foreman_',''))}</b> · ${esc(line.text)}</p>`).join(''));
+  else if(message.t==='result'){result=message;$('feedback').textContent=state.view.project.title;}
+};
+function acceptState(message){
+  if(state?.runId!==message.runId){cards.clear();result=null;$('clipboard').textContent='';$('listen-lines').innerHTML='';$('feedback').textContent='';}
+  state=message;stage=message.stage;lastDay=message.day;render();
+}
+</script></body></html>
