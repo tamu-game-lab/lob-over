@@ -7,7 +7,7 @@ const server = createServer(async (req, res) => {
   try {
     if (!['GET', 'HEAD'].includes(req.method)) { res.writeHead(405).end(); return; }
     const url = new URL(req.url, 'http://localhost');
-    const name = decodeURIComponent(url.pathname).replace(/^\/lob-over-showcase(?=\/)/, '');
+    const name = decodeURIComponent(url.pathname).replace(/^\/lob-over(?=\/)/, '');
     const path = resolve(dist, '.' + (name === '/' ? '/index.html' : name));
     const rel = relative(dist, path);
     if (rel.startsWith('..') || isAbsolute(rel) || !(await stat(path)).isFile()) throw new Error('Not a file');

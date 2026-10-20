@@ -9,7 +9,7 @@ import { build } from '../src/showcase/build.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const output = fileURLToPath(new URL('../out/e2e/showcase/', import.meta.url));
-const base = 'http://localhost:7340/lob-over-showcase/';
+const base = 'http://localhost:7340/lob-over/';
 const slice = JSON.parse(await readFile(new URL('../../Data/Scenarios/slice_texas.json', import.meta.url), 'utf8'));
 const collapseTitle = slice.events.find(event => event.type === 'P1').card.title;
 test('Showcase: static Pages subpath, local seats, autoplan, result and phone room', { timeout: 90_000 }, async t => {
