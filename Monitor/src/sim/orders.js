@@ -11,6 +11,8 @@ const PLAN_OPS = new Set([...CREW_OPS, ...OFFICE_OPS, 'lend', 'order', 'protect'
 const positive = n => Number.isFinite(n) && n > 0;
 const owns = (object, key) => typeof key === 'string' && Object.hasOwn(object, key) && !key.startsWith('_');
 const ownerOf = (s, machine) => CREW_IDS.find(id => s.crews[id].machine === machine);
+const machineCommitted = (s, machine) => s.orders.some(order => order.op.op === 'lend'
+  && order.op.machine === machine && order.appliedT == null);
 export const landingTime = (s, crew) => s.pure || crew && nearby(s, s.crews[crew].pos) ? s.t : nextBoundary(s.t);
 
 export function validateOp(s, op) {
@@ -25,10 +27,9 @@ export function validateOp(s, op) {
   if (op.op === 'hold' && (op.days != null && !positive(op.days)
     || op.fromDay != null && (!Number.isInteger(op.fromDay) || op.fromDay < displayDay(s.t)))) return 'invalid hold';
   if (op.op === 'lend') {
+    if (machineCommitted(s, op.machine)) return 'machine already committed';
     const owner = ownerOf(s, op.machine);
-    if (!owner || s.crews[owner].lentAway || s.loans.some(l => l.fromCrew === owner && l.phase !== 'returned')
-      || s.orders.some(order => order.op.op === 'lend' && order.op.machine === op.machine
-        && order.appliedT == null)) return 'machine unavailable';
+    if (!owner || s.crews[owner].lentAway || s.loans.some(l => l.fromCrew === owner && l.phase !== 'returned')) return 'machine unavailable';
     if (!CREW_IDS.includes(op.toCrew) || op.toCrew === owner || !positive(op.days)) return 'invalid lend';
   }
   if (op.op === 'protect' || op.op === 'order') {
@@ -46,6 +47,7 @@ export function validateOp(s, op) {
     }
   }
   if (op.op === 'pay') {
+    if (op.item === 'clear_own' && machineCommitted(s, s.crews.exc.machine)) return 'machine already committed';
     const response = availableResponses(s).find(r => r.option.key === op.item);
     if (!response) return 'no such response now';
     if (op.item === 'hire_excavator' && (!owns(s.catalog.machines, op.machine)
@@ -114,7 +116,6 @@ function applyLanded(s, order) {
     c.demobBillingEndsT = nextBoundary(s.t);
     c.arguing = false;
   } else if (op.op === 'remob') {
-    s.spentUsd += s.scenario.rules.demobFeeUsd;
     c.remobT = s.t + s.catalog.cities[s.scenario.city].remobilizationDelayDays;
   }
   order.appliedT = s.t;
@@ -141,6 +142,7 @@ export function issueOrder(s, op) {
   if (!s.pure) markFirstRadio(s, order);
   if (op.op === 'protect') s.spentUsd += s.catalog.protection[op.kind].priceUsd;
   if (op.op === 'order') purchase(s, op.machine);
+  if (op.op === 'remob') s.spentUsd += s.scenario.rules.demobFeeUsd;
   if (op.op === 'hold') voice(s, 'holdCommitted', ['plan']);
   if (op.op === 'demob') voice(s, 'demobCommitted', ['plan']);
   if (!OFFICE_OPS.has(op.op)) return;

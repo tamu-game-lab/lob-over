@@ -40,10 +40,12 @@ export function applySite(s, cmd) {
   }
   if (cmd.action === 'stopWork') {
     if (zoneAt(s, truck.stationFt)?.id !== cmd.zone) return 'outside zone';
+    const stop = { zone: cmd.zone, fromT: s.t + s.scenario.rules.stopWorkReachHours / HOURS_PER_DAY };
     for (const id of CREW_IDS) {
       const c = s.crews[id];
-      if (zoneAt(s, c.pos)?.id === cmd.zone) c.stop = { zone: cmd.zone,
-        fromT: s.t + s.scenario.rules.stopWorkReachHours / HOURS_PER_DAY };
+      if (zoneAt(s, c.pos)?.id !== cmd.zone) continue;
+      if (s.t >= c.startDay - 1 - EPS) c.stop = { ...stop };
+      else s.pendingStops[id] = { ...stop };
     }
     return;
   }

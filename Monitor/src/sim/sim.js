@@ -10,18 +10,26 @@ import { plannedPolylines } from './planning.js';
 import { applySite, updateTruck } from './site.js';
 import { view } from './views.js';
 
+// WO-05a: these authored Texas switches have no alternative implementation.
+const SUPPORTED_RULES = {
+  orderLagShifts: 1, heldCrewBills: true, conflictRule: 'crossWithinNextDay',
+  conflictBehaviour: 'stopAndArgue', unpermittedBoundary: 'idleAndBill',
+  pumpHalvesRework: true, likelihoodRollsApply: false,
+};
+const SUPPORTED_SHIFTS_PER_DAY = 1; // Authored scenario time.shiftsPerDay.
+
 function initialState(scenario, catalog, pure) {
   const crews = Object.fromEntries(CREW_IDS.map(id => {
     const crew = scenario.crews.find(c => c.id === id);
     return [id, { ...crew, pos: 0, work: 0, onsite: 0, finishT: null,
-      rate: catalog.machines[crew.machine].rateFtPerDay, mult: 0, status: 'idle',
-      mood: 0, waitDays: 0, hold: null, stop: null, arguing: false, demobilized: false, lentAway: false }];
+      rate: catalog.machines[crew.machine]?.rateFtPerDay ?? 0, mult: 0, status: 'idle',
+      mood: 0, waitDays: 0, workingDays: 0, hold: null, stop: null, arguing: false, demobilized: false, lentAway: false }];
   }));
   const state = {
     scenario, catalog, pure, rngState: makeRng(scenario.seed).state(),
     t: 0, speed: 'full', pausedSpeed: 'full', done: false, result: null, crews,
     capFt: scenario.capFt ?? null, orders: [], nextOrderId: 1, loans: [], deliveries: [], payments: [],
-    protections: [], events: copy(scenario.events ?? []), deviations: copy(scenario.deviations ?? []), conflicts: [],
+    protections: [], events: copy(scenario.events ?? []), deviations: copy(scenario.deviations ?? []), conflicts: [], pendingStops: {},
     permits: Object.fromEntries(scenario.job.zones.map(z => [z.id, { entered: pure || scenario.permits.heldBy === 'pm',
       signed: false, number: scenario.permits.cards.find(c => c.zone === z.id)?.number }])),
     inspections: Object.fromEntries(scenario.job.zones.map(z => [z.id, { cleared: pure || !scenario.inspections.required,
@@ -116,20 +124,35 @@ function commit(state, ops) {
   }
   resolveConflicts(s);
   for (const id of CREW_IDS) {
-    if (!ops.some(op => op.op === 'hold' && op.crew === id)) s.crews[id].stop = null;
+    if (s.crews[id].stop && !ops.some(op => ['hold', 'resume'].includes(op.op) && op.crew === id)
+      && !s.orders.some(order => order.op.op === 'resume' && order.crew === id && order.appliedT == null)) {
+      issueOrder(s, { op: 'resume', crew: id });
+    }
   }
+  s.pendingStops = {};
   updateOrders(s);
   updateHoldPoints(s);
   if (s.crews.back.finishT == null && s.crews.back.pos >= s.scenario.job.lengthFt - EPS
     && finalInspectionEntered(s)) s.crews.back.finishT = s.t;
   refreshCrews(s);
-  s.changeLog.push({ day: s.t, ops: copy(ops) });
+  s.changeLog.push({ day: s.t, ops: copy(ops), ...(ops.length ? {} : { note: 'no change' }) });
   if (s.speed === 'paused') s.pausedSpeed = 'full'; else s.speed = 'full';
   finish(s);
   return { state: s };
 }
 
 export function createSim(scenario, catalog, { pure = false } = {}) {
+  // The pure oracle omits full-model switches; explicitly changed values still fail.
+  for (const [key, expected] of Object.entries(SUPPORTED_RULES)) {
+    const actual = scenario.rules?.[key];
+    if (!(pure && actual === undefined) && actual !== expected) {
+      throw new Error(`Unsupported rules.${key}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+    }
+  }
+  const shifts = scenario.time?.shiftsPerDay;
+  if (!(pure && shifts === undefined) && shifts !== SUPPORTED_SHIFTS_PER_DAY) {
+    throw new Error(`Unsupported time.shiftsPerDay: expected ${SUPPORTED_SHIFTS_PER_DAY}, got ${JSON.stringify(shifts)}`);
+  }
   // JSON copying also accepts the WO-01 loader's frozen scenario with derived functions.
   const source = copy(scenario), fleet = copy(catalog);
   let state = initialState(source, fleet, pure);

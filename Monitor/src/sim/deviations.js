@@ -16,6 +16,8 @@ export function confirmDeviation(s, order, outcome) {
 }
 
 export function boundaryAllowance(s, zone) {
+  // WO-05a O10: F2 requires crossing from another zone, not starting the job.
+  if (!s.scenario.job.zones.some(previous => previous.toFt === zone.fromFt)) return zone.fromFt;
   const d = s.deviations.find(d => d.type === 'F2');
   if (!d) return zone.fromFt;
   if (d.triggered) return d.zone === zone.id && !d.caught ? zone.fromFt + d.overshootFt : zone.fromFt;

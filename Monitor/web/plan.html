@@ -11,7 +11,7 @@ button.primary:hover{background:#365568}
 <div id="pm" hidden><b>PM</b><p id="pm-text"></p></div><div id="events" class="panel"></div>
 <div class="bottom"><section class="panel"><h2>Inbox</h2><div id="inbox" class="scroll"></div></section><section class="panel"><h2>Radio log</h2><div id="radio" class="scroll"></div></section></div>
 </div><aside>
-<section class="panel"><h2>Draft &amp; Commit</h2><ol id="draft" class="draft"></ol><button id="commit" class="primary">Commit</button> <button id="clear-draft">Clear draft</button><p id="feedback" role="status"></p>
+<section class="panel"><h2>Draft &amp; Commit</h2><ol id="draft" class="draft"></ol><button id="commit" class="primary">Commit (no change)</button> <button id="clear-draft">Clear draft</button><p id="feedback" role="status"></p>
 <details open><summary>Hold / Resume</summary><div class="row"><label>Crew<select id="hold-crew"><option value="back">back</option><option value="pipe">pipe</option><option value="exc">exc</option></select></label><label>From day<input id="hold-from" type="number" min="1" step="1" placeholder="Arrival"></label><label>Days<input id="hold-days" type="number" min="1" step="1" placeholder="Until resume"></label></div><button id="add-hold">Draft hold</button> <button id="add-resume">Draft resume</button></details>
 <details open><summary>Lend</summary><label>Machine<select id="lend-machine"></select></label><div class="row"><label>To crew<select id="lend-crew"><option value="pipe">pipe</option><option value="back">back</option><option value="exc">exc</option></select></label><label>Days<input id="lend-days" type="number" min="1" step="1"></label><button id="add-lend">Draft lend</button></div></details>
 <details><summary>Start days</summary><p class="muted">Drag a crew's first point vertically; days snap to whole numbers.</p><div class="row"><label>Crew<select id="start-crew"><option>exc</option><option>pipe</option><option>back</option></select></label><label>Day<input id="start-day" type="number" min="1" step="1"></label><button id="add-start">Draft start</button></div></details>
@@ -51,7 +51,7 @@ function cost(op){
   return '$0';
 }
 function describe(op){return Object.entries(op).map(([k,v])=>k==='op'?v:`${k}: ${v}`).join(' · ');}
-function renderDraft(){html('draft',draft.map(op=>`<li>${esc(describe(op))} <small>${esc(cost(op))}</small></li>`).join(''));}
+function renderDraft(){html('draft',draft.map(op=>`<li>${esc(describe(op))} <small>${esc(cost(op))}</small></li>`).join(''));$('commit').disabled=false;$('commit').textContent=draft.length?`Commit ${draft.length} changes`:'Commit (no change)';}
 $('commit').onclick=()=>{const count=draft.length;sendOps([...draft],()=>{draft.splice(0,count);renderDraft();});};
 $('clear-draft').onclick=()=>{draft=[];renderDraft();};
 $('add-hold').onclick=()=>add({op:'hold',crew:$('hold-crew').value,...($('hold-from').value?{fromDay:Number($('hold-from').value)}:{}),...($('hold-days').value?{days:Number($('hold-days').value)}:{})});
@@ -158,6 +158,6 @@ socket.onmessage=event=>{
 };
 function acceptState(message){
   if(state?.runId!==message.runId){result=null;draft=[];catalogStage=null;lastReport=null;$('overlay').hidden=true;$('events').innerHTML='';$('draft').innerHTML='';$('feedback').textContent='';$('chart-title').textContent='Line of balance';$('response-options').dataset.keys='';}
-  state=message;stage=message.stage;lastDay=message.day;render();
+  state=message;stage=message.stage;lastDay=message.day;render();$('commit').disabled=false;$('commit').textContent=draft.length?`Commit ${draft.length} changes`:'Commit (no change)';
 }
 </script></body></html>

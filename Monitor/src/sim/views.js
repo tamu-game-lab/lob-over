@@ -56,6 +56,7 @@ export function inspectionText(s, target) {
   if (target === 'machine') {
     if (!c) return 'No machine within sight.';
     const machine = s.catalog.machines[c.machine];
+    if (!machine) return 'No machine within sight.';
     return `${c.name}: ${machine.label}, plate ${machine.sizeClass}`;
   }
   if (target === 'protection') return p
@@ -116,14 +117,14 @@ export function siteView(s) {
     && (e.zone == null || e.zone === zoneAt(s, s.truck.stationFt)?.id || e.inspected));
   return {
     truck: { stationFt: s.truck.stationFt, moving: s.truck.moving, dismounted: s.truck.dismounted },
-    crews: CREW_IDS.map(id => { const c = s.crews[id], size = s.catalog.machines[c.machine].sizeClass;
-      return { id, stationFt: c.pos, status: c.status, machinePlate: size[0].toUpperCase() + size.slice(1), moodLevel: c.mood }; }),
+    crews: CREW_IDS.map(id => { const c = s.crews[id], size = s.catalog.machines[c.machine]?.sizeClass;
+      return { id, stationFt: c.pos, status: c.status, machinePlate: size ? size[0].toUpperCase() + size.slice(1) : null, moodLevel: c.mood }; }),
     trench, boards: s.scenario.job.zones.map(z => ({ zone: z.id,
       permitNumber: s.permits[z.id].entered ? s.permits[z.id].number : null,
       inspectionNumber: s.inspections[z.id].cleared ? s.inspections[z.id].number : null })),
     sky: sky(s), gate: { trucksWaiting: s.deliveries.filter(d => !d.arrived).length },
     activeEvent: localEvent ? { id: localEvent.id, card: localEvent.shownCard } : null,
-    orders: s.orders.filter(order => order.crew && order.landedT != null && order.status !== 'confirmed'
+    orders: s.orders.filter(order => order.crew && order.landedT != null && order.status !== 'sent' && order.status !== 'confirmed'
       && nearby(s, s.crews[order.crew].pos)).map(publicOrder),
   };
 }
@@ -133,7 +134,8 @@ export function view(s, seat) {
   if (seat === 'site') return copy(siteView(s));
   if (seat === 'facilitator') {
     const { messages, ...state } = s;
-    return copy({ ...state, plan: planView(s), site: siteView(s) });
+    return copy({ ...state, deviations: s.deviations.map(d => ({ ...d,
+      state: !d.triggered ? 'armed' : d.caught ? 'caught' : 'missed' })), plan: planView(s), site: siteView(s) });
   }
   throw new Error('unknown seat');
 }

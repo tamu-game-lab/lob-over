@@ -10,7 +10,7 @@ export function accrue(s, dt) {
     const c = s.crews[id];
     if (billing(s, c)) {
       c.onsite += dt;
-      crewDaily += s.catalog.machines[c.machine].dailyUsd;
+      crewDaily += s.catalog.machines[c.machine]?.dailyUsd ?? 0;
     }
   }
   const protectionDaily = s.protections.reduce((sum, p) => sum
@@ -30,5 +30,6 @@ export function buyMachine(s, machine) {
 }
 
 export function releaseMachine(s, machine) {
+  if (!machine) return;
   s.spentUsd -= s.catalog.machines[machine].priceUsd * s.catalog.orders.releaseRefundFraction;
 }

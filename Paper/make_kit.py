@@ -103,7 +103,12 @@ def fill_placeholders(text, scenario, catalog, missing):
         missing.add(key)
         return "[to validate]"
 
-    return PLACEHOLDER.sub(replace, text)
+    # WO-05a: format authored and substituted dollar amounts, including validation placeholders.
+    return re.sub(
+        r"\$([0-9]+(?:,[0-9]+)*)(\.[0-9]+)?",
+        lambda match: f"${int(match[1].replace(',', '')):,}{match[2] or ''}",
+        PLACEHOLDER.sub(replace, text),
+    )
 
 
 def manual_sections(source, scenario, catalog):

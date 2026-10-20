@@ -2,16 +2,23 @@ import { CREW_IDS, LEADER, EPS, MAX_MOOD, voice } from './common.js';
 import { excavationLimit, backfillLimit, finalInspectionEntered } from './permits.js';
 import { rainMultiplier, pipeReworking } from './rain.js';
 
+const MOOD_RECOVERY_DAYS = 1; // WO-05a (a): mood falls only after a full day of work.
+
 export function refreshCrews(s) {
   for (const id of CREW_IDS) {
     const c = s.crews[id];
+    // WO-05a (f): the stop reaches an unstarted crew only on its scheduled day.
+    if (s.pendingStops[id] && s.t >= c.startDay - 1 - EPS) {
+      c.stop = s.pendingStops[id];
+      delete s.pendingStops[id];
+    }
     if (c.hold?.untilT != null && s.t >= c.hold.untilT - EPS) c.hold = null;
     if (c.remobT != null && s.t >= c.remobT - EPS) {
       c.demobilized = false;
       c.demobBillingEndsT = null;
       c.remobT = null;
     }
-    c.rate = s.catalog.machines[c.machine].rateFtPerDay;
+    c.rate = s.catalog.machines[c.machine]?.rateFtPerDay ?? 0;
     for (const loan of s.loans.filter(l => l.toCrew === id && l.phase === 'working' && !l.eventId)) {
       c.rate += s.catalog.machines[loan.machine].rateFtPerDay;
     }
@@ -21,7 +28,7 @@ export function refreshCrews(s) {
       : stopped ? 'stopped' : held ? 'held' : 'working';
     c.mult = 1;
     if (s.t < c.startDay - 1 - EPS || c.finishT != null) { c.mult = 0; c.status = 'idle'; }
-    if (c.demobilized || c.arguing || stopped || held || c.lentAway) c.mult = 0;
+    if (c.demobilized || c.arguing || stopped || held || c.lentAway || c.rate === 0) c.mult = 0;
     if (!s.pure) {
       c.mult *= rainMultiplier(s, id);
       for (const event of s.events.filter(e => e.fired && !e.resolved && e.type !== 'A2'
@@ -54,7 +61,7 @@ export function moveCrews(s, dt) {
     }
     desired = Math.max(c.pos, Math.min(desired, limit));
     const moved = desired - c.pos;
-    c.work += moved / c.rate;
+    if (moved > 0) c.work += moved / c.rate;
     c.pos = desired;
     c.moved = moved;
     if (leader && moved < c.rate * c.mult * dt - EPS && !c.idleReason) c.idleReason = 'leader';
@@ -68,6 +75,7 @@ export function moveCrews(s, dt) {
 export function updateMood(s, dt) {
   for (const id of CREW_IDS) {
     const c = s.crews[id];
+    if (s.t < c.startDay - 1 - EPS) continue;
     const held = c.status === 'held' || c.status === 'stopped';
     const waiting = held || c.idleReason === 'leader';
     c.waitDays = waiting ? c.waitDays + dt : 0;
@@ -75,6 +83,7 @@ export function updateMood(s, dt) {
     if (held && level > c.mood) {
       for (let mood = c.mood + 1; mood <= level; mood++) voice(s, `heldDay${mood}`, ['site'], [id]);
     }
-    c.mood = level;
+    c.workingDays = c.status === 'working' && c.moved > EPS ? c.workingDays + dt : 0;
+    c.mood = c.workingDays >= MOOD_RECOVERY_DAYS - EPS ? 0 : Math.max(c.mood, level);
   }
 }
