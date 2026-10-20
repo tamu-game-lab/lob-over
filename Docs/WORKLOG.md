@@ -112,3 +112,8 @@ Table test (20 minutes, three laptops, or one laptop plus a phone for the Site p
 5. Write what broke into Docs/DECISIONS.md (Open) with the scenario numbers to change; O10 (F2 at the job start), O11 (stop-work lift lag) and O12 (argument at an idle leader) are the known sim questions.
 
 Status: WO-00 ACCEPTED 38e5473, WO-01 ACCEPTED 822a83b, WO-02 ACCEPTED 369c38a, WO-03 ACCEPTED df498c9 + 5aca6cd, WO-04 ACCEPTED bee8df5, WO-05 ACCEPTED 55f0ee7. READY_FOR_TABLE_TEST.
+
+## Showcase track (first goal: WO-05a, WO-S1, WO-S2) — started 2026-10-20 14:50
+
+Toolchain (step 0, ORCHESTRATOR_SHOWCASE.md): node v24.14.1, npm 11.19.1, dotnet SDK 9.0.313 with runtimes 8.0.26 and 9.0.15 and the 8.0.26 targeting pack, python 3.14.3 (reportlab 5.0.1, pypdf 6.20.1), git 2.53.0, Playwright 1.64.1 with chromium, ws 8.22.0. Codex: the desktop app's bundled binary moved to %LOCALAPPDATA%\OpenAI\Codex\bin\896a0166b774037a (codex-cli 0.163.0-alpha.10.2; no --full-auto, so CODEX_FLAGS="--sandbox workspace-write -c approval_policy=never" as before; model gpt-6-astra from ~/.codex/config.toml). Unity Editor: not open on this project (no Temp/UnityLockfile; 9.1 GB free of 33.4 GB).
+Pre-installed for Astra's offline sandbox: PeerJS 1.5.4 fetched from unpkg (sha256 ad5d8870…36fe5) to vendor into Monitor/web/lib/ before WO-S1; NuGet cache warmed with Newtonsoft.Json 13.0.3, xunit 2.9.2, xunit.runner.visualstudio 2.8.2, Microsoft.NET.Test.Sdk 17.12.0, coverlet.collector 6.0.2 for net8.0 and netstandard2.1 before WO-S2.
