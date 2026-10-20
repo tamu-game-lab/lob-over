@@ -1,0 +1,74 @@
+{
+  "pm_open_slice": {
+    "text": "Short run today. Three thousand feet, two zones, same rules as the big job. Dig Day 1, pipe Day 2, backfill Day 4. We promised Day 18. The spec-keeper has both permits. Call me before you change anything.",
+    "sha1": "b372a71b3007450db94a9980e670c5975bcec000",
+    "voice": "am_onyx",
+    "seconds": 11.844583333333333
+  },
+  "pm_prep_refused_01": {
+    "text": "No. We are not buying steel for a hole that has not failed. Not in the budget.",
+    "sha1": "31433f904c7764d924ddaeaee7ab5dc11eab8b26",
+    "voice": "am_onyx",
+    "seconds": 4.767416666666667
+  },
+  "pm_hold_01": {
+    "text": "You are holding a crew that bills eighteen hundred a day. I hope you have a reason.",
+    "sha1": "960cef64249380252ca94f4cda321a9d69f42a06",
+    "voice": "am_onyx",
+    "seconds": 4.843333333333334
+  },
+  "pm_demob_01": {
+    "text": "Sending a crew home mid-job? Getting them back costs us five thousand and days we do not have.",
+    "sha1": "c269a091405badf5a482260e8b51e72875c9484a",
+    "voice": "am_onyx",
+    "seconds": 5.737833333333334
+  },
+  "pm_end_slice": {
+    "text": "That is the short run. Look at where the lines ended up against what we promised.",
+    "sha1": "dcc53428366b25ae632ac6be3d1395a4030a847c",
+    "voice": "am_onyx",
+    "seconds": 4.79125
+  },
+  "radio_ack_01": {
+    "text": "Copy, office. Passing it to the foreman at the next shift.",
+    "sha1": "7220b4b38c518aa773717dbf08b0819d0b72fcbe",
+    "voice": "af_sarah",
+    "seconds": 4.385666666666666
+  },
+  "radio_notdone_01": {
+    "text": "Office, inspector reports the crew never got it. Say again?",
+    "sha1": "7d0b8ccba4fa7e2476d8ef61073e0eca540aed3d",
+    "voice": "af_sarah",
+    "seconds": 4.685666666666667
+  },
+  "foreman_pipe_arg_slice": {
+    "text": "You are on top of me! I have got a wall down at five-twenty and your loader is pushing dirt onto my bedding.",
+    "sha1": "d7fbecc9a21434b0530bac03d0df2ad8922a2d43",
+    "voice": "am_fenrir",
+    "seconds": 6.333166666666667
+  },
+  "foreman_back_arg_01": {
+    "text": "The schedule had me here. I lay two-fifty a day and you lay one-eighty. Where exactly did they think I would go?",
+    "sha1": "ca3130d9061f4b9a0b3d374af5bab6f243ad71a4",
+    "voice": "am_puck",
+    "seconds": 6.667
+  },
+  "foreman_held_01": {
+    "text": "Standing by. Meter is running.",
+    "sha1": "0bcd345e89a50c6e5bd671631351e74462e78626",
+    "voice": "am_puck",
+    "seconds": 1.8581666666666667
+  },
+  "foreman_held_02": {
+    "text": "Second day on a hold. My guys are getting paid to watch a trench.",
+    "sha1": "9e7afbd7757e80a4236f23c2e99a6af786af5a9d",
+    "voice": "am_puck",
+    "seconds": 3.807541666666667
+  },
+  "foreman_held_03": {
+    "text": "Three days. Either give me a stretch to fill or send us home.",
+    "sha1": "69272d734292001618ee57235e9b51933e7b098d",
+    "voice": "am_puck",
+    "seconds": 3.4095416666666667
+  }
+}

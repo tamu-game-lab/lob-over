@@ -19,9 +19,11 @@ Written October 20, 2026, after Phase 0. Section A (testing today's browser buil
 
 | Scripted play | Finish day | Idle crew-days (exc / pipe / back) | Spent | Peak open trench | Collapse days lost | Rain days lost |
 | --- | --- | --- | --- | --- | --- | --- |
-| Push as the PM wrote it (`slice_play.json`) | 23.85 | 18.1 (3.1 / 6.2 / 8.9) | $128,357 | 1,281 ft | 3.18 | 3.0 |
-| Pull in the huddle: backfill Day 8, trench box 4+00 to 7+00, pump at the forecast (`slice_pull_play.json`) | 22.35 | 9.1 (1.1 / 4.7 / 3.4) | $128,262 | 1,820 ft | 2.18 | 2.5 |
+| Push as the PM wrote it (`slice_play.json`) | 23.00 | 17.2 (4.1 / 5.2 / 8.0) | $125,533 | 1,059 ft | 3.17 | 2.0 |
+| Pull in the huddle: backfill Day 8, trench box 4+00 to 7+00, pump at the forecast (`slice_pull_play.json`) | 22.34 | 10.1 (2.1 / 4.7 / 3.3) | $129,743 | 1,451 ft | 2.17 | 2.5 |
 | Plan on autopilot, Site does nothing (`slice_autoplan.json`) | 24.8 | 20.0 | — | — | F1 missed | — |
+
+Re-measured 2026-10-20 after WO-05a (the stop-work lift lands by the order-lag rule, K18): the push script now rides Site to the backfill crew before Plan's Day 5 commit so the argument stays on Day 5; `Data/transcripts/` holds these runs.
 
 Wall clock at the slice's pace (4 s per day, 15 s per day while an event waits for Plan): 96 s of full speed plus however long the three seats take to resolve the collapse, the argument and the rain. Three minutes when the team moves; five when it talks. The real stages keep 5 and 20 s.
 
