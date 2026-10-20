@@ -36,3 +36,19 @@ git status --short     # only Assets/LOBOver/** (StreamingAssets ignored)
 ## Out of scope
 
 No XR, no controllers, no Plan interaction on the panel, no Android settings, no edits to `Assets/LOBGame/**`.
+
+## Amendment 1 (orchestrator, 2026-10-20): the PlayMode fixture of item 7
+
+Astra reported BLOCKED: the recorded transcript has no per-day snapshot with the backfill crew `arguing`, because the slice argument runs from t 4.14 to the hold at t 4.35, between the snapshots. Item 7's expectations were written from the design beats; the recorded values below replace them. Everything else in this work order stands.
+
+`Data/transcripts/slice_play.json` holds `sim.view('facilitator')` per day: `snapshots[d].site` is the Site view at t = d (d = 0, 1, 2, ...), with keys `truck`, `crews` (id, stationFt, status, machinePlate, moodLevel), `trench` (one cell per 100 ft: stationFt, state, water, wall, protection, pipeDamage), `boards` (zone, permitNumber, inspectionNumber), `sky`, `gate`, `activeEvent`, `orders`.
+
+`SiteWorldTests` feed `snapshots[d].site` for d = 1, 4, 5, 9, 16, in that order, and assert:
+
+- d 1: exc at 220 ft `working`, pipe at 0 ft `working`, back at 0 ft `idle`; cell 5+00 `undug`, wall `sound`, water `none`; board zone 1 "TX-0311", board zone 2 shows no permit posted; sky `clear`.
+- d 4: cell 5+00 state `piped`, wall `slumped`, water `standing` (the collapse at 5+20); exc at 869 ft `stopped`, pipe at 520 ft `stopped`, back at 237.5 ft `working`; `activeEvent` is ev_p1; the truck stands at 270 ft dismounted.
+- d 5: back at 272.5 ft `held`, exc at 869 ft `working` with moodLevel 1, pipe at 520 ft `idle`; cell 5+00 still `slumped` with `standing` water.
+- d 9: sky `rain`, `activeEvent` ev_a2; cell 5+00 `backfilled`, wall `sound`, water `none`; board zone 2 "TX-0312"; all three crews `working`.
+- d 16: board zone 1 inspection "8403-5"; sky `clear`; the trailer board holds three crew lines with one point per fed day (five points each).
+
+The argument comes from a replay, not from the file: load the catalog and `slice_texas` from StreamingAssets, `Sim.Create`, then apply the entries of `slice_play.json` (copied to `StreamingAssets/Data/scripts/` by Sync Data) in t order with `Apply(seat, cmd)` for both seats exactly as `Monitor/src/sim/headless.js` does (tick 0.01 until an entry's t is reached, apply, continue), stop at t 4.20 and feed `View("site")`: pipe at 520 ft `arguing`, back at 272.5 ft `arguing`, exc at 869 ft `stopped`, `activeEvent` ev_p1; the two foremen face each other (the WO-08 posture). `Sim/LOBOver.Sim.Tests/Replay.cs` runs the same loop for xunit; copy its logic into the test, do not reference that project.
