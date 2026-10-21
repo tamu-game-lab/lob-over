@@ -89,6 +89,18 @@ Rules for this round:
 
 One goal: WO-L1 and WO-L2 dispatched in parallel (disjoint folders; WO-L2's host tests run once WO-L1 is in), each verified and accepted or rejected (max two rejection rounds), committed and pushed; Build and Run Quest; the request to Bryan; then print `LEVEL1_WAITING`. The next goal starts with his replies and fixes whatever failed before anything new.
 
+## Round 5, Level 1 looks and feels right (October 21)
+
+Bryan's third headset test (the WO-L2 build) failed: the warp showed the site through a round window that stuck, so he could only see part of the view and could not look around; the site was a flat band under a flat sky with white blobs; it read as a drawing through a lens. The Plan page worked but did not feel like a game. Decisions K37 to K41; design in `Docs/LEVEL1.md` ("In the headset", "On the PC"); rules in `Docs/XR_RENDERING.md` (load `.claude/skills/quest-mr-rendering` first); work orders WO-L3, WO-L4, WO-L5.
+
+Rules for this round:
+0. First commit these documents and push. Then pull the headset's log from Bryan's test before anything changes on the device: `adb logcat -d -s Unity > Docs/WORK_ORDERS/logs/headset-20261021.log` (if the Quest is connected); note in the worklog whether a `LOBOver` exception or a warp message appears. Do not change the app on the headset.
+1. Run `Tools/import_lobgame_assets.ps1` after WO-L4 lands and before verifying it.
+2. No Quest build this round (K41). Every headset check is done in the Editor through the MCP: tests, the preview screenshots WO-L4 names, the Warp Frames composites WO-L5 names, the Editor stats. Review the images yourself and reject what does not match the work order's goal sentence; a rejection says what the image shows and what it should show.
+3. Keep `Play LOB Over.cmd` running for the Editor checks; stop it at the end.
+4. Dispatch WO-L3 (web) and WO-L4 (Unity) in parallel; WO-L5 after WO-L4 is accepted (it changes the shader WO-L4 creates). Max two rejection rounds each.
+5. At the end, run `LOB Over > Build > Sync Data`, set the Android texture compression override to ASTC through the MCP (it drifts), commit and push, and print `LEVEL1_READY_TO_BUILD` with these lines for Bryan: open Unity; `LOB Over > Build > Build and Run Quest` (if it stops on the ASTC line: File > Build Profiles > Android > Texture Compression > ASTC, then again); double-click `Play LOB Over.cmd`; put on the headset; then the five checks of WO-L5 and the Plan page.
+
 ## Finish lines
 
 - First goal: `READY_FOR_PAGES` when WO-05a, WO-S1 and WO-S2 are ACCEPTED.

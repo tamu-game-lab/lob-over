@@ -86,3 +86,9 @@ Data/transcripts/*.tmp
 
 # Local build temp (Unity/IL2CPP tool cache written during the Quest build)
 .utmp/
+
+# Asset Store packs Bryan imported for WO-L4 (Terrain Sample Asset Pack, AllSky Free): re-import from My Assets, kept local like Assets/LOBGame
+/Assets/TerrainSampleAssets/
+/Assets/TerrainSampleAssets.meta
+/Assets/AllSkyFree/
+/Assets/AllSkyFree.meta

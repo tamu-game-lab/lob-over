@@ -33,13 +33,18 @@ Nothing tells the team whether a choice was right. The PM's voice pushes to keep
 
 ## In the headset
 
-- You start in your room (passthrough) and can see and talk to the others. A panel within arm's reach shows the day and three buttons: Ray, digging; Marcus, pipe; Dana, backfill.
-- Touch a button, or point at it and pull the trigger. Your room dissolves into the site and you are standing on the road beside that crew. You do not move; the world changes around you.
-- In the site you look and listen. Foremen talk from where they stand; when you arrive, the foreman greets you or says what is going on. The only button is Back, on your left wrist. It dissolves the site back into your room.
+Revised later on October 21, after the first Level 1 build (WO-L2) was tested: its warp drew a mask around the head that stuck as a window, the site was a flat band of colour under a flat sky with white blobs, and the view read as a drawing seen through a lens. Decisions K37 to K40; work orders WO-L4 and WO-L5.
+
+- You start in your room, in full passthrough, and can see and talk to the others. Nothing is drawn but a panel within arm's reach: the day and three buttons, Ray, digging; Marcus, pipe; Dana, backfill.
+- Touch a button, or point at it and pull the trigger. The site materializes around you where you stand: a wave runs outward from your feet across the ground; just behind its front everything is drawn as glowing wire and blueprint lines over the room, and a moment later the surfaces fill in, dirt, gravel, steel, the crews, the machines, until the room is gone and the sky closes over you. About 1.5 s. You do not move; the site is built around you. Going back runs the same wave inward, and the room returns.
+- The site has to look like a site: a textured ground with relief, a real trench with spoil along it, bedding and pipe in the bottom, a gravel road with ruts, fences, cones and barriers, the trailer, the crews and their machines, a sky with sun and clouds, shadows, and haze toward the horizon. You can look anywhere; nothing frames or masks the view.
+- In the site you look and listen. Foremen talk from where they stand; when you arrive, the foreman greets you or says what is going on. The only button is Back, on your left wrist.
 
 ## On the PC
 
-One page: Start, the chart, and one button per crew that reads Hold or Go. Hold and Go act at once. At the end the page shows the finish day against the promise, the idle crew-days for each crew, and what the crews actually did drawn over the plan. Run again replays the same world, with the previous run drawn faintly underneath.
+Revised later on October 21: the first page worked but did not feel like a game (WO-L3).
+
+The Plan seat is the site office. The Line of Balance is a drafting board, inked day by day as the reports come in, with the PM's planned lines dashed under it and a ruler sliding down the days. Beside it is the radio console: one card per crew with its foreman, machine and speed, and a two-position switch, Go or Hold, that clunks and sends a radio chirp. The PM has a face (LOB-Game's portraits) and a speech bubble when a line plays. A calendar tile flips each day with a tick; when the field slows the clock pill says so and the radio hisses, and nothing on the page says why. A daily report line types itself at the bottom. At the end the result is stamped on the board: the finish against the promise and the idle crew-days per crew, with the actual lines over the plan; Run again keeps the previous run faint underneath. Nothing on the page shows the live site, money, or a verdict.
 
 ## How a run goes
 

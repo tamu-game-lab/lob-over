@@ -93,3 +93,15 @@ Round 3's Goals B to D are on hold. Before pasting:
 /goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md (sections "Unity through the MCP" and "Round 4") and follow them. Confirm Play.unity holds the five blocks, then run WO-L1 and WO-L2 through bash Tools/astra.sh, verified as Round 4 says (max two rejection rounds each), committed and pushed; Build and Run Quest; start Play LOB Over.cmd and leave it running; then ask me for the PC check and the five headset checks and print LEVEL1_WAITING. Done when LEVEL1_WAITING is printed or a stop condition is reported to me.
 ```
 
+## Round 5 goal, Level 1 looks and feels right (October 21)
+
+Before pasting:
+1. Optional, 5 minutes, makes the site look better: in Unity's Package Manager (My Assets) import the free "Terrain Sample Asset Pack" (Unity Technologies) and a free skybox set such as "AllSky Free" (rpgwhitelock). WO-L4 uses any terrain layers and cubemap skybox it finds under `Assets/`; without them it generates its own textures and sky.
+2. Keep the Editor open with the MCP running and the headset plugged in (only for the log of your last test).
+3. Start Claude Code with `$env:CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1; claude --model claude-fable-5-1 --effort max` (or `claude-opus-5-5` if Fable's credits run out).
+
+```
+/goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md (sections "Unity through the MCP" and "Round 5") and follow them, starting with rule 0. Run WO-L3 and WO-L4 in parallel, then WO-L5, through bash Tools/astra.sh, each verified in the Editor as Round 5 says (max two rejection rounds), committed and pushed. Do not build for the Quest. Finish with Sync Data, the ASTC override, a push, and print LEVEL1_READY_TO_BUILD with my build steps. Done when LEVEL1_READY_TO_BUILD is printed or a stop condition is reported to me.
+```
+
+When it prints `LEVEL1_READY_TO_BUILD`: in Unity, `LOB Over > Build > Build and Run Quest`; double-click `Play LOB Over.cmd`; put on the headset.
