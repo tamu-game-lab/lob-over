@@ -543,12 +543,41 @@ def make_kit(scenario_path, out=None, html=False):
     return out
 
 
+def make_rules_page(source, out):
+    markdown = source.read_text(encoding="utf-8-sig")
+    title, body = markdown.split("\n", 1)
+    title = title.lstrip("# ")
+    out.mkdir(parents=True, exist_ok=True)
+    register_fonts()
+    pdf = new_pdf(out / "rules.pdf")
+    section_page(pdf, "LOB, Over · Level 1", 1, title, body)
+    pdf.save()
+    style = """@page{size:letter;margin:.58in}body{font:14px/1.4 system-ui,sans-serif;color:#23313b;
+max-width:7.34in;margin:28px auto;padding:0 16px}h1{font-size:24px}h3{font-size:17px;margin:18px 0 8px}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{border:1px solid #adb7bb;text-align:left;
+vertical-align:top;padding:7px}th{background:#f0f2f1}p{margin:9px 0}@media print{body{margin:0;padding:0;
+font-size:10pt}h1{font-size:18pt}h3{font-size:12pt}table{font-size:9.5pt}th,td{padding:5px}a{display:none}}"""
+    document = '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+    document += f'<title>{inline(title)}</title><style>{style}</style><body><a href="/level1/rules.pdf">Printable PDF</a>'
+    document += f'<main><h1>{inline(title)}</h1>{html_blocks(body)}</main></body></html>\n'
+    (out / "rules.html").write_text(document, encoding="utf-8")
+    print(f"Wrote one letter page rules.pdf and rules.html to {out}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("scenario", type=Path)
+    parser.add_argument("scenario", type=Path, nargs="?")
+    parser.add_argument("--page", type=Path, help="Typeset one authored rules page as PDF and HTML")
     parser.add_argument("--out", type=Path, help="Output directory (default: Paper/out/<scenario id>)")
     parser.add_argument("--html", action="store_true", help="Write only manual.html, with section anchors")
     args = parser.parse_args()
+    if args.page:
+        if not args.out:
+            parser.error("--page requires --out")
+        make_rules_page(args.page, args.out)
+        return
+    if not args.scenario:
+        parser.error("scenario or --page is required")
     make_kit(args.scenario, args.out, html=args.html)
 
 

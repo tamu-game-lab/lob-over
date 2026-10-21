@@ -104,7 +104,13 @@ def make_voice(scenario_path, output_root, force):
     manifest_path = stage_dir / "manifest.json"
     manifest = (json.loads(manifest_path.read_text(encoding="utf-8"))
                 if manifest_path.exists() else {})
-    current_ids = {line["id"] for line in scenario["lines"]}
+    exchanges = any("turns" in line for line in scenario["lines"])
+    lines = [dict(id=f"{line['id']}_{index + 1}", **turn)
+             for line in scenario["lines"]
+             for index, turn in enumerate(line.get("turns", [
+                 {key: line.get(key) for key in ("speaker", "text")}
+             ]))] if exchanges else scenario["lines"]
+    current_ids = {line["id"] for line in lines}
     for wav in sorted(stage_dir.glob("*.wav")):
         if wav.stem not in current_ids:
             print(f"Removed line {wav.stem}: leaving {wav.as_posix()}", file=sys.stderr)
@@ -112,7 +118,7 @@ def make_voice(scenario_path, output_root, force):
     pipeline = None
     pipeline_error = None
     failed = False
-    for line in scenario["lines"]:
+    for line in lines:
         line_id, speaker, text = line["id"], line["speaker"], line["text"]
         destination = stage_dir / f"{line_id}.wav"
         digest = hashlib.sha1(text.encode("utf-8")).hexdigest()

@@ -10,6 +10,7 @@ button.primary:hover{background:#365568}
 <section class="panel"><h2>Field actions</h2><div class="row"><label>Flag station<input id="flag-station" placeholder="7+20"></label><label>Note · 40 characters<input id="flag-note" maxlength="40" style="width:250px"></label><button id="flag">Flag</button><button id="stop-work">Stop work</button></div></section></div>
 <aside><section class="panel"><h2>Confirm</h2><div id="orders"></div></section><section class="panel"><h2>Trailer board</h2><div class="legend"><span>━ exc</span><span>┄ pipe</span><span>┈ back</span><span>Live actual</span></div><svg id="actual" viewBox="0 0 420 240" role="img" aria-label="Live actual lines"></svg><div id="boards"></div><p id="gate"></p></section></aside></div></main>
 <script src="lib/transport.js"></script>
+<script src="lib/voice.js"></script>
 <script src="lib/guide.js"></script>
 <script>
 'use strict';
@@ -48,8 +49,8 @@ function render(){
   for(const button of document.querySelectorAll('[data-inspect],#listen,#flag,#stop-work'))button.disabled=fieldDisabled;
   html('zones',job.zones.map(z=>{const b=v.boards.find(b=>b.zone===z.id);return `<div class="zone-board" style="left:${z.fromFt*scale}px;width:${(z.toFt-z.fromFt)*scale}px">Zone ${z.id} · ${station(z.fromFt)}–${station(z.toFt)}<br>Permit ${esc(b.permitNumber??'—')}</div>`;}).join(''));
   html('cells',v.trench.filter(c=>c.stationFt<job.lengthFt).map(c=>`<button class="cell ${c.state}" data-station="${c.stationFt}" aria-label="Station ${station(c.stationFt)}" title="${esc([c.state,c.water,c.wall,c.protection].filter(Boolean).join(' · '))}" style="left:${c.stationFt*scale}px;width:${job.stationEveryFt*scale}px" ${v.truck.moving||v.truck.dismounted?'disabled':''}><span>${station(c.stationFt)}</span><br>${c.water&&c.water!=='none'?'≈':''}${c.wall==='slumped'?' ∕':''}${c.protection!=='none'?' □':''}</button>`).join(''));
-  html('crew-icons',v.crews.map((c,i)=>`<div class="crew" style="left:${Math.min(2320,c.stationFt*scale)}px;top:${53+i*9}px" title="${esc(c.machinePlate)}">◆ ${c.id} ${MOODS[c.moodLevel]}</div>`).join(''));
-  html('crew-list',v.crews.map(c=>`<div class="crew-card" data-crew="${c.id}" title="Plate: ${esc(c.machinePlate)}"><b>${c.id}</b> · ${station(c.stationFt)} · <span class="crew-status">${esc(c.status)}</span> <span class="mood" aria-label="Mood ${c.moodLevel}">${MOODS[c.moodLevel]} ${c.moodLevel}</span></div>`).join(''));
+  html('crew-icons',v.crews.filter(c=>c.onSite!==false).map((c,i)=>`<div class="crew" style="left:${Math.min(2320,c.stationFt*scale)}px;top:${53+i*9}px" title="${esc(c.machinePlate)}">◆ ${c.id} ${MOODS[c.moodLevel]}</div>`).join(''));
+  html('crew-list',v.crews.filter(c=>c.onSite!==false).map(c=>`<div class="crew-card" data-crew="${c.id}" title="Plate: ${esc(c.machinePlate)}"><b>${c.id}</b> · ${station(c.stationFt)} · <span class="crew-status">${esc(c.status)}</span> <span class="mood" aria-label="Mood ${c.moodLevel}">${MOODS[c.moodLevel]} ${c.moodLevel}</span></div>`).join(''));
   html('orders',v.orders.map(o=>`<div class="item" data-order="${o.id}"><b>${esc(o.crew)} · ${esc(o.op.op)}</b><p>${esc(o.id)} · ${esc(o.status==='notCarriedOut'?'not carried out':o.status)}</p><button data-order="${o.id}" data-outcome="done" ${fieldDisabled?'disabled':''}>Done</button> <button data-order="${o.id}" data-outcome="notDone" ${fieldDisabled?'disabled':''}>Not carried out</button></div>`).join('')||(v.truck.moving?'Truck moving':'No orders at this station.'));
   html('boards',v.boards.map(b=>`<div class="board"><b>Zone ${b.zone}</b> · Permit ${esc(b.permitNumber??'—')}<br>Inspection ${esc(b.inspectionNumber??'—')}</div>`).join(''));
   $('gate').textContent='Trucks waiting: '+v.gate.trucksWaiting;
@@ -74,11 +75,12 @@ socket.onmessage=event=>{
   else if(message.t==='nack')$('feedback').textContent=message.reason;
   else if(message.t==='inspection'){$('clipboard').textContent=message.text;if($('read-aloud').checked&&'speechSynthesis'in window)speechSynthesis.speak(new SpeechSynthesisUtterance(message.text));}
   else if(message.t==='event'){cards.set(message.eventId,message.card);render();}
+  else if(message.t==='voice'&&message.turns)LobVoice.play(message,stage);
   else if(message.t==='voice')html('listen-lines',(message.lines??[]).map(line=>`<p><b>${esc(line.speaker==='pm'?'PM':line.speaker.replace('foreman_',''))}</b> · ${esc(line.text)}</p>`).join(''));
   else if(message.t==='result'){result=message;$('feedback').textContent=state.view.project.title;}
 };
 function acceptState(message){
-  if(state?.runId!==message.runId){cards.clear();result=null;$('clipboard').textContent='';$('listen-lines').innerHTML='';$('feedback').textContent='';}
+  if(state?.runId!==message.runId){LobVoice.reset();cards.clear();result=null;$('clipboard').textContent='';$('listen-lines').innerHTML='';$('feedback').textContent='';}
   state=message;stage=message.stage;lastDay=message.day;render();
 }
 </script></body></html>

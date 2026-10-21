@@ -1,0 +1,332 @@
+{
+  "schemaVersion": 1,
+  "id": "level1_texas",
+  "title": "LOB, Over ? Level 1",
+  "subtitle": "Texas, 3,000 ft, three crews and one collapse.",
+  "city": "texas",
+  "seed": 20261020,
+  "mode": "push",
+  "job": {
+    "lengthFt": 3000,
+    "stationEveryFt": 100,
+    "zones": [
+      {
+        "id": 1,
+        "fromFt": 0,
+        "toFt": 1500
+      },
+      {
+        "id": 2,
+        "fromFt": 1500,
+        "toFt": 3000
+      }
+    ],
+    "sign": {
+      "cityCode": "TX",
+      "pipe": "12 in PVC DR18 water main",
+      "contractDays": 30
+    }
+  },
+  "time": {
+    "secondsPerDayFull": 4,
+    "secondsPerDaySlow": 15,
+    "slowUntil": "eventEnd",
+    "shiftsPerDay": 1
+  },
+  "crews": [
+    {
+      "id": "exc",
+      "name": "Excavation",
+      "machine": "excavator_standard",
+      "startDay": 1,
+      "locked": false,
+      "foreman": "Ray"
+    },
+    {
+      "id": "pipe",
+      "name": "Pipe laying",
+      "machine": "crane_standard",
+      "startDay": 2,
+      "locked": false,
+      "foreman": "Marcus"
+    },
+    {
+      "id": "back",
+      "name": "Backfill",
+      "machine": "backfill_standard",
+      "startDay": 4,
+      "locked": false,
+      "foreman": "Dana"
+    }
+  ],
+  "plan": {
+    "locked": false,
+    "huddleSeconds": 30,
+    "preparationAllowed": false,
+    "promisedFinishDay": 18,
+    "deadlineDay": 30,
+    "budgetUsd": 172320,
+    "_derivation": "no-event push finish t 17.7 (pipe 1 + 3000/180); budget 18 x $4,800 x 1.3 + $60,000; deadline 18 + 12"
+  },
+  "permits": {
+    "heldBy": "pm",
+    "openZoneLimit": 2,
+    "cards": [
+      {
+        "zone": 1,
+        "number": "TX-0311"
+      },
+      {
+        "zone": 2,
+        "number": "TX-0312"
+      }
+    ]
+  },
+  "inspections": {
+    "required": false,
+    "checklist": [],
+    "cards": []
+  },
+  "rules": {
+    "orderLagShifts": 1,
+    "stopWorkReachHours": 1,
+    "heldCrewBills": true,
+    "moodStepDays": 1,
+    "overheadRate": 0.3,
+    "mobilizationUsd": 25000,
+    "demobFeeUsd": 5000,
+    "conflictRule": "crossWithinNextDay",
+    "conflictBehaviour": "stopAndArgue",
+    "rainReworkDaysPer500Ft": 1,
+    "pumpHalvesRework": true,
+    "permitFineUsd": 10000,
+    "unpermittedBoundary": "idleAndBill",
+    "uncertaintyBandFt": 150,
+    "likelihoodRollsApply": false,
+    "orderLag": "none",
+    "holdBeforeStartDelaysStart": true,
+    "planControlsClock": true
+  },
+  "ground": {
+    "soil": "wet clay",
+    "cohesion": "V.High",
+    "groundwater": "High",
+    "rain": "V.High",
+    "defaultIndicator": {
+      "wall": "Stiff clay, vertical cut holding. Spoil pile set back about 2 ft.",
+      "water": "Damp bottom, no standing water."
+    },
+    "segments": [
+      {
+        "fromFt": 400,
+        "toFt": 700,
+        "type": "C",
+        "seepage": true,
+        "indicator": {
+          "wall": "Clay softening toward the toe; a thumb goes in. Small slabs have let go near the bottom.",
+          "water": "Water seeping from the lower wall; a puddle is forming along the toe."
+        }
+      }
+    ]
+  },
+  "events": [
+    {
+      "id": "ev_p1",
+      "type": "P1",
+      "trigger": {
+        "kind": "crewReaches",
+        "crew": "pipe",
+        "ft": 520
+      },
+      "stationFt": 520,
+      "zone": 1,
+      "hits": "pipe",
+      "rateDrop": 1,
+      "visibleTo": [
+        "site"
+      ],
+      "card": {
+        "title": "Trench wall collapse at 5+20",
+        "facts": [
+          "The lower wall has slumped into the pipe crew's working section.",
+          "Pipe crew is out of the trench.",
+          "Standing water in the bottom."
+        ]
+      },
+      "durationDays": 2,
+      "options": []
+    }
+  ],
+  "deviations": [],
+  "inbox": [],
+  "lines": [
+    {
+      "id": "pm_open_level1",
+      "trigger": "stageStart",
+      "speaker": "pm",
+      "text": "Morning. Three thousand feet, three crews. Dig Day 1, pipe Day 2, backfill Day 4. We promised the city Day 18, so keep everybody moving."
+    },
+    {
+      "id": "pm_hold_level1",
+      "trigger": "holdCommitted",
+      "speaker": "pm",
+      "text": "You're holding a crew? We promised Day 18. I hope you have a reason."
+    },
+    {
+      "id": "pm_end_level1",
+      "trigger": "stageEnd",
+      "speaker": "pm",
+      "text": "That's the run. Look at where the lines ended up against what we promised."
+    },
+    {
+      "id": "marcus_collapse",
+      "trigger": "event",
+      "eventType": "P1",
+      "turns": [
+        {
+          "speaker": "foreman_pipe",
+          "text": "Wall's moving! Out of the hole, everybody out, now!"
+        },
+        {
+          "speaker": "foreman_pipe",
+          "text": "Okay. Everybody's out, nobody's hurt. That whole side let go at five-twenty, and there's water coming in at the bottom."
+        },
+        {
+          "speaker": "foreman_pipe",
+          "text": "I'm not putting a man back down there until somebody cleans that up."
+        }
+      ]
+    },
+    {
+      "id": "arg_back_pipe_stopped",
+      "trigger": "conflict",
+      "pair": "back-pipe",
+      "cause": "leaderStopped",
+      "turns": [
+        {
+          "speaker": "foreman_back",
+          "text": "Marcus, why is your crew standing on the bank? I've got a loader full of dirt and nowhere to put it."
+        },
+        {
+          "speaker": "foreman_pipe",
+          "text": "Because my wall's in the ditch, Dana. Push dirt onto my bedding and you can explain it to the inspector."
+        },
+        {
+          "speaker": "foreman_back",
+          "text": "The schedule had me here today. I lay two-fifty a day. You lay one-eighty on a good day."
+        },
+        {
+          "speaker": "foreman_pipe",
+          "text": "Then the schedule was wrong before the wall ever moved. Somebody tell the office."
+        }
+      ]
+    },
+    {
+      "id": "arg_back_pipe_caught",
+      "trigger": "conflict",
+      "pair": "back-pipe",
+      "cause": "caughtUp",
+      "turns": [
+        {
+          "speaker": "foreman_back",
+          "text": "Marcus, I'm on your heels again. Pick it up or get out of my way."
+        },
+        {
+          "speaker": "foreman_pipe",
+          "text": "I lay one-eighty a day, Dana, same as every day. You lay two-fifty. Do the math."
+        },
+        {
+          "speaker": "foreman_back",
+          "text": "The math says I sit here and get paid to watch you."
+        },
+        {
+          "speaker": "foreman_pipe",
+          "text": "Take it up with whoever wrote the start dates."
+        }
+      ]
+    },
+    {
+      "id": "grumble_back_pipe",
+      "trigger": "conflictRepeat",
+      "pair": "back-pipe",
+      "turns": [
+        {
+          "speaker": "foreman_back",
+          "text": "Caught up again, Marcus."
+        },
+        {
+          "speaker": "foreman_pipe",
+          "text": "I heard you the first time."
+        }
+      ]
+    },
+    {
+      "id": "ray_working",
+      "trigger": "arrive",
+      "crew": "exc",
+      "status": "working",
+      "speaker": "foreman_exc",
+      "text": "Morning, inspector. Good ground today. We'll make our footage if nobody bothers us."
+    },
+    {
+      "id": "marcus_idle",
+      "trigger": "arrive",
+      "crew": "pipe",
+      "status": "idle",
+      "speaker": "foreman_pipe",
+      "text": "Nothing to lay until that wall's cleaned up. My guys are standing around."
+    },
+    {
+      "id": "dana_working",
+      "trigger": "arrive",
+      "crew": "back",
+      "status": "working",
+      "speaker": "foreman_back",
+      "text": "Dirt's going in fine. Just keep me fed."
+    },
+    {
+      "id": "marcus_working",
+      "trigger": "arrive",
+      "crew": "pipe",
+      "status": "working",
+      "speaker": "foreman_pipe",
+      "text": "Pipe's going in. One-eighty a day if the walls behave."
+    },
+    {
+      "id": "dana_idle",
+      "trigger": "arrive",
+      "crew": "back",
+      "status": "idle",
+      "speaker": "foreman_back",
+      "text": "We're right on Marcus's heels. Nothing to fill until he lays more pipe."
+    },
+    {
+      "id": "foreman_held_01",
+      "speaker": "foreman_back",
+      "trigger": "heldDay1",
+      "text": "Standing by. Meter is running."
+    },
+    {
+      "id": "foreman_held_02",
+      "speaker": "foreman_back",
+      "trigger": "heldDay2",
+      "text": "Second day on a hold. My guys are getting paid to watch a trench."
+    },
+    {
+      "id": "foreman_held_03",
+      "speaker": "foreman_back",
+      "trigger": "heldDay3",
+      "text": "Three days. Either give me a stretch to fill or send us home."
+    }
+  ],
+  "kit": {
+    "permitCodeDigits": 4,
+    "checkDigit": "digitSumMod10",
+    "openTrenchTokenFt": 500,
+    "manualPages": []
+  },
+  "result": {
+    "overlayPreviousStage": null,
+    "showChangeLog": false
+  }
+}

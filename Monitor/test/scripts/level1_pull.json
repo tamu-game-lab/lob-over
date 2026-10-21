@@ -1,0 +1,4 @@
+[
+  {"t":0,"seat":"plan","cmd":{"id":"hold-day1","action":"commit","ops":[{"op":"hold","crew":"back"}]}},
+  {"t":8,"seat":"plan","cmd":{"id":"go-day9","action":"commit","ops":[{"op":"resume","crew":"back"}]}}
+]

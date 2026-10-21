@@ -17,6 +17,7 @@ const DEVIATION_TRIGGERS = new Set([
 const LINE_TRIGGERS = new Set([
   'stageStart', 'holdCommitted', 'demobCommitted', 'prepRefused', 'orderLanded',
   'orderNotDone', 'conflict', 'heldDay1', 'heldDay2', 'heldDay3', 'stageEnd',
+  'event', 'arrive', 'conflictRepeat',
 ]);
 const SPEAKERS = new Set(['pm', 'radio', 'foreman_exc', 'foreman_pipe', 'foreman_back']);
 const SEATS = new Set(['site', 'plan', 'rules']);
@@ -114,12 +115,16 @@ export function validateScenario(scenario, catalog) {
   function checkCards(section, codeKey, prefix) {
     const path = `$.${section}.cards`;
     const cards = array(scenario[section]?.cards, path);
+    // WO-L1: already-posted permits have no read-out codes; no inspection cards.
+    const level1 = scenario.rules?.planControlsClock === true;
+    if (level1 && section === 'inspections' && !scenario.inspections.required && !cards.length) return;
     const zoneIds = new Set(zones.map(zone => zone?.id));
     const counts = new Map();
     const codes = new Set();
     cards.forEach((card, index) => {
       counts.set(card?.zone, (counts.get(card?.zone) ?? 0) + 1);
       const code = card?.[codeKey];
+      if (level1 && section === 'permits' && scenario.permits.heldBy === 'pm' && code == null) return;
       const codePath = `${path}[${index}].${codeKey}`;
       if (codes.has(code)) add(`${prefix}_CODE_DUPLICATE`, codePath, `duplicate code ${describe(code)}`);
       codes.add(code);
@@ -178,7 +183,13 @@ export function validateScenario(scenario, catalog) {
     if (!LINE_TRIGGERS.has(line?.trigger)) {
       add('LINE_TRIGGER', `${path}.trigger`, `unknown trigger ${describe(line?.trigger)}`);
     }
-    if (!SPEAKERS.has(line?.speaker)) {
+    if (line.turns !== undefined) {
+      if (!Array.isArray(line.turns) || !line.turns.length) add('LINE_TURNS', `${path}.turns`, 'expected a nonempty exchange');
+      else line.turns.forEach((turn, i) => {
+        if (!SPEAKERS.has(turn?.speaker)) add('LINE_SPEAKER', `${path}.turns[${i}].speaker`, 'unknown speaker');
+        if (typeof turn?.text !== 'string' || !turn.text.trim()) add('LINE_TEXT', `${path}.turns[${i}].text`, 'expected speech text');
+      });
+    } else if (!SPEAKERS.has(line?.speaker)) {
       add('LINE_SPEAKER', `${path}.speaker`, `unknown speaker ${describe(line?.speaker)}`);
     }
     if (lineIds.has(line?.id)) add('LINE_ID_DUPLICATE', `${path}.id`, `duplicate id ${describe(line?.id)}`);

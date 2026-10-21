@@ -105,3 +105,47 @@ At each day boundary the host emits `report` for the day that just ended and adv
 ## Phase 1 note
 
 The Unity host implements the same messages; the Quest client replaces `site.html`. The C# port is accepted only when the headless Stage 1 transcript (`state` snapshots at each day boundary plus every `event`, `report`, `result`) matches the Node host's transcript for the same scenario and seed within the golden tolerances.
+
+## Level 1 additions (WO-L1)
+
+`rules.planControlsClock: true` allows the primary Plan connection to send `ctrl start`
+and `ctrl reset`. Other controls remain facilitator-only; mirrors remain read-only.
+The host starts paused. The opening PM line is delivered on Start, once per run.
+During an argument, Plan may only commit one `hold` for the trailing crew; other
+orders return `The field won't take that order right now` without naming the problem.
+Site may observe (`moveTo`, `mount`, `dismount`, `inspect`, `listen`), but cannot change work.
+
+For this mode, Plan's view contains `plannedLines`, `plannedPolylines` (the original
+PM plan), `reportedLines` (through yesterday), `held` (booleans keyed by crew),
+`promisedDay`, `deadlineDay`, and authored `crews` with `id`, `name`, `foreman`,
+`startDay`, `rate` (ft/day). `project` and `plan.locked` retain their meanings.
+`siteClient` is the primary Site connection's hello `client`: `quest`, `web`, or
+`null` when disconnected. `previousRun` contains the prior run's actual polylines,
+or null. These additions carry no live field positions to Plan. Reports omit money.
+Site crews add `onSite`: false before their start or while an unstarted crew is held.
+
+At the result Plan receives only `t`, `v`, `stage`, `finishDay`, `promisedDay`,
+`idleDays` (per crew), `lines` (`planned`, `actual`), and `previousRun` with the same
+public result fields. Site receives only `{t:"result",v:1,stage}`. The facilitator
+retains the full result; money remains internal to the simulation and facilitator.
+Reset retains the previous completed run for the faint chart overlay.
+
+New voice messages retain `lineIds` and add `turns`, in speaking order:
+
+```json
+{"t":"voice","v":1,"day":3.89,"lineIds":["marcus_collapse"],"seats":["site"],"turns":[{"speaker":"foreman_pipe","text":"Wall's moving! Out of the hole, everybody out, now!","clip":"marcus_collapse_1.wav","stationFt":520.2}]}
+```
+
+The host also includes the authored line objects in `lines`, including `turns` for
+exchanges. Play each `turns[].clip` from `/Voice/<stage>/`, at its speaker's crew
+position (`stationFt` is omitted for PM/radio). Do not overlap exchanges; leave
+0.3 real seconds between turns. No captions during play. PM reaches Plan only;
+foremen reach Site only. Arrivals can repeat on a new display day, at most once
+per crew per day; repeat grumbles at most once per pair per day. Other lines play
+once per run. Listen near a crew replays its last exchange.
+
+`/play.html` is the Level 1 PC page. Its Rules link serves `/level1/rules.pdf`;
+`/level1/rules.html` is also available. Existing stage pages are retained.
+With `--discovery`, the Node host sends UTF-8 `LOBOVER 1 <port> <hostname>` to UDP
+7332 every two real seconds, using the broadcast address of each non-loopback
+IPv4 interface. USB uses `adb reverse tcp:7331 tcp:7331`.

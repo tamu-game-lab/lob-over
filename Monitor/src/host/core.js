@@ -30,7 +30,12 @@ export function createHost({ scenario, catalog, pacing = {}, autoplan = [], stag
   function resultFor(seat) {
     if (seat === 'rules') return null;
     // The guided debrief is shown by Plan; Site never receives the money or plan.
-    if (guideEngine && seat === 'site') return { t: 'result', v: 1, stage: scenario.id };
+    if ((guideEngine || scenario.rules.planControlsClock) && seat === 'site') return { t: 'result', v: 1, stage: scenario.id };
+    if (scenario.rules.planControlsClock && seat === 'plan') {
+      const publicRun = run => run && ({ finishDay: run.finishDay, promisedDay: run.promisedDay,
+        idleDays: run.idleDays, lines: run.lines });
+      return { t: 'result', v: 1, stage: scenario.id, ...publicRun(result), previousRun: publicRun(result.previousRun) };
+    }
     return result;
   }
 
@@ -71,6 +76,13 @@ export function createHost({ scenario, catalog, pacing = {}, autoplan = [], stag
       view.fees = { mobilizationUsd: scenario.rules.mobilizationUsd, remobUsd: scenario.rules.demobFeeUsd,
         remobDays: catalog.cities[scenario.city].remobilizationDelayDays };
       view.plannedPolylines = plannedPolylines(sim.serialize());
+      if (scenario.rules.planControlsClock) {
+        delete view.fees;
+        view.crews = scenario.crews.map(({ id, name, machine, foreman, startDay }) => ({ id, name, foreman,
+          startDay, rate: catalog.machines[machine].rateFtPerDay }));
+        view.siteClient = clients.siteClient();
+        view.previousRun = runs.get(scenario.id)?.lines.actual ?? null;
+      }
     }
     if (seat === 'site') {
       const raw = sim.serialize();
@@ -93,18 +105,22 @@ export function createHost({ scenario, catalog, pacing = {}, autoplan = [], stag
   function withVoiceText(message) {
     if (message.t !== 'voice') return message;
     return { ...message, lines: message.lineIds.map(id => scenario.lines.find(line => line.id === id))
-      .filter(Boolean).map(({ id, speaker, text }) => ({ id, speaker, text })) };
+      .filter(Boolean).map(({ id, speaker, text, turns }) => ({ id, speaker, text, ...(turns ? { turns } : {}) })) };
   }
   function drain(requester) {
     for (let message of sim.drain()) {
       if (message.t === 'result') {
-        result = { ...message, previousRun: runs.get(scenario.result.overlayPreviousStage) ?? null };
+        result = { ...message, previousRun: runs.get(scenario.rules.planControlsClock ? scenario.id : scenario.result.overlayPreviousStage) ?? null };
         runs.set(scenario.id, { ...message, previousRun: null });
         message = result;
         transcript.result = { ...sim.result, previousRun: result.previousRun };
       }
       transcript.messages.push({ t: message.day ?? sim.t, message });
-      if (message.t === 'result' && guideEngine) clients.sendEach(resultFor);
+      if (message.t === 'result' && (guideEngine || scenario.rules.planControlsClock)) clients.sendEach(resultFor);
+      else if (message.t === 'report' && scenario.rules.planControlsClock) {
+        const { spendUsd, ...report } = message;
+        clients.deliver(report, requester);
+      }
       else clients.deliver(withVoiceText(message), requester);
       if (message.t === 'result') {
         onTranscript(transcript);
@@ -130,7 +146,10 @@ export function createHost({ scenario, catalog, pacing = {}, autoplan = [], stag
   const pacer = createPacer(() => sim, () => { snapshot(); drain(); observeGuide(); runAutoplan(); }, pacing);
   function handleCommand(socket, seat, message, send) {
     let reply;
-    if (message.t === 'cmd' && message.action === 'ready') {
+    if (scenario.rules.planControlsClock && seat === 'plan' && message.t === 'ctrl'
+      && sim.serialize().conflicts.some(conflict => !conflict.resolved)) {
+      reply = { ok: false, reason: "The field won't take that order right now" };
+    } else if (message.t === 'cmd' && message.action === 'ready') {
       reply = guideEngine?.markReady(seat) ? { ok: true, appliedDay: sim.t } : { ok: false, reason: 'no guide beat' };
     } else if (message.t === 'ctrl' && message.action === 'continue') {
       reply = guideEngine?.proceed() ? { ok: true, appliedDay: sim.t } : { ok: false, reason: 'no guide beat' };
@@ -158,6 +177,10 @@ export function createHost({ scenario, catalog, pacing = {}, autoplan = [], stag
         sim.apply('facilitator', { action: 'pause' });
       }
       if (reply.ok && message.t === 'ctrl' && ['start', 'resume'].includes(message.action)) {
+        if (scenario.rules.planControlsClock && initialMessages.length) {
+          for (const initial of initialMessages) clients.deliver(withVoiceText(initial));
+          initialMessages = [];
+        }
         observeGuide({ start: true });
         if (guideEngine?.paused) sim.apply('facilitator', { action: 'pause' });
       }
@@ -179,7 +202,7 @@ export function createHost({ scenario, catalog, pacing = {}, autoplan = [], stag
       clients.broadcast();
       publishGuide();
       clients.sendEach(seat => seat === 'rules' ? rulesKit() : null);
-      for (const initial of initialMessages) clients.deliver(withVoiceText(initial));
+      if (!scenario.rules.planControlsClock) for (const initial of initialMessages) clients.deliver(withVoiceText(initial));
     }
     drain(socket);
     observeGuide();
@@ -188,14 +211,15 @@ export function createHost({ scenario, catalog, pacing = {}, autoplan = [], stag
   }
   const clients = createClients({
     state,
+    allowControl: (seat, action) => scenario.rules.planControlsClock && seat === 'plan' && ['start', 'reset'].includes(action),
     welcome(socket, seat, send) {
-      for (const message of initialMessages) if (message.seats?.includes(seat)) send(socket, withVoiceText(message));
+      if (!scenario.rules.planControlsClock) for (const message of initialMessages) if (message.seats?.includes(seat)) send(socket, withVoiceText(message));
       if (seat === 'rules') send(socket, rulesKit());
       if (guideEngine) send(socket, guideMessage(seat));
       if (result && resultFor(seat)) send(socket, resultFor(seat));
     },
     command: handleCommand,
-    changed: () => guideEngine?.connectionsChanged(),
+    changed: () => { guideEngine?.connectionsChanged(); if (scenario.rules.planControlsClock) clients.broadcast(); },
   });
   const broadcastTimer = setInterval(clients.broadcast, STATE_MS);
   function control(action, fields = {}) {

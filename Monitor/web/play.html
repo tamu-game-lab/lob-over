@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LOB, Over · Level 1</title><style>
+:root{font:16px/1.5 system-ui,sans-serif;color:#263943;background:#eeeae2}*{box-sizing:border-box}body{margin:0}
+header{background:#243540;color:#fff;padding:22px 5vw;display:flex;justify-content:space-between;align-items:center;gap:20px}
+h1{font-size:23px;margin:0}#day{font-size:22px}#site-status{font-size:14px;color:#dae3e7}main{max-width:1160px;margin:auto;padding:24px}
+.toolbar{display:flex;gap:24px;align-items:center;margin-bottom:16px}a{color:inherit}button{font:inherit;padding:10px 26px;border:1px solid #425967;border-radius:4px;background:#fffdf8;color:inherit;cursor:pointer}
+button:hover{background:#e4ebed}button:disabled{opacity:.5;cursor:default}#start{background:#243f50;color:white;min-width:150px}
+.panel{background:#fffdf8;border:1px solid #c6ceca;padding:20px;margin-bottom:18px}.legend{font-size:14px;color:#52646d;display:flex;gap:20px;flex-wrap:wrap}
+svg{display:block;width:100%;height:auto;max-height:570px}svg text{font:13px system-ui;fill:#344852}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px;border-bottom:1px solid #d7dcd7}th{font-size:13px;font-weight:500;color:#52646d}td button{min-width:90px}
+#feedback{min-height:24px;margin:0 0 12px}#result{margin:0 0 16px;font-size:20px}#idle{font-size:16px}#result[hidden]{display:none}
+@media(max-width:680px){header{padding:16px;align-items:start;flex-direction:column;gap:8px}main{padding:12px}.panel{padding:10px}th,td{padding:8px 5px;font-size:13px}td button{min-width:65px;padding:8px}h1{font-size:21px}}
+</style></head><body>
+<header><h1>LOB, Over · Level 1</h1><div><div id="day">Day 1</div><div id="site-status">Waiting for the headset</div></div></header>
+<main><div class="toolbar"><button id="start" disabled>Start</button><a href="/level1/rules.pdf" target="_blank">Rules page</a></div>
+<p id="feedback" role="status"></p>
+<section class="panel"><div id="result" hidden><div id="finish"></div><div id="idle"></div></div>
+<div class="legend"><span>Dashed: PM’s plan</span><span id="actual-label">Solid: reported through yesterday</span><span id="previous-label" hidden>Faint: previous run</span></div>
+<svg id="chart" viewBox="0 0 900 540" role="img" aria-label="Crew stations across, days down"></svg></section>
+<section class="panel"><table><thead><tr><th>Crew</th><th>Foreman</th><th>Speed</th><th>Planned start</th><th></th></tr></thead><tbody id="crews"></tbody></table></section>
+</main><script src="lib/transport.js"></script><script src="lib/voice.js"></script><script>
+'use strict';
+const $=id=>document.getElementById(id), CREWS=['exc','pipe','back'], COLORS=['#285d83','#78568c','#9b632b'];
+const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const station=ft=>Math.floor(ft/100)+'+'+String(Math.round(ft%100)).padStart(2,'0');
+let state, result, sequence=0, mirror=false, starting=false;
+const pending=new Map(), socket=LobTransport.connect();
+socket.onopen=()=>socket.send(JSON.stringify({t:'hello',v:1,seat:'plan',client:'web'}));
+socket.onclose=()=>{$('feedback').textContent='Connection to the game closed.';$('start').disabled=true;document.querySelectorAll('[data-crew]').forEach(b=>b.disabled=true);};
+function send(t,action,fields={},onAck){
+  if(socket.readyState!==WebSocket.OPEN)return;
+  const id='l1-'+(++sequence);pending.set(id,onAck);$('feedback').textContent='';
+  socket.send(JSON.stringify({t,v:1,id,seat:'plan',action,...fields}));
+}
+$('start').onclick=()=>{
+  starting=true;$('start').disabled=true;
+  if(result)send('ctrl','reset',{},()=>send('ctrl','start'));
+  else send('ctrl','start');
+};
+$('crews').onclick=event=>{const crew=event.target.dataset.crew;if(crew&&!mirror&&!result)send('cmd','commit',{ops:[{op:state.view.held[crew]?'resume':'hold',crew}]});};
+function drawChart(){
+  const v=state.view, length=v.project.job.lengthFt;
+  const previous=result?result.previousRun?.lines.actual:v.previousRun;
+  const all=[...Object.values(result?.lines.actual??{}).flat(),...Object.values(previous??{}).flat()];
+  const maxDay=Math.max(v.promisedDay+3,...all.map(p=>Math.ceil(p.t+1)));
+  // Same station/time polylines as plan.html, with days increasing down the page.
+  const x=ft=>65+ft/length*730,y=t=>32+t/(maxDay-1)*455;
+  let svg='';
+  for(let ft=0;ft<=length;ft+=500)svg+=`<line x1="${x(ft)}" x2="${x(ft)}" y1="32" y2="487" stroke="#e2e5df"/><text x="${x(ft)}" y="513" text-anchor="middle">${station(ft)}</text>`;
+  for(let day=1;day<=maxDay;day+=2)svg+=`<line x1="65" x2="795" y1="${y(day-1)}" y2="${y(day-1)}" stroke="#e2e5df"/><text x="51" y="${y(day-1)+4}" text-anchor="end">${day}</text>`;
+  svg+=`<text x="16" y="18">Day</text><text x="400" y="536">Station</text><line x1="65" x2="795" y1="${y(v.promisedDay-1)}" y2="${y(v.promisedDay-1)}" stroke="#7c776c" stroke-dasharray="3 4"/><text x="800" y="${y(v.promisedDay-1)+4}">Day ${v.promisedDay}</text>`;
+  function lines(data,kind,opacity=1){for(const [i,id]of CREWS.entries()){
+    const points=data?.[id]??[];if(!points.length)continue;
+    svg+=`<polyline data-line="${id}" data-kind="${kind}" points="${points.map(p=>`${x(p.ft)},${y(p.t)}`).join(' ')}" fill="none" stroke="${COLORS[i]}" stroke-width="${kind==='plan'?2:3}" stroke-dasharray="${kind==='plan'?'8 6':''}" opacity="${opacity}"/>`;
+  }}
+  lines(previous,'previous',.18);lines(result?.lines.planned??v.plannedPolylines,'plan');lines(result?.lines.actual??v.reportedLines,'actual');
+  $('chart').innerHTML=svg;$('previous-label').hidden=!previous;
+}
+function render(){
+  const v=state.view;$('day').textContent='Day '+(Number.isFinite(result?.finishDay)?Math.floor(result.finishDay+1e-6)+1:state.displayDay);
+  $('actual-label').textContent=result?'Solid: actual work':'Solid: reported through yesterday';
+  $('site-status').textContent=v.siteClient==='quest'?'Headset connected':v.siteClient==='web'?'Site connected in a browser':'Waiting for the headset';
+  $('start').textContent=result?'Run again':'Start';$('start').disabled=mirror||starting||(!result&&state.speed!=='paused');
+  const rows=v.crews.map((c,i)=>`<tr><td style="border-left:4px solid ${COLORS[i]}">${esc(c.name)}</td><td>${esc(c.foreman)}</td><td>${c.rate} ft/day</td><td>Day ${c.startDay}</td><td><button data-crew="${c.id}" aria-label="${v.held[c.id]?'Go':'Hold'} ${esc(c.name)}" ${mirror||result?'disabled':''}>${v.held[c.id]?'Go':'Hold'}</button></td></tr>`).join('');
+  if($('crews').innerHTML!==rows)$('crews').innerHTML=rows;
+  drawChart();
+}
+function acceptState(message){
+  if(state?.runId!==message.runId){result=null;$('result').hidden=true;$('feedback').textContent='';LobVoice.reset();}
+  state=message;if(state.speed!=='paused')starting=false;render();
+}
+socket.onmessage=event=>{
+  const message=JSON.parse(event.data);
+  if(message.t==='welcome'){mirror=message.mirror;acceptState(message.state);}
+  else if(message.t==='state')acceptState(message);
+  else if(message.t==='ack'||message.t==='nack'){
+    const callback=pending.get(message.id);pending.delete(message.id);
+    if(message.t==='nack'){starting=false;$('feedback').textContent=message.reason;render();}else callback?.();
+  }else if(message.t==='voice')LobVoice.play(message,state.stage);
+  else if(message.t==='result'){
+    result=message;starting=false;$('result').hidden=false;
+    $('finish').textContent=Number.isFinite(result.finishDay)?`Finished Day ${Math.floor(result.finishDay+1e-6)+1} · Promised Day ${result.promisedDay}`:`Run ended · Promised Day ${result.promisedDay}`;
+    $('idle').textContent='Idle crew-days: '+state.view.crews.map(c=>`${c.name} ${Number(result.idleDays[c.id].toFixed(2))}`).join(' · ');
+    render();
+  }
+};
+</script></body></html>

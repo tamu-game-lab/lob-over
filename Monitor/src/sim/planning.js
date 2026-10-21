@@ -35,6 +35,8 @@ export function plannedPolylines(s) {
 }
 
 export function projectOrder(s, order) {
+  // WO-L1 chart compares against the PM's original plan throughout the run.
+  if (s.scenario.rules.planControlsClock) return;
   const op = order.op, line = s.plannedLines[order.crew];
   if (op.op === 'hold' || op.op === 'demob') {
     const fromT = Math.max(order.landsT, op.fromDay != null ? op.fromDay - 1 : order.landsT);

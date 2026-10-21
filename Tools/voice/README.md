@@ -8,3 +8,9 @@ Edit `Tools/voice/voices.json` to swap a speaker's cached Kokoro voice, then run
 Defaults: PM `am_onyx` (mature American male), radio `af_sarah` (neutral American female), three distinct male foremen.
 Replace any placeholder with a recorded 24 kHz mono WAV at the same filename; leave its manifest entry and avoid `--force`.
 Generation uses cached models offline, PM speed 1.0, radio speed 1.1, 150 ms edge silence, -3 dBFS peaks and radio-only filtering/clicks.
+
+Level 1: `.venv\Scripts\python Tools/voice/make_voice.py Data/Scenarios/level1_texas.json`.
+Use that interpreter explicitly; do not change PATH globally. A sheet containing exchanges
+writes every utterance as `<lineId>_<n>.wav` (one-based, including single-turn lines).
+Dana uses the cached American female `af_sarah`, as specified in `Docs/VOICE.md`.
+Existing stage WAVs are unchanged unless explicitly regenerated.

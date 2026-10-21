@@ -13,7 +13,8 @@ const owns = (object, key) => typeof key === 'string' && Object.hasOwn(object, k
 const ownerOf = (s, machine) => CREW_IDS.find(id => s.crews[id].machine === machine);
 const machineCommitted = (s, machine) => s.orders.some(order => order.op.op === 'lend'
   && order.op.machine === machine && order.appliedT == null);
-export const landingTime = (s, crew) => s.pure || crew && nearby(s, s.crews[crew].pos) ? s.t : nextBoundary(s.t);
+export const landingTime = (s, crew) => s.pure || s.scenario.rules.orderLag === 'none'
+  || crew && nearby(s, s.crews[crew].pos) ? s.t : nextBoundary(s.t);
 
 export function validateOp(s, op) {
   if (!op || !PLAN_OPS.has(op.op)) return 'unknown operation';
@@ -105,9 +106,13 @@ function applyLanded(s, order) {
   if (op.op === 'hold') {
     const fromT = Math.max(s.t, op.fromDay != null ? op.fromDay - 1 : s.t);
     c.hold = { fromT, untilT: op.days != null ? fromT + op.days : null };
+    if (s.scenario.rules.holdBeforeStartDelaysStart && !c.onsite && !c.work && fromT <= c.startDay - 1 + EPS) {
+      c.startDelayed = true;
+    }
     c.arguing = false;
     c.stop = null;
   } else if (op.op === 'resume') {
+    if (c.startDelayed) { c.startDay = s.t + 1; c.startDelayed = false; }
     c.hold = c.stop = null;
   } else if (op.op === 'lend') startLoan(s, op);
   else if (op.op === 'protect') s.protections.push({ kind: op.kind, fromFt: op.fromFt, toFt: op.toFt, placedT: s.t });

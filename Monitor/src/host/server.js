@@ -7,6 +7,7 @@ import { loadCatalog } from '../common/catalog.js';
 import { loadScenario } from '../scenario/load.js';
 import { WebSocketServer, WebSocket } from 'ws';
 import { createHost, roundedJSON } from './core.js';
+import { startDiscovery, ipv4Interfaces } from './discovery.js';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const WEB = resolve(ROOT, 'Monitor/web');
@@ -15,9 +16,9 @@ const OUT = resolve(ROOT, 'Monitor/out');
 const MANUALS = resolve(ROOT, 'Paper/out');
 // Docs/PROTOCOL.md default HTTP and WebSocket port.
 const DEFAULT_PORT = 7331;
-const MIME = { '.html': 'text/html; charset=utf-8', '.wav': 'audio/wav', '.ico': 'image/x-icon', '.js': 'text/javascript', '.json': 'application/json' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.pdf': 'application/pdf', '.wav': 'audio/wav', '.ico': 'image/x-icon', '.js': 'text/javascript', '.json': 'application/json' };
 
-export async function startHost({ scenarioPath, stage2Path, autoplanPath, guidePath, port = DEFAULT_PORT, testMode = process.env.NODE_ENV === 'test' }) {
+export async function startHost({ scenarioPath, stage2Path, autoplanPath, guidePath, discovery = false, port = DEFAULT_PORT, testMode = process.env.NODE_ENV === 'test' }) {
   const catalog = loadCatalog();
   const base = process.env.INIT_CWD || process.cwd();
   const scenario = loadScenario(resolve(base, scenarioPath), { catalog });
@@ -44,8 +45,9 @@ export async function startHost({ scenarioPath, stage2Path, autoplanPath, guideP
       }
       const voice = pathname.startsWith('/Voice/');
       const manual = pathname.match(/^\/manual\/([a-z0-9_]+)\.(html|pdf)$/);
-      const root = manual ? MANUALS : voice ? VOICE : WEB;
-      const path = resolve(root, manual ? `${manual[1]}/manual.${manual[2]}`
+      const rules = pathname.match(/^\/level1\/rules\.(html|pdf)$/);
+      const root = manual || rules ? MANUALS : voice ? VOICE : WEB;
+      const path = resolve(root, rules ? `level1/rules.${rules[1]}` : manual ? `${manual[1]}/manual.${manual[2]}`
         : voice ? pathname.slice('/Voice/'.length) : `.${pathname === '/' ? '/plan.html' : pathname}`);
       const rel = relative(root, path);
       if (rel.startsWith(`..${sep}`) || rel === '..' || isAbsolute(rel) || !(await stat(path)).isFile()) {
@@ -74,8 +76,9 @@ export async function startHost({ scenarioPath, stage2Path, autoplanPath, guideP
   try {
     await new Promise((ready, reject) => { server.once('error', reject); server.listen(port, ready); });
   } catch (error) { core.close(); wss.close(); throw error; }
+  const beacon = discovery ? await startDiscovery(server.address().port) : null;
   return { server, core, port: server.address().port,
-    close() { core.close(); wss.close(); return new Promise(done => server.close(done)); },
+    close() { beacon?.close(); core.close(); wss.close(); return new Promise(done => server.close(done)); },
   };
 }
 
@@ -88,10 +91,15 @@ async function main(args) {
     else if (options[i] === '--stage2' && options[i + 1]) config.stage2Path = options[++i];
     else if (options[i] === '--autoplan' && options[i + 1]) config.autoplanPath = options[++i];
     else if (options[i] === '--guide' && options[i + 1]) config.guidePath = options[++i];
+    else if (options[i] === '--discovery') config.discovery = true;
     else throw new Error(`Unknown or incomplete option: ${options[i]}`);
   }
   const host = await startHost(config);
   console.log(`LOB host listening on ${host.port}`);
+  if (config.discovery) {
+    for (const entry of ipv4Interfaces()) console.log(`PC address: http://${entry.address}:${host.port}/play.html`);
+    console.log('Close this window to end the game');
+  }
   for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => host.close().then(() => process.exit(0)));
 }
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {

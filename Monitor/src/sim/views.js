@@ -84,6 +84,11 @@ export function publicOrder(order) {
 }
 
 export function planView(s) {
+  if (s.scenario.rules.planControlsClock) return {
+    plannedLines: s.plannedLines, reportedLines: s.reportedLines,
+    promisedDay: s.scenario.plan.promisedFinishDay, deadlineDay: s.scenario.plan.deadlineDay,
+    held: Object.fromEntries(CREW_IDS.map(id => [id, !!s.crews[id].hold])),
+  };
   return {
     plannedLines: s.plannedLines,
     responses: availableResponses(s).map(({ event, option }) => ({ key: option.key, label: option.label,
@@ -118,7 +123,8 @@ export function siteView(s) {
   return {
     truck: { stationFt: s.truck.stationFt, moving: s.truck.moving, dismounted: s.truck.dismounted },
     crews: CREW_IDS.map(id => { const c = s.crews[id], size = s.catalog.machines[c.machine]?.sizeClass;
-      return { id, stationFt: c.pos, status: c.status, machinePlate: size ? size[0].toUpperCase() + size.slice(1) : null, moodLevel: c.mood }; }),
+      return { id, stationFt: c.pos, status: c.status, machinePlate: size ? size[0].toUpperCase() + size.slice(1) : null, moodLevel: c.mood,
+        ...(s.scenario.rules.holdBeforeStartDelaysStart ? { onSite: !c.startDelayed && s.t >= c.startDay - 1 - EPS } : {}) }; }),
     trench, boards: s.scenario.job.zones.map(z => ({ zone: z.id,
       permitNumber: s.permits[z.id].entered ? s.permits[z.id].number : null,
       inspectionNumber: s.inspections[z.id].cleared ? s.inspections[z.id].number : null })),

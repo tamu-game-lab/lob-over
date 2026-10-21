@@ -1,0 +1,146 @@
+{
+  "pm_open_level1_1": {
+    "text": "Morning. Three thousand feet, three crews. Dig Day 1, pipe Day 2, backfill Day 4. We promised the city Day 18, so keep everybody moving.",
+    "sha1": "83141e7fd6d559b2417d0e4217d8f88df1d1617e",
+    "voice": "am_onyx",
+    "seconds": 8.323
+  },
+  "pm_hold_level1_1": {
+    "text": "You're holding a crew? We promised Day 18. I hope you have a reason.",
+    "sha1": "481f027c60c4fad2bcccaa3fc8dca600731229b7",
+    "voice": "am_onyx",
+    "seconds": 4.340541666666667
+  },
+  "pm_end_level1_1": {
+    "text": "That's the run. Look at where the lines ended up against what we promised.",
+    "sha1": "a5200d0838a262c908ed485c6c87c53ab5efbbcc",
+    "voice": "am_onyx",
+    "seconds": 4.28625
+  },
+  "marcus_collapse_1": {
+    "text": "Wall's moving! Out of the hole, everybody out, now!",
+    "sha1": "51e67993e4f0578b33b36430f392d73488dc23ab",
+    "voice": "am_fenrir",
+    "seconds": 2.7167083333333335
+  },
+  "marcus_collapse_2": {
+    "text": "Okay. Everybody's out, nobody's hurt. That whole side let go at five-twenty, and there's water coming in at the bottom.",
+    "sha1": "496ae6b1bb1e8af068f5db5b6e839404605b51eb",
+    "voice": "am_fenrir",
+    "seconds": 6.82925
+  },
+  "marcus_collapse_3": {
+    "text": "I'm not putting a man back down there until somebody cleans that up.",
+    "sha1": "e891bc84c990a58bb93dada6934626060c4d5036",
+    "voice": "am_fenrir",
+    "seconds": 3.690125
+  },
+  "arg_back_pipe_stopped_1": {
+    "text": "Marcus, why is your crew standing on the bank? I've got a loader full of dirt and nowhere to put it.",
+    "sha1": "84ba5f405dc05fb0a5783de3020be6a8f1157535",
+    "voice": "af_sarah",
+    "seconds": 5.633375
+  },
+  "arg_back_pipe_stopped_2": {
+    "text": "Because my wall's in the ditch, Dana. Push dirt onto my bedding and you can explain it to the inspector.",
+    "sha1": "e4db820ed8830651654480cc25e32372dfc8908f",
+    "voice": "am_fenrir",
+    "seconds": 5.959375
+  },
+  "arg_back_pipe_stopped_3": {
+    "text": "The schedule had me here today. I lay two-fifty a day. You lay one-eighty on a good day.",
+    "sha1": "c7fd764f1dcda7365b5635b8ba0a13cd8b2e107a",
+    "voice": "af_sarah",
+    "seconds": 4.953125
+  },
+  "arg_back_pipe_stopped_4": {
+    "text": "Then the schedule was wrong before the wall ever moved. Somebody tell the office.",
+    "sha1": "a83e0a78803479308f33cbe8181dae6632a9fdfc",
+    "voice": "am_fenrir",
+    "seconds": 4.732458333333334
+  },
+  "arg_back_pipe_caught_1": {
+    "text": "Marcus, I'm on your heels again. Pick it up or get out of my way.",
+    "sha1": "65a2696e1717d63b02d5562525148e51c026f9f9",
+    "voice": "af_sarah",
+    "seconds": 3.777625
+  },
+  "arg_back_pipe_caught_2": {
+    "text": "I lay one-eighty a day, Dana, same as every day. You lay two-fifty. Do the math.",
+    "sha1": "c15fd250dd94869d26f8839e7534ff04fb5acb6b",
+    "voice": "am_fenrir",
+    "seconds": 4.913625
+  },
+  "arg_back_pipe_caught_3": {
+    "text": "The math says I sit here and get paid to watch you.",
+    "sha1": "bb2f7d33c780f0bad50ca7dc09187526b92fdae4",
+    "voice": "af_sarah",
+    "seconds": 2.86225
+  },
+  "arg_back_pipe_caught_4": {
+    "text": "Take it up with whoever wrote the start dates.",
+    "sha1": "afab427686a65690fad8a78642505a199805b2c6",
+    "voice": "am_fenrir",
+    "seconds": 2.31975
+  },
+  "grumble_back_pipe_1": {
+    "text": "Caught up again, Marcus.",
+    "sha1": "e73d702a902045e4ed3aae3daf080f485ed8191f",
+    "voice": "af_sarah",
+    "seconds": 1.561125
+  },
+  "grumble_back_pipe_2": {
+    "text": "I heard you the first time.",
+    "sha1": "a7caad025dd3fa49d524d067262a75f0dfde4986",
+    "voice": "am_fenrir",
+    "seconds": 1.5024583333333332
+  },
+  "ray_working_1": {
+    "text": "Morning, inspector. Good ground today. We'll make our footage if nobody bothers us.",
+    "sha1": "595250c5e2636b9818536d8c0c61aeaec1451d32",
+    "voice": "am_michael",
+    "seconds": 5.312083333333334
+  },
+  "marcus_idle_1": {
+    "text": "Nothing to lay until that wall's cleaned up. My guys are standing around.",
+    "sha1": "13b53690ba02fcb9d18c05abc5d624f1c7572f58",
+    "voice": "am_fenrir",
+    "seconds": 4.5155
+  },
+  "dana_working_1": {
+    "text": "Dirt's going in fine. Just keep me fed.",
+    "sha1": "403ff1760f379f948815792159dc72f267b2fae6",
+    "voice": "af_sarah",
+    "seconds": 2.5092083333333335
+  },
+  "marcus_working_1": {
+    "text": "Pipe's going in. One-eighty a day if the walls behave.",
+    "sha1": "d9aa32fa0221d39168489336c74d1c76bc8e72ba",
+    "voice": "am_fenrir",
+    "seconds": 3.055833333333333
+  },
+  "dana_idle_1": {
+    "text": "We're right on Marcus's heels. Nothing to fill until he lays more pipe.",
+    "sha1": "7421a03f46c9fb645bd232f677f96cc155a0c207",
+    "voice": "af_sarah",
+    "seconds": 4.178125
+  },
+  "foreman_held_01_1": {
+    "text": "Standing by. Meter is running.",
+    "sha1": "0bcd345e89a50c6e5bd671631351e74462e78626",
+    "voice": "af_sarah",
+    "seconds": 2.222875
+  },
+  "foreman_held_02_1": {
+    "text": "Second day on a hold. My guys are getting paid to watch a trench.",
+    "sha1": "9e7afbd7757e80a4236f23c2e99a6af786af5a9d",
+    "voice": "af_sarah",
+    "seconds": 4.06825
+  },
+  "foreman_held_03_1": {
+    "text": "Three days. Either give me a stretch to fill or send us home.",
+    "sha1": "69272d734292001618ee57235e9b51933e7b098d",
+    "voice": "af_sarah",
+    "seconds": 3.4467916666666665
+  }
+}

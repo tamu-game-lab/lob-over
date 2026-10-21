@@ -107,3 +107,31 @@ Each beat has a unique `id`, `title`, `trigger`, `narration`, `prompts:{site,pla
 | `{"kind":"result"}` | the simulation emits its result |
 
 Triggers are latched. Beats remain ordered; an unfired earlier beat is marked skipped when a later beat becomes due. A trigger reached during a paused Site trip waits until the current beat ends. Reset clears readiness, completed/skipped beats and latched triggers. Loading a different scenario disables an incompatible guide. See `PROTOCOL.md` for the message and Ready/Continue behavior.
+
+## Level 1 opt-in fields (WO-L1)
+
+Existing slice and stage scenarios omit these fields and keep their existing behavior.
+
+| Field | Effect |
+| --- | --- |
+| P1 `durationDays` | Resolves automatically at `firedT + durationDays`, without a response order. Omit to retain clearing-machine behavior. |
+| `rules.orderLag: "none"` | All orders land immediately, independent of Site position. |
+| `time.slowUntil: "eventEnd"` | Slow while an event is active or an argument remains unresolved; full otherwise. Commits do not override this. The host uses the authored `secondsPerDayFull` and `secondsPerDaySlow`. |
+| `rules.holdBeforeStartDelaysStart: true` | Holding an unstarted crew keeps it off site and unbilled. Resume (or finite hold expiry) sets its start to that moment. Already-started holds still accrue idle time. |
+| `rules.planControlsClock: true` | Plan can Start and Reset; uses the Level 1 filtered views, unchanged original plan overlay, and Hold/Go-only argument resolution. |
+
+With Plan clock control and `permits.heldBy: "pm"`, permit cards still identify
+each zone and posted number, but may omit `code`. With inspections not required,
+`inspections.cards` may be empty. `crews[].foreman` supplies the authored display name.
+
+Voice lines may have `turns: [{speaker, text}, ...]` instead of a single `speaker`
+and `text`. An exchange is nonempty and all speakers use the existing cast IDs.
+New triggers: `event` matches `eventType`; `arrive` matches `crew` and `status`
+while Site is dismounted within 30 m (at most once per crew/display day);
+`conflict` may match `pair` (`back-pipe`, `pipe-exc`) and `cause` (`leaderStopped`
+when the leader is not moving, otherwise `caughtUp`). The most specific conflict
+match wins: pair and cause, then pair, then any. `conflictRepeat` matches `pair`
+on later catch-ups, at most once per pair/display day, without another stop.
+The first argument retains the existing `crossWithinNextDay` simulation rule.
+For the new line sheet, PM/radio route to Plan, foremen to Site, and lines play
+once except the explicitly daily arrival/repeat triggers and a requested Listen replay.

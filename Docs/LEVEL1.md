@@ -57,8 +57,8 @@ Measured runs (filled in by WO-L1 from `Monitor/test/scripts/level1_push.json` a
 
 | Run | Finish (t, display day) | Idle crew-days (exc, pipe, back) | Argument |
 | --- | --- | --- | --- |
-| Push: hold backfill at the argument, Go two days later | | | |
-| Pull: hold backfill on Day 1, Go on Day 9 | | | |
+| Push: hold backfill at the argument, Go two days later | 19.67, Day 20 | 0.004, 2.003, 4.670 | Yes |
+| Pull: hold backfill on Day 1, Go on Day 9 | 20.00, Day 21 | 0.004, 2.003, 0.000 | No |
 
 ## Voices
 
