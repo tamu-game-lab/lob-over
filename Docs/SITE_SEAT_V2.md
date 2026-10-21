@@ -2,6 +2,8 @@
 
 Revised October 21, 2026, after Bryan's first headset test of the showcase build. This file overrides the headset parts of `Docs/DESIGN_v0.md` ("The VR seat", the truck ride) and of WO-S4. The rest of the design stands: Site sees but cannot act, every order is confirmed in the field, no verdicts during play.
 
+> Later on October 21: Level 1 (`Docs/LEVEL1.md`, K29 to K36) comes first. Its hub is full passthrough with one panel and three crew buttons, and the warp moves the site rather than the rig. The table model, PM standee, stake markers and wrist panel described here return in later levels.
+
 ## What the test found
 
 1. The player fell through the world at start, so the start panel seemed to fly up. Likely cause, to verify: the Interactions Rig block brings Interaction SDK locomotion (the scene contains its locomotor with a gravity factor), and nothing under the player has a collider.

@@ -82,3 +82,14 @@ Goal D:
 /goal Follow Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md "Round 3", Goal D. My replies to Goal C are below; record them and fix what I report first. Then WO-S10, Build and Run, ask me to listen to the slice in the headset, and print ROUND3_D_WAITING. Done when ROUND3_D_WAITING is printed or a stop condition is reported to me. My replies:
 ```
 
+## Round 4 goal, Level 1 (October 21)
+
+Round 3's Goals B to D are on hold. Before pasting:
+1. In Unity: File > New Scene > Empty. In Building Blocks add Camera Rig, Passthrough, Controller Tracking, Hand Tracking and Interactions Rig. No Real Hands, no demo blocks. Save as `Assets/LOBOver/Scenes/Play.unity`.
+2. Keep the Editor open with the MCP running and the headset plugged in.
+3. Start Claude Code with `$env:CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1; claude --model claude-opus-5-5 --effort max`.
+
+```
+/goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md (sections "Unity through the MCP" and "Round 4") and follow them. Confirm Play.unity holds the five blocks, then run WO-L1 and WO-L2 through bash Tools/astra.sh, verified as Round 4 says (max two rejection rounds each), committed and pushed; Build and Run Quest; start Play LOB Over.cmd and leave it running; then ask me for the PC check and the five headset checks and print LEVEL1_WAITING. Done when LEVEL1_WAITING is printed or a stop condition is reported to me.
+```
+

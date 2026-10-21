@@ -73,6 +73,22 @@ Four goals, one stop each. A goal is complete when its token is printed after th
 
 A WO whose acceptance needs Bryan is committed as "accepted, pending Bryan" once its machine checks pass, and closed by his reply at the start of the next goal.
 
+> Later on October 21: Goals B to D are on hold since Bryan's second headset test; Round 4 replaces them.
+
+## Round 4, Level 1 (October 21)
+
+Bryan's second headset test of the WO-S6 build failed: the start panel sat behind a passthrough hole and could not be read, and touching it played a click while nothing happened (its top buttons only change a selection). He then chose a much simpler first playable, `Docs/LEVEL1.md` (K29 to K36): one event with Hold or Go; the headset player looks and talks only; Rules gets one page; the team game now. WO-S8 to WO-S10 wait until Level 1 plays well.
+
+Rules for this round:
+0. First commit the Level 1 documents (`Docs/LEVEL1.md`, `Paper/level1_rules.md`, WO-L1, WO-L2, the decisions and these addenda) and Bryan's `Play.unity` exactly as he made it (save it through the MCP first if it is dirty), and push.
+1. A headset work order is accepted only after Bryan's check in the headset (K35). Machine checks come first and must pass, but they never accept a headset work order. Commit it as "accepted, pending Bryan".
+2. Before dispatching WO-L2, confirm through the MCP that `Assets/LOBOver/Scenes/Play.unity` exists and holds the Camera Rig, Passthrough, Controller Tracking, Hand Tracking and Interactions Rig blocks (today's Check Building Blocks reads only Site.unity and still requires Real Hands; WO-L2 changes both). If it has Real Hands, a second passthrough layer or a demo block, stop and tell Bryan which block to remove in the Building Blocks window (K34); never remove blocks yourself. Never run the old Site Scene builder on Play.unity.
+3. Verify the team connection yourself before asking Bryan: run `Play LOB Over.cmd`, enter Play in the Editor on Play.unity, and confirm Connected, a warp to Marcus (screenshot) and Back.
+4. Leave `Play LOB Over.cmd` running and the app on the headset for Bryan's check.
+5. Ask Bryan in at most eight lines for the PC check (double-click, Start, Hold, Go, the result) and WO-L2's five headset checks, each to be answered OK or with what went wrong.
+
+One goal: WO-L1 and WO-L2 dispatched in parallel (disjoint folders; WO-L2's host tests run once WO-L1 is in), each verified and accepted or rejected (max two rejection rounds), committed and pushed; Build and Run Quest; the request to Bryan; then print `LEVEL1_WAITING`. The next goal starts with his replies and fixes whatever failed before anything new.
+
 ## Finish lines
 
 - First goal: `READY_FOR_PAGES` when WO-05a, WO-S1 and WO-S2 are ACCEPTED.

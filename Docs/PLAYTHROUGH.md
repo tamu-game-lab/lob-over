@@ -2,6 +2,8 @@
 
 Written October 21, 2026. A beat-by-beat walkthrough of the three-minute slice (`Data/Scenarios/slice_texas.json`) that shows how Site, Rules and Plan cooperate, one handoff at a time. Use it three ways: as the script for a rehearsal, as the narration for stakeholders, and as the source of the guided mode (`Data/Guides/slice_guided.json`, WO-S7), which pauses the clock at each beat until every seat presses Ready.
 
+> Later on October 21: this walkthrough is for the slice. Level 1's walkthrough is "How a run goes" in `Docs/LEVEL1.md`.
+
 The numbers are from the measured push run (`Data/transcripts/slice_play.json`). Sample lines are for rehearsal only; in real play everyone uses their own words.
 
 ## Setup (10 minutes)
