@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "id": "slice_guided",
+  "scenario": "slice_texas",
+  "title": "The slice, beat by beat",
+  "source": "Docs/PLAYTHROUGH.md",
+  "autoResumeWhenAllReady": true,
+  "resumeDelaySeconds": 2,
+  "beats": [
+    {
+      "id": "b0_brief",
+      "title": "Morning brief",
+      "trigger": { "kind": "start" },
+      "narration": "Three people, one pipeline. Plan holds the schedule and the money but cannot see the site. Site stands on the site but cannot change anything. Rules holds the manual and the permits and sees neither. The PM has already written the plan.",
+      "prompts": {
+        "plan": "Listen to the PM. Read the three planned lines and the promise. Ask Rules for zone 1's permit code and enter it.",
+        "rules": "Find zone 1's permit card. Check the digits, then read the code to Plan.",
+        "site": "Read zone 1's board aloud once its permit number is posted. Then go to 4+00 to 7+00, look at the walls and the water, and say what you see."
+      },
+      "rulesSection": "permits_holdpoints"
+    },
+    {
+      "id": "b1_collapse",
+      "title": "The wall at 5+20",
+      "trigger": { "kind": "event", "id": "ev_p1" },
+      "narration": "The pipe crew reaches the stretch Site looked at. Only the headset sees what happens next.",
+      "prompts": {
+        "site": "Stop work in zone 1. Tell the others what you see, in your own words, and read the excavator's plate.",
+        "rules": "Read Procedure P-1 aloud, one line at a time. Then find the page that matches what Site describes.",
+        "plan": "Read backfill's buffer behind pipe on the LOB, and the budget. When Rules has read the options, commit your decision."
+      },
+      "rulesSection": "procedures"
+    },
+    {
+      "id": "b2_argument",
+      "title": "Two foremen",
+      "trigger": { "kind": "conflict", "pair": "back-pipe" },
+      "narration": "Backfill started close behind pipe. With pipe stopped, the loader runs into it, and the foremen say why.",
+      "prompts": {
+        "site": "Go to the two foremen and listen. Tell the others what each one says, numbers included.",
+        "rules": "Read Procedure P-6. Put Site's numbers through the front-page rule.",
+        "plan": "Hold the trailing crew or send it home, and say for how long. Ask Site to confirm it stood down."
+      },
+      "rulesSection": "front_rule"
+    },
+    {
+      "id": "b3_orders",
+      "title": "Did the orders land?",
+      "trigger": { "kind": "t", "atLeast": 5.0 },
+      "narration": "A new shift. The office believes its orders reached the crews. Only Site can check.",
+      "prompts": {
+        "plan": "Read the radio log. Tell Site which orders went out and to which crew.",
+        "site": "Go to each crew an order was for. Is it doing what the office ordered? Confirm each order, or report it as not carried out.",
+        "rules": "Write the days lost in the ledger for zone 1."
+      },
+      "rulesSection": "procedures"
+    },
+    {
+      "id": "b4_forecast",
+      "title": "Weather and the next zone",
+      "trigger": { "kind": "t", "atLeast": 7.0 },
+      "narration": "Two signals at once: a forecast in the office and dark towers over the site. And excavation is closing on the end of zone 1.",
+      "prompts": {
+        "plan": "Read the forecast to the team and ask how much trench is open. Ask Rules for zone 2's permit if you want excavation to keep going.",
+        "site": "Look at the sky. Count how far the open trench runs between the excavator and the backfill crew.",
+        "rules": "Read the A2 page and count the open-trench tokens. If Plan asks, check the city limit and read zone 2's code."
+      },
+      "rulesSection": "A2"
+    },
+    {
+      "id": "b5_rain",
+      "title": "Rain",
+      "trigger": { "kind": "event", "id": "ev_a2" },
+      "narration": "Rain. Every crew at half speed for two days, and the open trench fills.",
+      "prompts": {
+        "site": "Say where the water stands and how far it runs.",
+        "rules": "Work out the rework days from the open feet.",
+        "plan": "Commit a change, or commit with no change to carry on."
+      },
+      "rulesSection": "A2"
+    },
+    {
+      "id": "b6_holdpoint_1",
+      "title": "Closing zone 1",
+      "trigger": { "kind": "holdPoint", "zone": 1 },
+      "narration": "Backfill reaches the end of zone 1. Nothing closes without a check from the field, the office and the spec book.",
+      "prompts": {
+        "site": "Go to 15+00. Look for the tracer wire and the bedding and say what is actually there.",
+        "plan": "Read the compaction result from the inbox. Enter the inspection number when Rules reads it.",
+        "rules": "Run Procedure P-3 with Site and Plan. If all three items pass, sign zone 1's inspection card and read its number."
+      },
+      "rulesSection": "permits_holdpoints"
+    },
+    {
+      "id": "b7_holdpoint_2",
+      "title": "Closing zone 2",
+      "trigger": { "kind": "holdPoint", "zone": 2 },
+      "narration": "The last zone. Same handshake.",
+      "prompts": {
+        "site": "Go to 30+00 and check the tracer wire and the bedding.",
+        "plan": "Read the compaction result. Enter zone 2's inspection number when Rules reads it.",
+        "rules": "Run Procedure P-3 again and read zone 2's inspection number."
+      },
+      "rulesSection": "permits_holdpoints"
+    },
+    {
+      "id": "b8_result",
+      "title": "The lines",
+      "trigger": { "kind": "result" },
+      "narration": "The job is done. Nobody was told whether any call was right. Look at where the lines ended up against the promise.",
+      "prompts": {
+        "plan": "Show the overlay to the team: planned against actual, the flat stretches, the change log.",
+        "site": "Say which moment you remember from the field.",
+        "rules": "Compare your ledger with Plan's overlay."
+      },
+      "rulesSection": "lookup"
+    }
+  ]
+}

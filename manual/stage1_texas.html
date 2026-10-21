@@ -1,0 +1,230 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stage 1 — Push — Field manual</title><style>body{font:16px/1.55 system-ui,sans-serif;color:#283942;background:#fffdf8;margin:24px auto;padding:0 20px;max-width:1000px}
+nav{display:flex;flex-wrap:wrap;gap:12px}a{color:inherit}section{padding:20px 0;border-top:1px solid #bac6ca;scroll-margin-top:15px}
+table{border-collapse:collapse;width:100%}th,td{text-align:left;vertical-align:top;border:1px solid #bac6ca;padding:8px}.table-scroll{overflow:auto}
+li{margin:8px 0}section:target{border-top:4px solid #324f60}@media print{nav{display:none}section{break-before:page}}</style></head><body><main><h1>Stage 1 — Push — Field manual</h1>
+<h3>LOB, Over — Field Manual v0</h3>
+<p><i>Rules seat only. Draft of October 14, 2026, for validation by Phumpat and Dr. Rybkowski. Values marked [to validate] are game hypotheses; everything else is from the LOB-Game catalog or the Disruption Event Library workbook.</i></p>
+<nav aria-label="Manual sections"><a href="#front_rule">How to use this manual</a><a href="#city_texas">City page: Texas</a><a href="#indicators">What am I looking at?</a><a href="#P1">P1 — Trench collapse / cave-in</a><a href="#A2">A2 — Extreme weather</a><a href="#E1">E1 — Buried utility or existing pipeline strike</a><a href="#P2">P2 — Late pipe delivery / supply chain lag</a><a href="#P3">P3 — Pipe dropped during lifting / rigging failure</a><a href="#B1">B1 — Poor backfill compaction density, QC test failure</a><a href="#A1">A1 — Trench movement and water-driven settlement</a><a href="#permits_holdpoints">Permits and hold points</a><a href="#lookup">Lookup tables</a><a href="#procedures">Procedures</a></nav>
+<section id="front_rule"><h2>How to use this manual</h2><p>You are the spec-keeper. You cannot see the site and you cannot touch the plan. Site tells you what it sees; you find the page that matches; you read Plan the effects, the costs and the checks; you issue permits and sign inspections; you keep the zone ledger. The clock runs while you talk: at full speed a day passes every 5 seconds, during an event every 20 seconds.</p>
+<p>Three habits:</p>
+<ol start="1"><li><b>Make Site describe, not diagnose.</b> Ask for what it sees: water, wall, machine plate, sky, ticket, who is standing around. The indicator table turns descriptions into a page.</li><li><b>Read procedures aloud, one line at a time.</b> The procedures at the back name the seat for each line. A procedure read aloud is faster than a discussion.</li><li><b>Check the digits before you read a code.</b> Add the four digits of any code; the last digit of the sum must equal the digit after the dash (4821-5: 4+8+2+1 = 15). If it does not, the card is a misprint; say so.</li></ol>
+<h3>The one rule</h3>
+<p><b>Days lost to an event = rate drop × duration.</b> The crew behind idles for whatever exceeds its buffer.</p>
+<ul><li>Rate drop is the fraction of the normal rate the crew loses (a crew at 60% of normal has a 40% drop; a full stop is 100%).</li><li>Buffer is the vertical gap in days between the two crews' lines at today's station. Plan reads it off the LOB; Site can estimate it as the distance between the crews divided by the trailing crew's feet per day.</li><li>If days lost ≤ buffer, nobody idles. If days lost &gt; buffer, the trailing crew idles for the difference unless Plan holds it (same idle, but ordered and without the argument) or demobilizes it.</li></ul>
+<p>Worked example (checked in simulation): late pipe (P2) at 50% for 3 days costs 1.5 days. With a 1 day buffer, backfill idles half a day. With 1.5 days of buffer it idles nothing.</p>
+<div class="table-scroll"><table>
+<tr><th>Drop</th><th>1 day</th><th>2 days</th><th>3 days</th></tr>
+<tr><td>30%</td><td>0.3</td><td>0.6</td><td>0.9</td></tr>
+<tr><td>40%</td><td>0.4</td><td>0.8</td><td>1.2</td></tr>
+<tr><td>50%</td><td>0.5</td><td>1.0</td><td>1.5</td></tr>
+<tr><td>60%</td><td>0.6</td><td>1.2</td><td>1.8</td></tr>
+<tr><td>80%</td><td>0.8</td><td>1.6</td><td>2.4</td></tr>
+<tr><td>100% (stop)</td><td>1.0</td><td>2.0</td><td>3.0</td></tr>
+</table></div>
+<p><b>Job sign (ask Site to read it):</b> city TX, 12 in PVC DR18 water main, 47 contract days, 6000 ft in 4 zones of 1500 ft.</p></section>
+<section id="city_texas"><h2>City page: Texas</h2><p><b>Signature.</b> Soft saturated clay over a shallow water table. No rock at all.</p>
+<div class="table-scroll"><table>
+<tr><th>Hazard</th><th>Rating</th><th>What it means on this job</th></tr>
+<tr><td>Soil cohesion</td><td>V.High</td><td>Dangerously weak ground when wet; vertical cuts slump at the toe. Treat seeping stretches as OSHA Type C.</td></tr>
+<tr><td>Bedrock depth</td><td>Low</td><td>Rock is too deep to reach. E2 cannot happen here.</td></tr>
+<tr><td>Groundwater table</td><td>High</td><td>Expect seepage in low stretches; dewatering matters.</td></tr>
+<tr><td>Precipitation intensity</td><td>V.High</td><td>Heavy rain is a matter of when. Open trench floods.</td></tr>
+<tr><td>Temperature extremes</td><td>Med</td><td>Not a driver on this job.</td></tr>
+<tr><td>Traffic congestion</td><td>Med</td><td>Lead days: catalog + 0. Remobilizing a crew: 1 day(s).</td></tr>
+</table></div>
+<p><b>Situations that can occur here:</b> E1, P1, P2, P3, B1, A1, A2. Not E2.</p>
+<p><b>Protection here:</b> sloping the trench is allowed. A trench box works at full benefit (no running sand). Shoring works.</p>
+<p><b>Open-trench limit:</b> the city allows 2 zone(s) open to excavation at a time (open = permit posted and not yet backfilled and signed) [to validate; comparable rules elsewhere: 300 ft at the end of each day in Sacramento County, 200 ft at any time in Framingham].</p>
+<p><b>Locates:</b> Texas811 ticket, 48 hours before digging; 14-day ticket life; 18 in tolerance zone each side of a marked line (hand-dig inside it).</p>
+<p><b>Permits in this stage:</b> all issued and posted by the PM before Day 1.</p></section>
+<section id="indicators"><h2>What am I looking at?</h2><p>Ask Site for the words in the left column. Then turn to the page.</p>
+<div class="table-scroll"><table>
+<tr><th>Site says</th><th>With the city page saying</th><th>Treat as</th><th>Page</th></tr>
+<tr><td>Water seeping from the lower wall; a puddle along the toe; clay soft to the thumb; small slabs let go</td><td>Groundwater High or V.High</td><td>Type C ground; collapse likely here; protection bought ahead applies to this stretch</td><td>P1 (before it happens)</td></tr>
+<tr><td>The wall has slumped into the trench; pipe crew out of the trench; standing water</td><td>any</td><td>Trench collapse</td><td>P1</td></tr>
+<tr><td>Machine stopped, operator out of the cab, an orange flag or paint line, someone on a phone</td><td>any</td><td>Buried utility strike or locate</td><td>E1</td></tr>
+<tr><td>Bucket bouncing, sparks or dust, the excavator backing off the same spot</td><td>Bedrock depth High or V.High</td><td>Hard rock refusal</td><td>E2</td></tr>
+<tr><td>Pipe crew standing at an empty rack; a truck not at the gate; the foreman looking at a ticket</td><td>any</td><td>Late delivery</td><td>P2</td></tr>
+<tr><td>Pipe on the ground beside the truck, boom down, slings on the ground</td><td>any</td><td>Dropped pipe. Ask Site to inspect the joint: cracked is damage; whole is a safety hold only</td><td>P3</td></tr>
+<tr><td>A tester kneeling on the backfill with a gauge; backfill crew waiting</td><td>any</td><td>Compaction test (result arrives in Plan's inbox)</td><td>B1</td></tr>
+<tr><td>A dip or a crack line in a backfilled stretch; water standing on finished grade</td><td>Groundwater High or V.High</td><td>Settlement</td><td>A1</td></tr>
+<tr><td>Towers to the south; Plan's inbox says 70%</td><td>Precipitation High or V.High</td><td>Rain within a day; count the open trench now</td><td>A2</td></tr>
+<tr><td>Pipe stencil does not match the purchase order (Site reads the stencil, Plan reads the order)</td><td>any</td><td>Wrong delivery (deviation F4)</td><td>P2, option B</td></tr>
+<tr><td>A box or a lent machine standing at a stake Plan did not name</td><td>any</td><td>Wrong station (deviation F3); Plan radios the right stake</td><td>Procedure P-4</td></tr>
+<tr><td>A held crew still working; a stopped excavator still digging</td><td>any</td><td>Order not received (deviation F1); Plan radios again</td><td>Procedure P-1, line 6</td></tr>
+<tr><td>Two foremen facing each other, crews standing</td><td>any</td><td>Conflict: the trailing crew has caught its leader</td><td>Procedure P-6</td></tr>
+</table></div></section>
+<section id="P1"><h2>P1 — Trench collapse / cave-in</h2><div class="table-scroll"><table>
+<tr><th></th><th></th></tr>
+<tr><td>Hits</td><td>Pipe laying, full stop</td></tr>
+<tr><td>Cause</td><td>Sidewall failure from inadequate shoring or sloping; wet, weak ground</td></tr>
+<tr><td>Duration</td><td>3, 2 or 1 days to clear with a Small, Standard or Large excavator. The excavator that clears it stops digging for the same days</td></tr>
+<tr><td>Hidden consequence</td><td>Clearing it with your own machine moves the delay to excavation; the cost is not money, it is that crew falling behind</td></tr>
+</table></div>
+<div class="table-scroll"><table>
+<tr><th>Option</th><th>What it does</th><th>Check (who)</th></tr>
+<tr><td>A. Clear with your own excavator</td><td>Pipe at 0% until cleared, then 100%. Excavation stops for the clearing days (3/2/1 by size); the machine drives to the collapse the same day, but the order itself lands at the next shift unless Site is standing with the excavation crew</td><td>The plate on the excavator on site (Site). Excavation's lead over pipe in days (Plan): if the lead is less than the clearing days, excavation will not be the only crew waiting</td></tr>
+<tr><td>B. Emergency shoring</td><td>Work resumes in 1 day. $18,000 plus $150 a day for the rest of the job</td><td>Budget (Plan)</td></tr>
+<tr><td>C. Hire an outside excavator</td><td>Clears in 3/2/1 days by size after the catalog lead days + this city's delay; price + $25,000 mobilization</td><td>Lead days (Rules); budget (Plan)</td></tr>
+</table></div>
+<p><b>Before it happens.</b> Where Site reports seepage and a soft toe (indicator table, first row), protection bought ahead changes the collapse, not the chance of it in this game: a trench box ($14,000 + $90 a day) halves the clearing time; shoring ($32,000 + $180 a day) cuts it to 0.4; sloping ($6,000) to 0.7 and is refused in New York, Los Angeles and Bangkok. The box must cover the stretch Site named; Site confirms where it stands.</p>
+<p>The front-page rule for backfill: with a Standard excavator, 2 days lost. Ask Plan: what is backfill's buffer behind pipe today? Ask Site: is the backfill crew still moving?</p></section>
+<section id="A2"><h2>A2 — Extreme weather</h2><div class="table-scroll"><table>
+<tr><th></th><th></th></tr>
+<tr><td>Hits</td><td>All crews</td></tr>
+<tr><td>Cause</td><td>Heavy rain, high wind, extreme heat or freezing make work unsafe or flood the trench</td></tr>
+<tr><td>Rate</td><td>50% drop for all three</td></tr>
+<tr><td>Duration</td><td>2 days</td></tr>
+<tr><td>Hidden consequence</td><td>Like A1 with a bigger slowdown. New rule [to validate]: every 500 ft of trench open on the rain day adds 1 day of pumping and re-bedding before pipe laying resumes in that stretch</td></tr>
+</table></div>
+<div class="table-scroll"><table>
+<tr><th>Option</th><th>What it does</th><th>Check (who)</th></tr>
+<tr><td>A. Work with the dropped rate</td><td>All three at 50% for 2 days</td><td>Spare days (Plan)</td></tr>
+<tr><td>B. Hire more equipment</td><td>Speeds whichever crews get it; price + mobilization</td><td>Budget (Plan)</td></tr>
+<tr><td>C. Borrow equipment</td><td>The workbook names no source</td><td>Which crew has room? (Plan)</td></tr>
+<tr><td>D. Rent a drainage pump now</td><td>Excavation and backfill back to 100% during the rain; pipe laying stays at 50%; the rework after the rain is halved. $4,000 plus $60 a day [to validate]</td><td>Count the open-trench tokens (Rules); is the sky to the south dark (Site); forecast percentage in the inbox (Plan)</td></tr>
+</table></div>
+<p>The forecast arrives a day ahead in Plan's inbox. The rework after the rain scales with how much trench is open when it starts, which is the pull lesson in one event. Ask Rules (yourself): how many tokens are on the table?</p></section>
+<section id="E1"><h2>E1 — Buried utility or existing pipeline strike</h2><div class="table-scroll"><table>
+<tr><th></th><th></th></tr>
+<tr><td>Hits</td><td>Excavation</td></tr>
+<tr><td>Cause</td><td>Excavation equipment contacts and damages a buried third-party utility, or the project's own pipe laid earlier</td></tr>
+<tr><td>Rate</td><td>40% drop: excavation at 60% of normal</td></tr>
+<tr><td>Duration</td><td>3 days (the Situations sheet says 1; the game uses 3) [to validate]</td></tr>
+<tr><td>Hidden consequence</td><td>Slower digging lets the pipe crew catch up to the excavator</td></tr>
+</table></div>
+<div class="table-scroll"><table>
+<tr><th>Option</th><th>What it does</th><th>Check (who)</th></tr>
+<tr><td>A. Work with the dropped rate</td><td>Excavation at 60% for 3 days, no cost</td><td>Pipe's buffer behind excavation on the LOB (Plan)</td></tr>
+<tr><td>B. Hire more equipment</td><td>Rate back up after arrival; price + $25,000 mobilization; lead days from the catalog + this city's delay</td><td>Lead days (Rules, city page); budget (Plan)</td></tr>
+<tr><td>C. Borrow the backfill loader</td><td>Excavation back up; backfill's line goes flat while its machine is away (it drives along the haul road the same day)</td><td>Backfill's buffer behind pipe (Plan); the loader actually moved (Site)</td></tr>
+<tr><td>D. Buy protection equipment</td><td>Rate reset to 100% at once; the most expensive line in the catalog</td><td>Budget (Plan)</td></tr>
+</table></div>
+<p>Ask Site: is the line marked and is anyone hand-digging inside the tolerance zone? Ask Plan: how many days of buffer does pipe have behind excavation right now?</p></section>
+<section id="P2"><h2>P2 — Late pipe delivery / supply chain lag</h2><div class="table-scroll"><table>
+<tr><th></th><th></th></tr>
+<tr><td>Hits</td><td>Pipe laying</td></tr>
+<tr><td>Cause</td><td>Pipe, fittings or specialty joints arrive late from the supplier</td></tr>
+<tr><td>Rate</td><td>50% drop</td></tr>
+<tr><td>Duration</td><td>3 days</td></tr>
+<tr><td>Hidden consequence</td><td>The crew behind keeps working at full speed and can run into the stalled pipe crew unless it is slowed too</td></tr>
+</table></div>
+<div class="table-scroll"><table>
+<tr><th>Option</th><th>What it does</th><th>Check (who)</th></tr>
+<tr><td>A. Wait for the delivery</td><td>50% for 3 days, then 100%; 1.5 days lost</td><td>Backfill's buffer (Plan)</td></tr>
+<tr><td>B. Alternate supplier</td><td>50% for 1 day, then 100%; premium price [to validate]. Site reads the stencil on arrival against Plan's order: a mismatch is a wrong delivery (F4)</td><td>Budget (Plan); the stencil (Site)</td></tr>
+<tr><td>C. Slow excavation and backfill to match</td><td>All three throttled; nobody catches anybody; the whole job slides</td><td>Does any crew have its own deadline? (Plan)</td></tr>
+</table></div>
+<p>Ask Site: is a truck at the gate, and what does its ticket say? Ask Plan: how many feet of pipe are on the rack (the daily report says)?</p></section>
+<section id="P3"><h2>P3 — Pipe dropped during lifting / rigging failure</h2><div class="table-scroll"><table>
+<tr><th></th><th></th></tr>
+<tr><td>Hits</td><td>Pipe laying</td></tr>
+<tr><td>Cause</td><td>A rigging failure drops a pipe section during the lift</td></tr>
+<tr><td>Rate</td><td>80% drop: pipe at 20% of normal while rigging is held for inspection</td></tr>
+<tr><td>Duration</td><td>2 days (the Situations sheet says 1 to 2)</td></tr>
+<tr><td>Hidden consequence</td><td>Like P2 but worse: backfill can catch up before the pipe issue is even fixed</td></tr>
+</table></div>
+<div class="table-scroll"><table>
+<tr><th>Option</th><th>What it does</th><th>Check (who)</th></tr>
+<tr><td>A. Hire another mobile crane</td><td>Rate up after arrival; price + mobilization; crane lead days are the longest in the catalog (7 to 10)</td><td>Lead days (Rules); budget (Plan)</td></tr>
+<tr><td>B. Hire a safety inspection</td><td>Resets the rate to 100% at once when the slowdown is a safety hold; does nothing for a cracked pipe; expensive</td><td>Site inspects the joint: cracked or whole</td></tr>
+<tr><td>C. Slow excavation and backfill to match</td><td>All three throttled</td><td>Own deadlines? (Plan)</td></tr>
+<tr><td>D. Work with the dropped rate</td><td>20% of normal for 2 days; 1.6 days lost</td><td>Backfill's buffer (Plan)</td></tr>
+</table></div>
+<p>Ask Site first: is the dropped section cracked? Replacement sticks are a purchase and a wait; a whole pipe is a safety hold only.</p></section>
+<section id="B1"><h2>B1 — Poor backfill compaction density, QC test failure</h2><div class="table-scroll"><table>
+<tr><th></th><th></th></tr>
+<tr><td>Hits</td><td>Backfill</td></tr>
+<tr><td>Cause</td><td>A density test on placed backfill fails to meet spec (too wet after rain, too dry in heat, poor lift thickness)</td></tr>
+<tr><td>Rate</td><td>30% drop: backfill at 70% while it reworks the lift</td></tr>
+<tr><td>Duration</td><td>3 days (the Situations sheet says 2; the game uses 3) [to validate]</td></tr>
+<tr><td>Hidden consequence</td><td>No crew behind to collide with, but paving over it first means tearing up new pavement to fix it later</td></tr>
+</table></div>
+<div class="table-scroll"><table>
+<tr><th>Option</th><th>What it does</th><th>Check (who)</th></tr>
+<tr><td>A. Borrow the excavator</td><td>Backfill up; excavation's line goes flat while its machine is away (same-day move along the line)</td><td>Has excavation finished, or does it have room to spare? (Plan)</td></tr>
+<tr><td>B. Hire more equipment</td><td>Up after lead days; price + mobilization</td><td>Lead days (Rules); budget (Plan)</td></tr>
+<tr><td>C. Hire a compactor</td><td>Reset to 100%; expensive</td><td>Budget (Plan)</td></tr>
+<tr><td>D. Work with the dropped rate</td><td>70% for 3 days; 0.9 days lost</td><td>Spare days to the deadline (Plan)</td></tr>
+</table></div>
+<p>The hold point is the place to catch this: Procedure P-3 before any zone is signed. Ask Site: did the tester's gauge go in the trench or on top of it?</p></section>
+<section id="A1"><h2>A1 — Trench movement and water-driven settlement</h2><div class="table-scroll"><table>
+<tr><th></th><th></th></tr>
+<tr><td>Hits</td><td>All crews</td></tr>
+<tr><td>Cause</td><td>After backfill, groundwater movement, poor compaction or thin bedding lets the trench settle or shift</td></tr>
+<tr><td>Rate</td><td>30% drop for all three</td></tr>
+<tr><td>Duration</td><td>2 days</td></tr>
+<tr><td>Hidden consequence</td><td>All three slow together so nobody catches up, until an uneven fix speeds two crews and leaves one behind, which makes a new collision</td></tr>
+</table></div>
+<div class="table-scroll"><table>
+<tr><th>Option</th><th>What it does</th><th>Check (who)</th></tr>
+<tr><td>A. Work with the dropped rate</td><td>All three at 70% for 2 days</td><td>Spare days across the whole site (Plan)</td></tr>
+<tr><td>B. Hire more equipment</td><td>Speeds whichever crews get it; price + mobilization each</td><td>Budget (Plan)</td></tr>
+<tr><td>C. Borrow equipment</td><td>Moves speed from one crew to another; the workbook names no source</td><td>Which crew has room? (Plan)</td></tr>
+<tr><td>D. Buy a pump to drain</td><td>Excavation and backfill back to 100%; pipe laying stays at 70%</td><td>Is pipe laying the crew everyone is waiting on? (Plan reads the LOB)</td></tr>
+</table></div>
+<p>Ask Site: where is the water standing, on finished grade or in the open trench?</p></section>
+<section id="permits_holdpoints"><h2>Permits and hold points</h2><p><b>Permits.</b> A zone opens to excavation when Plan enters the zone's permit code and the zone board posts the permit number. The city allows 2 zone(s) open at a time. Excavation that reaches an unpermitted boundary waits there and bills; excavation that crosses one is pushing ahead (deviation F2) and draws a city fine of $10,000 [to validate].</p>
+<p>In this stage the permits are all issued and posted by the PM before Day 1. A permit card returns to the deck when its zone is backfilled and signed.</p>
+<p><b>Hold points.</b> Backfill may not close a zone until you have signed its inspection card and Plan has entered the card's number. Before you sign, run the checklist with Site:</p>
+<ul><li>[ ] Tracer wire placed</li><li>[ ] Bedding placed and graded</li><li>[ ] Compaction test passed (result in Plan's inbox)</li></ul>
+<p>The compaction result arrives in Plan's inbox the evening backfill reaches the zone end. A failed result is situation B1.</p>
+<p><b>Codes on the cards in this stage</b> (check the digits before you read one aloud):</p>
+<div class="table-scroll"><table>
+<tr><th>Zone</th><th>Permit number</th><th>Code</th></tr>
+<tr><td>1</td><td>TX-0141</td><td>4821-5</td></tr>
+<tr><td>2</td><td>TX-0142</td><td>7306-6</td></tr>
+<tr><td>3</td><td>TX-0143</td><td>2590-6</td></tr>
+<tr><td>4</td><td>TX-0144</td><td>9147-1</td></tr>
+</table></div>
+<div class="table-scroll"><table>
+<tr><th>Zone</th><th>Inspection card number</th></tr>
+<tr><td>1</td><td>3417-5</td></tr>
+<tr><td>2</td><td>6082-6</td></tr>
+<tr><td>3</td><td>1935-8</td></tr>
+<tr><td>4</td><td>7254-8</td></tr>
+</table></div></section>
+<section id="lookup"><h2>Lookup tables</h2><p><b>Machines (LOB-Game catalog).</b> Idle machines bill. Mobilization $25,000 per order; a released machine refunds half its price.</p>
+<div class="table-scroll"><table>
+<tr><th>Machine</th><th>ft/day</th><th>$/day</th><th>Price</th><th>Lead days</th></tr>
+<tr><td>Excavator Small</td><td>165</td><td>$900</td><td>$18,000</td><td>3 + city</td></tr>
+<tr><td>Excavator Standard</td><td>220</td><td>$1,200</td><td>$30,000</td><td>5 + city</td></tr>
+<tr><td>Excavator Large</td><td>330</td><td>$1,800</td><td>$55,000</td><td>7 + city</td></tr>
+<tr><td>Crane Standard</td><td>180</td><td>$1,800</td><td>$45,000</td><td>7 + city</td></tr>
+<tr><td>Crane Heavy</td><td>270</td><td>$2,800</td><td>$80,000</td><td>10 + city</td></tr>
+<tr><td>Backfill Small</td><td>180</td><td>$1,400</td><td>$20,000</td><td>3 + city</td></tr>
+<tr><td>Backfill Standard</td><td>250</td><td>$1,800</td><td>$30,000</td><td>5 + city</td></tr>
+<tr><td>Backfill Large</td><td>375</td><td>$2,600</td><td>$50,000</td><td>7 + city</td></tr>
+</table></div>
+<p>City lead delay: Texas, Florida 0; Las Vegas 1; Los Angeles, New York, Bangkok 2 [to validate]. Remobilization delay: 1, 1, 2, 3 days in the same order.</p>
+<p><b>Protection.</b></p>
+<div class="table-scroll"><table>
+<tr><th>Kind</th><th>Price</th><th>Per day</th><th>Effect on a collapse</th><th>Notes</th></tr>
+<tr><td>Slope the trench</td><td>$6,000</td><td>—</td><td>clearing time × 0.7</td><td>Refused in New York, Los Angeles, Bangkok</td></tr>
+<tr><td>Trench box</td><td>$14,000</td><td>$90</td><td>× 0.5</td><td>Benefit halved in running sand (Florida)</td></tr>
+<tr><td>Trench shoring</td><td>$32,000</td><td>$180</td><td>× 0.4</td><td></td></tr>
+<tr><td>Emergency shoring</td><td>$18,000</td><td>$150</td><td>resume in 1 day</td><td>After the collapse only</td></tr>
+<tr><td>Drainage pump</td><td>$4,000</td><td>$60</td><td>rain rework × 0.5</td><td>[to validate]</td></tr>
+</table></div>
+<p><b>Holding versus demobilizing a crew.</b></p>
+<div class="table-scroll"><table>
+<tr><th></th><th>Hold</th><th>Demobilize</th></tr>
+<tr><td>Billing</td><td>Continues: machine $/day × 1.3 overhead</td><td>Stops from the next day</td></tr>
+<tr><td>Return</td><td>At once on resume (next shift unless Site is there)</td><td>Fee $5,000 + 1 day(s) [to validate]</td></tr>
+<tr><td>Crew mood</td><td>Worsens each day held; visible in the field, never in the report</td><td>—</td></tr>
+<tr><td>Two-day gap, Standard backfill crew</td><td>$4,680 billed ($1,800 × 1.3 × 2)</td><td>$5,000 fee, and the crew is back 1 day(s) after the call</td></tr>
+</table></div>
+<p><b>Money.</b> Daily overhead is 30% of crew billing. Budget and deadline are on the job sign and the PM's letter. The job is lost when funds go below zero or the deadline passes.</p></section>
+<section id="procedures"><h2>Procedures</h2><p>Read aloud, one line at a time, the seat named first. Do not skip a line because it seems obvious; the lines are the handshake.</p>
+<p><b>P-1 Stop work</b></p>
+<ol start="1"><li>Site: raise the red flag at the station and say the zone. ("Stop work, zone one.")</li><li>Site: report what you see in words from the indicator table. Do not name the situation.</li><li>Rules: name the page and read Plan the rate, duration, options and checks.</li><li>Plan: read the buffer off the LOB and the budget; say which option and which holds; commit.</li><li>Site: ride to each crew the orders touch; confirm each order as carried out, or report it as not carried out.</li><li>Plan: if an order was not carried out, radio it again; Site confirms again.</li><li>Rules: write the days lost in the ledger. Say "clear to resume" only when Site has confirmed the section is cleared; Plan resumes.</li></ol>
+<p><b>P-2 Zone handshake (permit)</b></p>
+<ol start="1"><li>Plan: say which zone excavation will enter next and when.</li><li>Rules: count open zones against the city limit; if there is room, take the zone's permit card, check its digits, read the code.</li><li>Plan: enter the code; read back the permit number the board posted.</li><li>Site: at the next stop, read the number off the zone board. If it differs, say so.</li><li>Rules: write the permit day in the ledger and place one open-trench token per 500 ft as excavation advances.</li></ol>
+<p><b>P-3 Hold point (inspection)</b></p>
+<ol start="1"><li>Site: report that backfill is at the zone end and read the checklist items you can see (tracer wire, bedding).</li><li>Plan: read the compaction result from the inbox.</li><li>Rules: if all three items pass, sign the inspection card and read its number.</li><li>Plan: enter the number.</li><li>Site: confirm backfill moved on. Rules: write the inspection day, remove that zone's tokens, return its permit card.</li></ol>
+<p><b>P-4 Lend a machine</b></p>
+<ol start="1"><li>Plan: say which machine, to which crew, for how many days, and where it must go (station).</li><li>Rules: read the lender's line going flat for the lend days; the machine moves the same day, but the order lands at the next shift unless Site is with the lending crew.</li><li>Plan: commit.</li><li>Site: ride to the receiving station; confirm the machine arrived at the right stake (a wrong stake is F3), or report not carried out.</li></ol>
+<p><b>P-5 Resume or demobilize</b></p>
+<ol start="1"><li>Plan: for each held crew, say resume or demobilize.</li><li>Rules: for demobilize, read the fee and the return delay; for resume, remind that the order lands next shift unless Site is at the station.</li><li>Plan: commit.</li><li>Site: confirm the crew moved, or that it packed up.</li></ol>
+<p><b>P-6 Conflict (the argument)</b></p>
+<ol start="1"><li>Site: ride to the two foremen; listen; report what each one says.</li><li>Rules: read the front-page rule with today's numbers: the trailing crew's feet per day against the leader's.</li><li>Plan: hold the trailing crew for a number of days, or demobilize it; commit.</li><li>Site: confirm the crew stood down.</li><li>Rules: write the idle days in the ledger. Do not say whose fault it was; the lines will.</li></ol></section></main></body></html>

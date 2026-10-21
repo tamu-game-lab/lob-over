@@ -6,15 +6,18 @@ select,input{font:inherit;padding:8px;max-width:100%}label{display:flex;align-it
 <section class="panel showcase"><div class="setup"><h2>Showcase session</h2>
 <label>Scenario <select id="scenario"><option value="slice_texas">Slice &middot; Texas</option><option value="stage1_texas">Stage 1 &middot; Texas</option><option value="stage2_texas">Stage 2 &middot; Texas</option></select></label>
 <label><input id="autoplan" type="checkbox" checked>Autoplan</label>
+<label><input id="guided" type="checkbox">Guided</label>
+<label>Guide <select id="guide-picker"><option value="slice_guided">Slice · guided playthrough</option></select></label>
 <label>Replay <select id="script"><option value="slice_autoplan">Slice &middot; autoplan</option><option value="slice_play">Slice &middot; play</option><option value="slice_pull_play">Slice &middot; pull play</option><option value="stage1_pm_play">Stage 1 &middot; PM play</option><option value="stage2_pull_play">Stage 2 &middot; pull play</option></select></label>
 <label>Script file <input id="script-file" type="file" accept=".json,application/json"></label>
-<div class="controls"><a id="open-plan" target="_blank" href="plan.html">Open Plan tab</a><a id="open-site" target="_blank" href="site.html">Open Site tab</a><a id="manual" target="_blank" href="manual/slice_texas.pdf">Field manual</a><a href="howto.html" target="_blank">How to play</a></div>
+<div class="controls"><a id="open-plan" target="_blank" href="plan.html">Open Plan tab</a><a id="open-site" target="_blank" href="site.html">Open Site tab</a><a id="open-rules" target="_blank" href="rules.html">Open Rules tab</a><a id="manual" target="_blank" href="manual/slice_texas.pdf">Field manual</a><a href="howto.html" target="_blank">How to play</a></div>
 <label><input id="fast" type="checkbox">Fast pacing</label><small>Keep this host tab open for the session.</small></div>
-<div class="room"><span>Phone room code</span><b id="room-code"></b><canvas id="room-qr" role="img" aria-label="Scan to open the Site seat"></canvas><a id="room-link">Open Site by room code</a><div id="room-status" role="status">Connecting to room server</div></div></section>
+<div class="room"><span>Phone room code</span><b id="room-code"></b><canvas id="room-qr" role="img" aria-label="Scan to open the Site seat"></canvas><a id="room-link">Open Site by room code</a><a id="rules-room-link">Open Rules by room code</a><div id="room-status" role="status">Connecting to room server</div></div></section>
 <section class="panel"><div class="controls"><button id="start" class="primary" data-action="start">Start</button><button id="pause" data-action="pause">Pause</button><button id="resume" data-action="resume">Resume</button><button id="reset" data-action="reset">Reset</button><a id="download" href="#" download>Download transcript</a></div><div class="metrics"><div><span>Simulation t</span><b id="time">0.00</b></div><div><span>Display day</span><b id="day">1</b></div><div><span>Speed</span><b id="speed">paused</b></div></div><p id="autoplan-status">autoplan: off</p><p id="feedback" role="status"></p></section>
 <div class="two"><section class="panel"><h2>Events</h2><table id="events"></table></section><section class="panel"><h2>Deviation states</h2><table id="deviations"></table></section></div>
 <div class="two"><section class="panel"><details open><summary>Plan view JSON</summary><pre id="plan-view"></pre></details></section><section class="panel"><details open><summary>Site view JSON</summary><pre id="site-view"></pre></details></section></div><section class="panel"><h2>Result</h2><div id="result">—</div></section></main>
 <script src="lib/transport.js"></script>
+<script src="lib/guide.js"></script>
 <script type="module">
 'use strict';
 const $=id=>document.getElementById(id),esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -27,18 +30,21 @@ async function json(path) { const response=await fetch(path);if(!response.ok)thr
 const catalog=loadCatalogFromObject(await json('Data/catalog.json'));
 const stages=await Promise.all(['slice_texas','stage1_texas','stage2_texas'].map(async id=>loadScenarioFromObject(await json(`Data/Scenarios/${id}.json`),catalog)));
 const scripts=new Map(await Promise.all([...$('script').options].map(async option=>[option.value,await json(`Data/scripts/${option.value}.json`)])));
+const guides=new Map(await Promise.all([...$('guide-picker').options].map(async option=>[option.value,await json(`Data/Guides/${option.value}.json`)])));
 const core=createHost({scenario:stages[0],catalog,stages,autoplan:scripts.get('slice_autoplan'),allowFast:true});
 const runId=crypto.randomUUID();localStorage.setItem('lob-over-run',runId);
-for(const seat of ['plan','site'])$('open-'+seat).href=`${seat}.html?run=${encodeURIComponent(runId)}`;
+for(const seat of ['plan','site','rules'])$('open-'+seat).href=`${seat}.html?run=${encodeURIComponent(runId)}`;
 const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const roomCode=[...crypto.getRandomValues(new Uint8Array(6))].map(value=>alphabet[value%alphabet.length]).join('');
 $('room-code').textContent=roomCode;
 const roomURL=new URL('site.html',location.href);roomURL.searchParams.set('room',roomCode);
 $('room-link').href=roomURL.href;drawQR($('room-qr'),roomURL.href);
+const rulesRoomURL=new URL('rules.html',location.href);rulesRoomURL.searchParams.set('room',roomCode);$('rules-room-link').href=rulesRoomURL.href;
 const transports=LobTransport.host(core,{runId,roomCode,
  onRoom:()=>{$('room-status').textContent='Room ready';$('room-status').dataset.ready='true';},
  onStatus:text=>{$('room-status').textContent=text;$('room-status').dataset.ready='false';}});
 const socket=LobTransport.direct(core);
+LobGuide.attach(socket,'facilitator');
 globalThis.showcase={core,runId,roomCode};
 addEventListener('pagehide',()=>{core.close();transports.close();if(localStorage.getItem('lob-over-run')===runId)localStorage.removeItem('lob-over-run');},{once:true});
 socket.onopen=()=>socket.send(JSON.stringify({t:'hello',v:1,seat:'facilitator',client:'web'}));
@@ -54,9 +60,16 @@ function render(){
 function acceptState(message){if(state?.runId!==message.runId){result=null;$('result').textContent='—';}state=message;stage=message.stage;lastDay=message.day;render();}
 socket.onmessage=event=>{const message=JSON.parse(event.data);if(message.t==='welcome'){$('connection').textContent=message.mirror?'Mirror · read only':'Connected';acceptState(message.state);}else if(message.t==='state')acceptState(message);else if(message.t==='nack')$('feedback').textContent=message.reason;else if(message.t==='result'){result=message;$('result').textContent=Object.entries(message).filter(([k,v])=>typeof v==='number'&&!['v','day'].includes(k)).map(([k,v])=>`${k}: ${Number(v.toFixed(2))}`).join(' · ');}};
 $('autoplan').onchange=()=>core.enableAutoplan($('autoplan').checked);
+function chooseGuide(){
+ const definition=guides.get($('guide-picker').value);
+ if($('guided').checked&&definition.scenario!==$('scenario').value){$('guided').checked=false;$('feedback').textContent='Guide is for '+definition.scenario;}
+ if($('guided').checked){$('autoplan').checked=false;core.enableAutoplan(false);}
+ core.setGuide($('guided').checked?definition:null);$('fast').checked=false;
+}
+$('guided').onchange=chooseGuide;$('guide-picker').onchange=chooseGuide;
 function chooseScript(){core.setAutoplan(scripts.get($('script').value),$('autoplan').checked);core.reset();$('fast').checked=false;}
 $('script').onchange=chooseScript;
-$('scenario').onchange=()=>{core.load($('scenario').value);$('script').value=({slice_texas:'slice_autoplan',stage1_texas:'stage1_pm_play',stage2_texas:'stage2_pull_play'})[$('scenario').value];chooseScript();$('manual').href=`manual/${$('scenario').value}.pdf`;};
+$('scenario').onchange=()=>{core.load($('scenario').value);$('script').value=({slice_texas:'slice_autoplan',stage1_texas:'stage1_pm_play',stage2_texas:'stage2_pull_play'})[$('scenario').value];chooseScript();chooseGuide();$('manual').href=`manual/${$('scenario').value}.pdf`;};
 $('script-file').onchange=async()=>{
  const file=$('script-file').files[0];if(!file)return;
  try{const script=JSON.parse(await file.text());const {createAutoplan}=await import('./src/host/autoplan.js');createAutoplan(script);
