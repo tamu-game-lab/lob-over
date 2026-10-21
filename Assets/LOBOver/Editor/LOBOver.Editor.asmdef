@@ -2,6 +2,8 @@
   "name": "LOBOver.Editor",
   "rootNamespace": "LOBOver.Editor",
   "references": [
+    "LOBOver.Client",
+    "LOBOver.Play",
     "LOBOver.Sim",
     "LOBOver.Director",
     "LOBOver.World",

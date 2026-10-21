@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
+#if UNITY_EDITOR || !UNITY_ANDROID
 using LOBOver.Runtime;
+#endif
 using LOBOver.Sim;
 using Newtonsoft.Json.Linq;
 using TMPro;
@@ -10,10 +12,12 @@ namespace LOBOver.World
 {
     public sealed class SiteWorld : MonoBehaviour
     {
+#if UNITY_EDITOR || !UNITY_ANDROID
         public Director director;
+        public PlanPanel planPanel;
+#endif
         public WorldAssets assets;
         public TrailerBoard trailerBoard;
-        public PlanPanel planPanel;
         public JobSign jobSign;
         public SiteSky sky;
         public TextMeshPro gateText;
@@ -35,6 +39,7 @@ namespace LOBOver.World
         public ZoneBoard Board(int zone) => boards.TryGetValue(zone, out var board) ? board : null;
         public int ZoneAt(double feet) => (int)zones.OfType<JObject>().First(z => feet >= (double)z["fromFt"] && (feet < (double)z["toFt"] || feet == LengthFt))["id"];
 
+#if UNITY_EDITOR || !UNITY_ANDROID
         private void OnEnable()
         {
             if (director == null) return;
@@ -52,16 +57,20 @@ namespace LOBOver.World
             Apply(site, director.DisplayDay); planPanel.Apply(plan, director.TimeDays);
         }
         private void OnResult(JObject value) => planPanel.ShowResult(value);
+#endif
         public void Configure(JObject job, double deadline)
         {
             if (generated != null) WorldDrawing.Remove(generated.gameObject);
             generated = WorldDrawing.Group("GeneratedSite", transform).transform;
             cells.Clear(); stakes.Clear(); boards.Clear(); crews.Clear(); CurrentView = null;
             LengthFt = (double)job["lengthFt"]; zones = (JArray)job["zones"].DeepClone();
-            jobSign.Apply((JObject)job["sign"]);
+            if (jobSign != null && job["sign"] is JObject sign) jobSign.Apply(sign);
             var boundaries = zones.OfType<JObject>().ToDictionary(z => (int)z["id"], z => (double)z["fromFt"]);
-            trailerBoard.Configure(assets, LengthFt, deadline, boundaries); planPanel.Configure(assets, LengthFt, deadline);
-            if (sky.State != null) sky.Apply("clear"); else sky.Configure(assets);
+            if (trailerBoard != null) trailerBoard.Configure(assets, LengthFt, deadline, boundaries);
+#if UNITY_EDITOR || !UNITY_ANDROID
+            if (planPanel != null) planPanel.Configure(assets, LengthFt, deadline);
+#endif
+            if (sky != null) { if (sky.State != null) sky.Apply("clear"); else sky.Configure(assets); }
         }
         public void Apply(SiteView view, int displayDay)
         {
@@ -73,9 +82,10 @@ namespace LOBOver.World
             var arguing = WorldUnits.CrewIds.Select(id => crews[id]).Where(crew => crew.Status == "arguing").ToArray();
             foreach (var crew in crews.Values) crew.FaceArgument(arguing.FirstOrDefault(other => other != crew && crew.Status == "arguing")?.transform);
             foreach (var board in view.boards) boards[(int)board.zone].Apply(board);
-            sky.Apply(view.sky); gateText.text = "Trucks waiting: " + view.gate.trucksWaiting;
-            truck.localPosition = new Vector3((float)view.truck.stationFt * WorldUnits.MetresPerFoot, 0, WorldUnits.RoadZ);
-            trailerBoard.Apply(view, displayDay);
+            if (sky != null) sky.Apply(view.sky);
+            if (gateText != null) gateText.text = "Trucks waiting: " + view.gate.trucksWaiting;
+            if (truck != null) truck.localPosition = new Vector3((float)view.truck.stationFt * WorldUnits.MetresPerFoot, 0, WorldUnits.RoadZ);
+            if (trailerBoard != null) trailerBoard.Apply(view, displayDay);
         }
         private void Build(SiteView view)
         {

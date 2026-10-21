@@ -53,8 +53,8 @@ namespace LOBOver.Start.Editor
             }
             if (!hasTarget) missing.Add("Quest 3S target: Project Settings > XR Plug-in Management > OpenXR > Android > Meta Quest Support > Target Devices > Quest 3S.");
             var scenes = EditorBuildSettings.scenes;
-            if (scenes.Length == 0 || scenes[0].path != SiteSceneBuilder.ScenePath || !scenes[0].enabled || AssetDatabase.LoadAssetAtPath<SceneAsset>(SiteSceneBuilder.ScenePath) == null)
-                missing.Add("Site.unity first: File > Build Profiles > Scene List > put Assets/LOBOver/Scenes/Site.unity first and enable it (or LOB Over > Build > Site Scene).");
+            if (scenes.Length != 1 || scenes[0].path != PlaySceneBuilder.ScenePath || !scenes[0].enabled || AssetDatabase.LoadAssetAtPath<SceneAsset>(PlaySceneBuilder.ScenePath) == null)
+                missing.Add("Play.unity only: run LOB Over > Build > Play Scene (Assets/Scenes/Play.unity).");
             if (EditorUserBuildSettings.androidBuildSubtarget != MobileTextureSubtarget.ASTC)
                 missing.Add("ASTC: File > Build Profiles > Android > Texture Compression > ASTC.");
             return missing;

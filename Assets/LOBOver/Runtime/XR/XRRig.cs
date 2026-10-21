@@ -14,6 +14,17 @@ namespace LOBOver.XR
     {
         public OVRCameraRig CameraRig { get; private set; }
         public Transform CentreEye => CameraRig == null ? null : CameraRig.centerEyeAnchor;
+        public Transform editorHead;
+        public Transform ViewEye
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (!OVRManager.isHmdPresent && editorHead != null) return editorHead;
+#endif
+                return CentreEye;
+            }
+        }
         public Transform LeftController => CameraRig == null ? null : CameraRig.leftControllerAnchor;
         public Transform RightController => CameraRig == null ? null : CameraRig.rightControllerAnchor;
         public Transform LeftHand => CameraRig == null ? null : CameraRig.leftHandAnchor;
@@ -56,7 +67,6 @@ namespace LOBOver.XR
             valid &= Require(handTracking && RightHand != null, "Hand Tracking (right)", logErrors);
             valid &= Require(Passthrough != null, "Passthrough", logErrors);
             valid &= Require(Rays.Length > 0 && Pokes.Length > 0, "Interactions Rig (ray and poke)", logErrors);
-            valid &= Require(Components<BuildingBlock>(scene).Any(block => block.BlockId == RealHandsId), "Real Hands", logErrors);
             return valid;
         }
         private bool Require(bool present, string block, bool log)
@@ -71,7 +81,7 @@ namespace LOBOver.XR
 #if UNITY_EDITOR
             if (!OVRManager.isHmdPresent)
             {
-                pose = new Pose(CentreEye.position, CentreEye.rotation);
+                pose = new Pose(ViewEye.position, ViewEye.rotation);
                 return true;
             }
 #endif

@@ -72,7 +72,7 @@ namespace LOBOver.World
         {
             if (audio.clip == clip) return;
             audio.Stop(); audio.clip = clip;
-            if (clip != null && Application.isPlaying) audio.Play();
+            if (clip != null && Application.isPlaying && audio.isActiveAndEnabled) audio.Play();
         }
         public static void Remove(GameObject obj)
         {

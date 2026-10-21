@@ -1,0 +1,20 @@
+using System;
+using LOBOver.Client;
+using Newtonsoft.Json.Linq;
+
+internal static class VerifyLevel1
+{
+    public static void Run()
+    {
+        if (!DiscoveryPacket.TryParse("LOBOVER 1 7331 BRYAN-PC\n", out var port, out var name) || port != 7331 || name != "BRYAN-PC")
+            throw new Exception("Discovery packet did not preserve the advertised port and hostname");
+        foreach (var invalid in new[] { "", "LOBOVER 2 7331 pc", "LOBOVER 1 0 pc", "LOBOVER 1 65536 pc", "LOBOVER 1 7331 pc extra", "LOBOVER 1 7331 ../host" })
+            if (DiscoveryPacket.TryParse(invalid, out _, out _)) throw new Exception("Invalid discovery packet accepted: " + invalid);
+        Console.WriteLine("PASS: Level 1 discovery parser; 1 valid packet, 6 invalid packets.");
+        var turns = VoiceTurn.Read(JObject.Parse("{\"turns\":[{\"speaker\":\"foreman_back\",\"clip\":\"grumble_back_pipe_1.wav\"},{\"speaker\":\"foreman_pipe\",\"clip\":\"grumble_back_pipe_2.wav\"}]}"));
+        if (turns.Count != 2 || turns[0].Number != 1 || turns[1].Number != 2 || turns[0].Speaker != "foreman_back" || turns[1].Speaker != "foreman_pipe")
+            throw new Exception("Wire voice turn order or speakers changed");
+        if (VoiceTurn.Read(JObject.Parse("{\"turns\":[{\"clip\":\"../unsafe_1.wav\"}]}" )).Count != 0) throw new Exception("Unsafe voice path accepted");
+        Console.WriteLine("PASS: Level 1 wire voice turns preserve speaker/clip order and reject paths outside the scenario.");
+    }
+}

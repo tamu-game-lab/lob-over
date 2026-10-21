@@ -21,15 +21,15 @@ namespace LOBOver.Editor
         public static readonly string[] DemoNames = { "[BuildingBlock] Cube", "Poke Interaction" };
 
         [MenuItem("LOB Over/Setup/Check Building Blocks")]
-        public static void CheckMenu() => CheckSite();
+        public static void CheckMenu() => CheckPlay();
 
-        public static bool CheckSite()
+        public static bool CheckPlay()
         {
-            if (!File.Exists(SiteSceneBuilder.ScenePath))
-            { Debug.LogError("LOB Over: Site.unity is missing; run Site Scene, then add the blocks listed by Check Building Blocks."); return false; }
-            var scene = SceneManager.GetSceneByPath(SiteSceneBuilder.ScenePath);
+            if (!File.Exists(PlaySceneBuilder.ScenePath))
+            { Debug.LogError("LOB Over: Assets/Scenes/Play.unity is missing; Bryan must save his Building Blocks scene there."); return false; }
+            var scene = SceneManager.GetSceneByPath(PlaySceneBuilder.ScenePath);
             var preview = !scene.IsValid() || !scene.isLoaded;
-            if (preview) scene = EditorSceneManager.OpenPreviewScene(SiteSceneBuilder.ScenePath);
+            if (preview) scene = EditorSceneManager.OpenPreviewScene(PlaySceneBuilder.ScenePath);
             try { return Check(scene); }
             finally { if (preview) EditorSceneManager.ClosePreviewScene(scene); }
         }
@@ -58,7 +58,6 @@ namespace LOBOver.Editor
                 Need(hand && rig != null && (side == Handedness.Left ? rig.leftHandAnchor : rig.rightHandAnchor) != null,
                     "Hand Tracking (" + side.ToString().ToLowerInvariant() + ")");
             }
-            Need(blocks.Any(block => block.BlockId == XRRig.RealHandsId), "Real Hands");
             return missing;
         }
         private static bool HasSide(Component source, Handedness side)
@@ -66,27 +65,41 @@ namespace LOBOver.Editor
             using var serialized = new SerializedObject(source);
             return serialized.FindProperty("_handedness")?.intValue == (int)side;
         }
-        public static bool Check(Scene scene)
+        public static bool Check(Scene scene, bool level1 = true)
         {
             var missing = Missing(scene);
             foreach (var name in new[] { "Camera Rig", "Passthrough", "Controller Tracking (left)", "Controller Tracking (right)",
-                "Interactions Rig", "Hand Tracking (left)", "Hand Tracking (right)", "Real Hands" })
+                "Interactions Rig", "Hand Tracking (left)", "Hand Tracking (right)" })
             {
                 if (missing.Contains(name)) Debug.LogError("LOB Over: MISSING " + name + "; add it from Building Blocks.");
                 else Debug.Log("LOB Over: PRESENT " + name);
             }
             foreach (var layer in XRRig.Components<OVRPassthroughLayer>(scene))
                 Debug.Log("LOB Over: Passthrough layer " + PathOf(layer.transform) + (layer.GetComponent<OVRCameraRig>() != null ? " (additional rig layer; preserved)" : ""));
-            foreach (var demo in Demos(scene)) Debug.Log("LOB Over: block demo " + PathOf(demo.transform) + "; active=" + demo.activeSelf);
-            return missing.Count == 0;
+            var forbidden = level1 ? Forbidden(scene) : new List<string>();
+            foreach (var name in forbidden) Debug.LogError("LOB Over: remove " + name + " in the Building Blocks window before building Play.unity.");
+            return missing.Count == 0 && forbidden.Count == 0;
         }
-        public static IEnumerable<GameObject> Demos(Scene scene) => scene.GetRootGameObjects().Where(root => DemoNames.Contains(root.name));
+        public static List<string> Forbidden(Scene scene)
+        {
+            var result = new List<string>();
+            if (XRRig.Components<BuildingBlock>(scene).Any(b => b.BlockId == XRRig.RealHandsId)
+                || XRRig.Components<Transform>(scene).Any(t => t.name.IndexOf("Real Hands", StringComparison.OrdinalIgnoreCase) >= 0)) result.Add("Real Hands");
+            if (XRRig.Components<Component>(scene).Any(c => c != null && c.GetType().Name == "EnableUnpremultipliedAlpha")) result.Add("EnableUnpremultipliedAlpha (Real Hands)");
+            var layers = XRRig.Components<OVRPassthroughLayer>(scene);
+            if (layers.Length > 1) result.Add("extra Passthrough layers: " + string.Join(", ", layers.Select(l => PathOf(l.transform))));
+            result.AddRange(Demos(scene).Select(d => "demo " + PathOf(d.transform)));
+            return result;
+        }
+        public static IEnumerable<GameObject> Demos(Scene scene) => XRRig.Components<Transform>(scene)
+            .Where(t => DemoNames.Contains(t.name) || t.name.StartsWith("[BuildingBlock]", StringComparison.Ordinal)
+                && t.name.IndexOf("demo", StringComparison.OrdinalIgnoreCase) >= 0).Select(t => t.gameObject);
 
         [MenuItem("LOB Over/Setup/Configure Building Blocks")]
         public static void ConfigureMenu()
         {
-            if (!File.Exists(SiteSceneBuilder.ScenePath)) { CheckSite(); return; }
-            var scene = SiteSceneBuilder.OpenExisting();
+            if (!File.Exists(PlaySceneBuilder.ScenePath)) { CheckPlay(); return; }
+            var scene = PlaySceneBuilder.OpenExisting();
             if (!Check(scene)) return;
             Configure(scene);
             EditorSceneManager.SaveScene(scene);
@@ -118,8 +131,16 @@ namespace LOBOver.Editor
                 // Installed SDK 207 SyncToOverlay always sets Underlay/int.MaxValue; it exposes no overlay-type field.
                 Debug.Log("LOB Over: " + PathOf(layer.transform) + " uses SDK-enforced Underlay (SyncToOverlay); preserved.");
             }
-            foreach (var demo in Demos(scene))
-                if (demo.activeSelf) Change(demo, "activeSelf", true, false, () => demo.SetActive(false));
+            foreach (var rig in XRRig.Components<OVRCameraRig>(scene))
+            {
+                var camera = rig.centerEyeAnchor == null ? null : rig.centerEyeAnchor.GetComponent<Camera>();
+                if (camera == null) continue;
+                if (camera.clearFlags != CameraClearFlags.SolidColor)
+                    Change(camera, "clearFlags", camera.clearFlags, CameraClearFlags.SolidColor, () => camera.clearFlags = CameraClearFlags.SolidColor);
+                if (camera.backgroundColor != Color.clear)
+                    Change(camera, "backgroundColor", camera.backgroundColor, Color.clear, () => camera.backgroundColor = Color.clear);
+                if (camera.allowHDR) Change(camera, "allowHDR", true, false, () => camera.allowHDR = false);
+            }
         }
         private static bool BelongsToBlocks(Component component) => component.GetComponentInParent<BuildingBlock>(true) != null
             || component.GetComponentInParent<OVRCameraRig>(true) != null;

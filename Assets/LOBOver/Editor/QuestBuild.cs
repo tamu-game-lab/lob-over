@@ -33,12 +33,12 @@ namespace LOBOver.Editor
             {
                 var passes = BuildChecks.Passes(out var settingsReport);
                 if (!passes) Debug.LogError("LOB Over: " + settingsReport);
-                if (!File.Exists(SiteSceneBuilder.ScenePath))
+                if (!File.Exists(PlaySceneBuilder.ScenePath))
                 {
-                    Debug.LogError("LOB Over: run LOB Over/Build/Site Scene first");
+                    Debug.LogError("LOB Over: Bryan must save Assets/Scenes/Play.unity, then run LOB Over/Build/Play Scene");
                     return;
                 }
-                if (!BuildingBlocksSetup.CheckSite()) return;
+                if (!BuildingBlocksSetup.CheckPlay()) return;
                 // Missing() includes the active target itself; switching must still be possible.
                 // A switch always returns without building, so all checks run again after reimport.
                 if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
@@ -50,6 +50,9 @@ namespace LOBOver.Editor
                 }
                 if (!passes) return;
 
+                // WO-L2: include the host scenario's per-turn voice clips in the APK.
+                DataSync.Sync();
+
                 var root = Directory.GetParent(Application.dataPath).FullName;
                 string adb = null;
                 var serial = run ? FindQuest(root, out adb) : null;
@@ -58,7 +61,7 @@ namespace LOBOver.Editor
                 var output = Path.Combine(directory, "LOBOver-" + DateTime.Now.ToString("yyyyMMdd-HHmm") + ".apk");
                 var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
                 {
-                    scenes = EditorBuildSettings.scenes.Where(scene => scene.enabled).Select(scene => scene.path).ToArray(),
+                    scenes = new[] { PlaySceneBuilder.ScenePath },
                     locationPathName = output,
                     target = BuildTarget.Android,
                     // Never let Unity choose between the Quest and an attached phone (Amendment 1).

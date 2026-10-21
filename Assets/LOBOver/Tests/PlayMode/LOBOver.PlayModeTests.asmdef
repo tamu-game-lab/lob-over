@@ -1,6 +1,8 @@
 {
   "name": "LOBOver.PlayModeTests",
   "references": [
+    "LOBOver.Client",
+    "LOBOver.Play",
     "LOBOver.Director",
     "LOBOver.World",
     "LOBOver.Sim",

@@ -1,3 +1,5 @@
+#if UNITY_EDITOR || !UNITY_ANDROID
+// Legacy Site.unity remains available in the Editor; WO-L2 excludes this seat from Quest.
 using System;
 using System.Collections;
 using System.IO;
@@ -231,3 +233,5 @@ namespace LOBOver.Runtime
         private void OnDestroy() { pacer?.Close(); }
     }
 }
+
+#endif

@@ -15,6 +15,8 @@ function Compile-Assembly([string]$name, [string]$folder, [string[]]$references,
         if (!$asm.noEngineReferences) { $references += $engineReferences }
         foreach ($dependency in $asm.references) {
             $compiled = Join-Path $scratch ($dependency + '.dll')
+            $androidDependency = Join-Path $scratch ($dependency + '.Android.dll')
+            if ($defines -match 'UNITY_ANDROID' -and $defines -notmatch 'UNITY_EDITOR' -and (Test-Path -LiteralPath $androidDependency)) { $compiled = $androidDependency }
             $references += $(if (Test-Path -LiteralPath $compiled) { $compiled } else { 'Library/ScriptAssemblies/' + $dependency + '.dll' })
         }
         if ($asm.optionalUnityReferences -contains 'TestAssemblies') {
@@ -52,6 +54,8 @@ try {
     Write-Output "SDK inputs: $($sdkAssemblies.Count) imported assemblies; $($sdkSources.Count) installed package sources (no restore)."
     $engineReferences = (Get-ChildItem (Join-Path $UnityData 'Managed/UnityEngine') -Filter '*.dll').FullName
     Compile-Assembly 'LOBOver.Sim' 'Assets/LOBOver/Sim' $baseReferences
+    Compile-Assembly 'LOBOver.Client' 'Assets/LOBOver/Runtime/Client' $baseReferences
+    Compile-Assembly 'LOBOver.Client.Android' 'Assets/LOBOver/Runtime/Client' $baseReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
     $runtimeReferences = $baseReferences + $engineReferences + @((Join-Path $scratch 'LOBOver.Sim.dll'))
     Compile-Assembly 'LOBOver.Director' 'Assets/LOBOver/Runtime/Director' $runtimeReferences
     $worldReferences = $runtimeReferences + @((Join-Path $scratch 'LOBOver.Director.dll'), 'Library/ScriptAssemblies/Unity.TextMeshPro.dll', 'Library/ScriptAssemblies/Unity.InputSystem.dll', 'Library/ScriptAssemblies/UnityEngine.UI.dll')
@@ -61,6 +65,8 @@ try {
     # Compile the conditional Android reader too, without opening the Editor or changing build settings.
     Compile-Assembly 'LOBOver.Director.Android' 'Assets/LOBOver/Runtime/Director' $runtimeReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
     Compile-Assembly 'LOBOver.World.Android' 'Assets/LOBOver/Runtime/World' $worldReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    Compile-Assembly 'LOBOver.Play' 'Assets/LOBOver/Runtime/Play' $worldReferences
+    Compile-Assembly 'LOBOver.Play.Android' 'Assets/LOBOver/Runtime/Play' $worldReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
     # SDK assemblies are already installed/imported; this check never restores packages.
     $xrReferences = $worldReferences + @((Join-Path $scratch 'LOBOver.World.dll'),
         'Library/ScriptAssemblies/Oculus.VR.dll', 'Library/ScriptAssemblies/Unity.XR.OpenXR.dll',
@@ -93,6 +99,9 @@ try {
     $fixtureArgs += '-r:"' + (Join-Path $scratch 'LOBOver.VR.dll') + '"'
     $fixtureArgs += '"' + (Join-Path $PSScriptRoot 'VerifyFixtures.cs.txt') + '"'
     $fixtureArgs += '"' + (Join-Path $PSScriptRoot 'VerifyPresenter.cs.txt') + '"'
+    $fixtureArgs += '"' + (Join-Path $PSScriptRoot 'VerifyLevel1.cs.txt') + '"'
+    $fixtureArgs += '"' + (Join-Path $projectRoot 'Assets/LOBOver/Runtime/Client/DiscoveryPacket.cs') + '"'
+    $fixtureArgs += '"' + (Join-Path $projectRoot 'Assets/LOBOver/Runtime/Client/VoiceTurn.cs') + '"'
     $fixtureArgs | Set-Content -LiteralPath $fixtureResponse -Encoding UTF8
     & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') (Join-Path $UnityData 'DotNetSdkRoslyn/csc.dll') ('@' + $fixtureResponse)
     if ($LASTEXITCODE -ne 0) { throw 'Fixture verifier did not compile' }

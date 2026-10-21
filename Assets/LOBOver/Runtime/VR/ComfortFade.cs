@@ -1,3 +1,5 @@
+#if UNITY_EDITOR || !UNITY_ANDROID
+// Legacy Site.unity remains available in the Editor; WO-L2 excludes this seat from Quest.
 using UnityEngine;
 namespace LOBOver.VR
 {
@@ -47,3 +49,5 @@ namespace LOBOver.VR
         private void OnDestroy() { if (fullMesh != null) Destroy(fullMesh); if (ringMesh != null) Destroy(ringMesh); }
     }
 }
+
+#endif

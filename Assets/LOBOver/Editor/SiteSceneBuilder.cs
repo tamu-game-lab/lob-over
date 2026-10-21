@@ -46,7 +46,7 @@ namespace LOBOver.Editor
                 BuildingBlocksSetup.Check(empty); return empty;
             }
             var scene = OpenExisting();
-            if (!BuildingBlocksSetup.Check(scene)) throw new InvalidOperationException("Site Scene stopped: add the missing Building Blocks.");
+            if (!BuildingBlocksSetup.Check(scene, false)) throw new InvalidOperationException("Site Scene stopped: add the missing Building Blocks.");
             var replaced = scene.GetRootGameObjects().Where(root => OwnedRoots.Contains(root.name)
                 || LegacyRoots.Contains(root.name)).ToArray();
             // Validate the entire deletion set before changing anything, including accidentally nested blocks.

@@ -36,6 +36,13 @@ namespace LOBOver.World
         private const float WorkingAlternateSeconds = 4;
         private static readonly string[] MoodClips = { "Idle", "IdleAlternate", "Drink", "EquipmentCheck" };
         private static readonly float[] MoodSpeeds = { 1, 0.9f, 0.8f, 0.7f };
+        private void OnEnable()
+        {
+            if (engine != null && engine.clip != null) engine.Play();
+            if (argument != null && argument.clip != null) argument.Play();
+            if (Status == "working" && effects != null)
+                foreach (var effect in effects.GetComponentsInChildren<ParticleSystem>()) effect.Play();
+        }
 
         public void Initialize(string id, WorldAssets source)
         {
@@ -83,7 +90,7 @@ namespace LOBOver.World
                     if (working && animator.runtimeAnimatorController != null && animator.HasState(0, Animator.StringToHash(cycle))) animator.Play(cycle, 0, 0);
                 }
                 foreach (var effect in effects.GetComponentsInChildren<ParticleSystem>())
-                    if (working && Application.isPlaying) effect.Play(); else effect.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                    if (working && Application.isPlaying && effect.gameObject.activeInHierarchy) effect.Play(); else effect.Stop(true, ParticleSystemStopBehavior.StopEmitting);
                 WorldDrawing.Loop(engine, working ? (Id == "exc" ? assets.excavation : Id == "back" ? assets.dozer : assets.idle) : Status == "demobilized" ? null : assets.idle);
                 WorldDrawing.Loop(argument, Status == "arguing" ? assets.conflict : null);
             }
@@ -128,6 +135,14 @@ namespace LOBOver.World
                 if (facing.sqrMagnitude > 0.001f) workers[i].rotation = Quaternion.LookRotation(facing);
             }
             ApplyAnimations();
+        }
+        public void SnapPose()
+        {
+            if (!positioned) return;
+            transform.localPosition = target; movementVelocity = Vector3.zero;
+            SetWorkerTargets();
+            for (var i = 0; i < workers.Length; i++)
+            { workers[i].position = workerTargets[i]; workerVelocities[i] = Vector3.zero; }
         }
         private bool ClipFinished(int index) => animators[index] == null || !animators[index].isActiveAndEnabled
             || animators[index].GetCurrentAnimatorStateInfo(0).normalizedTime >= 1;

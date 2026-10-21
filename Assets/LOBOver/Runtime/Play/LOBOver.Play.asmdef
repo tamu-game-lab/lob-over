@@ -1,0 +1,6 @@
+{
+  "name": "LOBOver.Play",
+  "references": ["LOBOver.Client", "LOBOver.World", "LOBOver.XR", "LOBOver.Sim", "Unity.TextMeshPro", "Oculus.VR", "Oculus.Interaction", "Unity.InputSystem"],
+  "overrideReferences": true,
+  "precompiledReferences": ["Newtonsoft.Json.dll"]
+}

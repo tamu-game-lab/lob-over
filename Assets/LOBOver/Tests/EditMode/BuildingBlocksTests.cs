@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using LOBOver.Editor;
-using LOBOver.Start;
+using LOBOver.Play;
 using LOBOver.XR;
 using Meta.XR.BuildingBlocks;
 using NUnit.Framework;
@@ -16,17 +16,17 @@ namespace LOBOver.Tests.Editor
     public sealed class BuildingBlocksTests
     {
         [Test]
-        public void ExistingSiteHasEveryRequiredBlock()
+        public void ExistingPlayHasEveryRequiredBlock()
         {
-            var scene = SiteSceneBuilder.OpenExisting();
+            var scene = PlaySceneBuilder.OpenExisting();
             Assert.That(BuildingBlocksSetup.Missing(scene), Is.Empty);
         }
 
         [Test]
         public void RebuildTwicePreservesBlocksRigAndUnownedRoots()
         {
-            var scene = SiteSceneBuilder.OpenExisting();
-            var sentinel = new GameObject("[BuildingBlock] Test");
+            var scene = PlaySceneBuilder.OpenExisting();
+            var sentinel = new GameObject("Unowned Test Sentinel");
             SceneManager.MoveGameObjectToScene(sentinel, scene);
             var protectedTransforms = XRRig.Components<BuildingBlock>(scene).SelectMany(block => block.GetComponentsInChildren<Transform>(true))
                 .Concat(XRRig.Components<OVRCameraRig>(scene).SelectMany(rig => rig.GetComponentsInChildren<Transform>(true)))
@@ -35,7 +35,7 @@ namespace LOBOver.Tests.Editor
                 rotation: t.localRotation, scale: t.localScale, active: t.gameObject.activeSelf)).ToArray();
             try
             {
-                SiteSceneBuilder.Build(false); SiteSceneBuilder.Build(false);
+                PlaySceneBuilder.Build(false); PlaySceneBuilder.Build(false);
                 foreach (var item in before)
                 {
                     Assert.That(item.t, Is.Not.Null);
@@ -44,16 +44,21 @@ namespace LOBOver.Tests.Editor
                     Assert.That(item.t.localScale, Is.EqualTo(item.scale)); Assert.That(item.t.gameObject.activeSelf, Is.EqualTo(item.active));
                 }
                 var roots = scene.GetRootGameObjects();
-                foreach (var name in new[] { "Lighting", "Director", "Hub", "Site", "Start", "Preview" })
+                foreach (var name in new[] { "Lighting", "Client", "Hub", "Site", "Warp", "Preview" })
                     Assert.That(roots.Count(root => root.name == "[LOBOver] " + name), Is.EqualTo(1));
                 var floor = roots.Single(root => root.name == "[LOBOver] Hub").transform.Find("TrackedFloor").GetComponent<BoxCollider>();
                 Assert.That(floor.bounds.size.x, Is.EqualTo(20)); Assert.That(floor.bounds.size.z, Is.EqualTo(20));
                 Assert.That(floor.bounds.max.y, Is.EqualTo(0).Within(0.0001));
-                var start = XRRig.Components<StartPanel>(scene).Single();
-                var pointable = start.panel.GetComponent<PointableCanvas>();
-                Assert.That(pointable.Canvas.renderMode, Is.EqualTo(RenderMode.WorldSpace));
-                Assert.That(start.panel.GetComponent<RayInteractable>().PointableElement, Is.SameAs(pointable));
-                Assert.That(start.panel.GetComponent<PokeInteractable>().PointableElement, Is.SameAs(pointable));
+                var start = XRRig.Components<HubPanel>(scene).Single();
+                foreach (var button in start.panel.GetComponentsInChildren<CrewButton>())
+                {
+                    Assert.That(button.GetComponent<RayInteractable>(), Is.Not.Null);
+                    Assert.That(button.GetComponent<PokeInteractable>(), Is.Not.Null);
+                    Assert.That(button.transform.Find("Face").localScale.x, Is.GreaterThanOrEqualTo(0.11f));
+                    Assert.That(button.transform.Find("Face").localScale.y, Is.GreaterThanOrEqualTo(0.06f));
+                }
+                Assert.That(XRRig.Components<LOBOver.Runtime.Director>(scene), Is.Empty);
+                Assert.That(XRRig.Components<LOBOver.World.PlanPanel>(scene), Is.Empty);
                 Assert.That(start.panel.GetComponentInParent<OVRCameraRig>(), Is.Null);
             }
             finally { if (sentinel != null) UnityEngine.Object.DestroyImmediate(sentinel); }
@@ -62,7 +67,7 @@ namespace LOBOver.Tests.Editor
         [Test]
         public void ConfigureIsIdempotentAndDisablesLocomotion()
         {
-            var scene = SiteSceneBuilder.OpenExisting();
+            var scene = PlaySceneBuilder.OpenExisting();
             BuildingBlocksSetup.Configure(scene);
             var components = XRRig.Components<Component>(scene).Where(c => c != null).ToArray();
             var before = components.Select(UnityEditor.EditorJsonUtility.ToJson).ToArray();

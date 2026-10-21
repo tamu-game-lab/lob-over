@@ -1,6 +1,8 @@
 {
   "name": "LOBOver.EditModeTests",
   "references": [
+    "LOBOver.Client",
+    "LOBOver.Play",
     "LOBOver.Editor",
     "LOBOver.Director",
     "LOBOver.World",

@@ -10,6 +10,20 @@ namespace LOBOver.XR
         public event Action<Vector3> Selected;
         private RayInteractable ray;
         private PokeInteractable poke;
+        private void OnEnable() => Bind();
+        private void OnDisable() => Unbind();
+        private void Bind()
+        {
+            Unbind();
+            ray = GetComponent<RayInteractable>(); poke = GetComponent<PokeInteractable>();
+            if (ray != null) ray.WhenPointerEventRaised += SelectedEvent;
+            if (poke != null) poke.WhenPointerEventRaised += SelectedEvent;
+        }
+        private void Unbind()
+        {
+            if (ray != null) ray.WhenPointerEventRaised -= SelectedEvent;
+            if (poke != null) poke.WhenPointerEventRaised -= SelectedEvent;
+        }
         private void SelectedEvent(PointerEvent evt)
         {
             if (evt.Type == PointerEventType.Select) Selected?.Invoke(evt.Pose.position);
@@ -21,7 +35,7 @@ namespace LOBOver.XR
             var surface = collider.gameObject.AddComponent<ColliderSurface>(); surface.InjectCollider(collider);
             var bridge = collider.gameObject.AddComponent<InteractionSurface>();
             bridge.ray = collider.gameObject.AddComponent<RayInteractable>(); bridge.ray.InjectSurface(surface);
-            bridge.ray.WhenPointerEventRaised += bridge.SelectedEvent;
+            bridge.Bind();
             return bridge;
         }
         public static void Canvas(Canvas canvas)
@@ -33,8 +47,7 @@ namespace LOBOver.XR
         {
             var bridge = obj.AddComponent<InteractionSurface>();
             Plane(obj, size, null, out bridge.ray, out bridge.poke);
-            bridge.ray.WhenPointerEventRaised += bridge.SelectedEvent;
-            bridge.poke.WhenPointerEventRaised += bridge.SelectedEvent;
+            bridge.Bind();
             return bridge;
         }
         private static void Plane(GameObject obj, Vector2 size, IPointableElement pointable, out RayInteractable ray, out PokeInteractable poke)

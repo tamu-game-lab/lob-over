@@ -29,7 +29,7 @@ namespace LOBOver.World
         {
             var key = view.state + "/" + view.wall + "/" + view.water + "/" + view.protection + "/" + view.pipeDamage;
             if (key == lastKey) return;
-            if (lastKey != null && Application.isPlaying)
+            if (lastKey != null && Application.isPlaying && sound.isActiveAndEnabled)
             {
                 if (view.wall == "slumped" && Wall != "slumped") sound.PlayOneShot(assets.collapse);
                 if (view.state == "piped" && State != "piped") sound.PlayOneShot(assets.pipeSetdown);

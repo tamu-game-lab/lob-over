@@ -1,3 +1,5 @@
+#if UNITY_EDITOR || !UNITY_ANDROID
+// Legacy Site.unity remains available in the Editor; WO-L2 excludes this seat from Quest.
 using System;
 using LOBOver.World;
 using LOBOver.XR;
@@ -41,3 +43,5 @@ namespace LOBOver.VR
         }
     }
 }
+
+#endif

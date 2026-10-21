@@ -1,0 +1,6 @@
+{
+  "name": "LOBOver.Client",
+  "references": ["LOBOver.Sim"],
+  "overrideReferences": true,
+  "precompiledReferences": ["Newtonsoft.Json.dll"]
+}

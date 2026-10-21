@@ -1,3 +1,5 @@
+#if UNITY_EDITOR || !UNITY_ANDROID
+// Legacy Site.unity remains available in the Editor; WO-L2 excludes this seat from Quest.
 using System;
 using System.Collections.Generic;
 using LOBOver.Sim;
@@ -92,3 +94,5 @@ namespace LOBOver.VR
         private void Send(JObject command) => Command?.Invoke(command);
     }
 }
+
+#endif
