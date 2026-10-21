@@ -97,6 +97,8 @@ Steps 1 and 5 belong to Site, 2 and 4 to Rules, 3 to Plan; the simulation does s
 
 ## The VR seat
 
+> Revised October 21, 2026: the headset seat now starts in passthrough and warps into the site; the truck ride is gone. `Docs/SITE_SEAT_V2.md` overrides this section where they differ.
+
 Site is an inspector. The seat is built around noticing, with one authority, because free movement and a long verb list are what make VR tiring and what unbalanced the first draft. Site never changes the plan: moving a machine, placing protection, holding a crew beyond a safety stop and entering codes are Plan's.
 
 - **Movement.** A site truck runs on the haul road beside the trench and stops at any station stake; the player dismounts to stand at the stake. The cab is a fixed frame of reference, turns are snap turns, and there is no free locomotion. Riding is not idle time: an order reaches a crew at once only when Site is standing there, so Site chooses where to be.

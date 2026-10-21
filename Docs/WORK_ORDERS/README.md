@@ -16,6 +16,11 @@ One file per bounded job for Astra. The orchestrator dispatches them in order wi
 | WO-S3 | The site in Unity from LOB-Game's assets, embedded simulation, autoplan director, desktop preview | WO-S2, copied assets | `Assets/LOBOver/` |
 | WO-S4 | Start panel, VR Site seat, MR Diorama, Android build checks | WO-S3 | `Assets/LOBOver/` |
 | WO-S5 | One menu item that builds the APK and runs it on the headset | WO-S4 | `Assets/LOBOver/Editor/QuestBuild.cs` |
+| WO-S6 | Building Blocks foundation: no code-built rig, no falling, a non-destructive builder | WO-S5 | `Assets/LOBOver/` |
+| WO-S7 | Guided three-seat playthrough on the web, Rules page | WO-S1 | `Monitor/`, `Paper/make_kit.py` |
+| WO-S8 | Passthrough hub and warp into the site | WO-S6 | `Assets/LOBOver/` |
+| WO-S9 | Team game in the headset (client of the Node host), guide prompts | WO-S7, WO-S8 | `Assets/LOBOver/` |
+| WO-S10 | Voices and arguments (O12 expanded), JS and C# in parity | WO-S9 | `Monitor/src/sim/`, `Assets/LOBOver/`, `Tools/voice/`, scenario lines |
 | WO-06 to WO-10 | Superseded (VR seat as a client of a LAN host); their world and verb sections are cited by WO-S3 and WO-S4 | — | — |
 | WO-07 | Quest client core (WebSocket, protocol, site-state model, HUD) | WO-06, imported assets | `Assets/LOBOver/Runtime/Client/` |
 | WO-08 | The site in VR: scene built by script, world in step with `state` | WO-07 | `Assets/LOBOver/Runtime/World/`, `Assets/LOBOver/Editor/` |

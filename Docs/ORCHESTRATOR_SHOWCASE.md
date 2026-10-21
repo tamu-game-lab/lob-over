@@ -56,6 +56,23 @@ One public repository holds everything: `https://github.com/tamu-game-lab/lob-ov
 
 After every accepted Unity work order in this goal, `git push` as well, so the public repository stays current.
 
+## Round 3 (October 21): Building Blocks, guided playthrough, hub and warp, team game, voices
+
+Bryan tested the headset build and asked for: Meta Building Blocks instead of code-built rigs, no falling, a passthrough hub with a shader warp into the site, the headset as a seat in a three-person game, a guided beat-by-beat playthrough, and expanded two-foreman arguments. The design is in `Docs/SITE_SEAT_V2.md`, `Docs/VOICE.md`, `Docs/PLAYTHROUGH.md` and `Data/Guides/slice_guided.json`; the work orders are WO-S6 to WO-S10; the decisions are K20 to K28 in `Docs/DECISIONS.md`.
+
+Before anything else:
+1. If the open scene has unsaved changes, save it through the MCP. Commit Bryan's `Assets/LOBOver/Scenes/Site.unity` exactly as it is ("Site.unity: Bryan's Building Blocks") with the new docs and work orders, and push.
+2. Do not run `LOB Over > Build > Site Scene` until WO-S6 is accepted. The old builder replaces the whole scene and would delete Bryan's blocks.
+3. Never add, remove or reparent `[BuildingBlock]` objects or `OVRCameraRig`, by MCP or by script. If a block is missing or broken, stop and ask Bryan to fix it in the Building Blocks window.
+
+Four goals, one stop each. A goal is complete when its token is printed after the request to Bryan; do not keep waiting after that. The next goal starts with his replies.
+- Goal A: WO-S6 (Unity) and WO-S7 (web) in parallel, since they touch disjoint folders; republish the site after WO-S7; Build and Run Quest; ask Bryan, in at most six lines, for the WO-S6 headset check (no falling, the panel stays, controllers and hands, ray and poke) and for a laptop run of the guided playthrough; print `ROUND3_A_WAITING`.
+- Goal B: record Bryan's replies and fix what he reports (through Astra); WO-S8; Build and Run; ask for the hub and warp check; print `ROUND3_B_WAITING`.
+- Goal C: record replies; WO-S9; Build and Run; ask for the three-seat guided playthrough with the headset, following `Docs/PLAYTHROUGH.md`; print `ROUND3_C_WAITING`.
+- Goal D: record replies; WO-S10 (regenerate the transcripts after the JavaScript changes and before the C# port); Build and Run; ask Bryan to listen to the slice in the headset; print `ROUND3_D_WAITING`. After his reply: record it, push, print `READY_FOR_PLAYTHROUGH`.
+
+A WO whose acceptance needs Bryan is committed as "accepted, pending Bryan" once its machine checks pass, and closed by his reply at the start of the next goal.
+
 ## Finish lines
 
 - First goal: `READY_FOR_PAGES` when WO-05a, WO-S1 and WO-S2 are ACCEPTED.

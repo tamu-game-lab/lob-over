@@ -57,3 +57,28 @@ Preparation, once: in Unity (LOB-OVER open, ECLIPSE closed) open Window → MCP 
 ```
 /goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md, section "Unity through the MCP", and follow it. Commit the pending Docs changes and WO-S5 first. Using the unity-lobover MCP, verify and fix WO-S3 (console, Sync Data, Site Scene, Play with screenshots at 25 s and 60 s, tests), then WO-S4 (start panel, Android settings check), dispatching Astra through bash Tools/astra.sh for any fix larger than one line; accept, commit and push each. Then dispatch WO-S5, verify it, and with the headset connected execute LOB Over/Build/Build and Run Quest through the MCP. Stop only when the app is running on the headset and ask me for the VR Site and MR Diorama check in four lines. Done when READY_FOR_HEADSET is printed or a stop condition is reported to me.
 ```
+
+## Round 3 goals (October 21)
+
+Paste one goal per session, in order; each ends with a token and a short request to you. Start Claude Code with `$env:CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1; claude --model claude-opus-5-5 --effort max`, the LOB-OVER Editor open with the MCP running.
+
+Goal A:
+```
+/goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md (sections "Unity through the MCP" and "Round 3") and follow them, starting with the three "Before anything else" steps. Run Goal A: WO-S6 and WO-S7 in parallel through bash Tools/astra.sh, verified as the addendum says, accepted or rejected (max two rounds), committed and pushed; republish the site after WO-S7; Build and Run Quest; then ask me for the headset check and the laptop playthrough and print ROUND3_A_WAITING. Done when ROUND3_A_WAITING is printed or a stop condition is reported to me.
+```
+
+Goal B:
+```
+/goal Follow Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md "Round 3", Goal B. My replies to Goal A are below; record them and fix what I report first. Then WO-S8, Build and Run, ask me for the hub and warp check, and print ROUND3_B_WAITING. Done when ROUND3_B_WAITING is printed or a stop condition is reported to me. My replies:
+```
+
+Goal C:
+```
+/goal Follow Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md "Round 3", Goal C. My replies to Goal B are below; record them and fix what I report first. Then WO-S9, Build and Run, ask me for the three-seat guided playthrough with the headset, and print ROUND3_C_WAITING. Done when ROUND3_C_WAITING is printed or a stop condition is reported to me. My replies:
+```
+
+Goal D:
+```
+/goal Follow Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md "Round 3", Goal D. My replies to Goal C are below; record them and fix what I report first. Then WO-S10, Build and Run, ask me to listen to the slice in the headset, and print ROUND3_D_WAITING. Done when ROUND3_D_WAITING is printed or a stop condition is reported to me. My replies:
+```
+

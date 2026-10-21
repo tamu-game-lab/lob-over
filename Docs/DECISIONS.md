@@ -25,21 +25,23 @@ Design decisions live in the design doc (`Docs/DESIGN_v0.md`, "Decisions needed"
 | K17 | F2 requires a boundary between zones; an unpermitted excavator at 0 ft idles and bills, with no overshoot or fine | O10: preserve F2 for the first real boundary | WO-05a |
 | K18 | A Plan commit lifts stop-work through resume orders with normal order lag, unless it holds the crew | O11: stop-work lifts follow the same delivery and confirmation rules as other orders | WO-05a, K8 |
 | K19 | An empty Plan commit acknowledges no change, restores full speed and records a no-change log entry | O13: Plan can close office time without changing its draft | WO-05a |
+| K20 | The working title is LOB, Over | O1, Bryan, October 21 | everywhere |
+| K21 | The construction numbers stand as recommended until Phumpat and Dr. Rybkowski validate them: $10,000 permit fine (O2), two zones open (O3), $5,000 plus the city's delay to remobilize (O4), one day of rework per 500 ft open with a pump halving it (O5), pump $4,000 plus $60 a day (O6), F1 to F3 in Texas and F4 to F5 for Stage 3 (O7), 3/2/1 clearing days (O8) | Bryan, October 21: easy to tune later | scenarios, catalog, `_validate` keys |
+| K22 | The rework rule stays at one day per 500 ft for now; the measured Stage 1 push finish (Day 41.4) stands and the design doc's Stage 1 table follows the measured runs; revisit after the table test if Stage 1 feels hopeless | O9, Bryan, October 21 | `DESIGN_v0.md`, `TABLE_TEST.md` |
+| K23 | Arguments are kept and expanded: four-turn two-foreman exchanges; arguments also when the trailing crew catches a waiting leader (permit boundary, hold point); two-line grumbles without a stop after the first argument of a pair | O12, Bryan, October 21: the two-voice argument is the most valuable moment | `VOICE.md`, WO-S10 |
+| K24 | The headset's XR rig comes only from Meta Building Blocks (Camera Rig, Passthrough, Controller Tracking, Interactions Rig, Real Hands); no code builds, copies or reconfigures a rig; interaction goes through the Interaction SDK; no locomotion and no gravity; the builder edits only `[LOBOver]` roots | Bryan, October 21: blocks are more reliable, and the code-built rig fell through the world | `SITE_SEAT_V2.md`, WO-S6 |
+| K25 | The headset seat starts in passthrough (team visible, the site as a model on the table) and warps into the full-scale site with a shader dissolve; the truck ride is removed | Bryan, October 21: players in one room must see and talk to each other; the warp reads well for stakeholders | `SITE_SEAT_V2.md`, WO-S8 |
+| K26 | In a team game the headset is a client of the Node host on the PC (USB with `adb reverse`, or the LAN); the embedded simulation remains for the solo demo | Three seats must share one simulation | `SITE_SEAT_V2.md`, WO-S9 |
+| K27 | Voices give claims, never conclusions; each voice reaches one seat; deviations hide in normal lines; no verdict voices | Bryan's concern that the headset player would only relay what a voice says | `VOICE.md` |
+| K28 | A guided mode pauses the clock at each beat of `Docs/PLAYTHROUGH.md` until every seat is ready; for rehearsals and demonstrations, not for study sessions | Bryan, October 21: demonstrate the cooperation one handoff at a time | `PLAYTHROUGH.md`, WO-S7 |
 
 ## Open (for Bryan; the orchestrator adds a line when a work order surfaces one)
 
 | # | Question | Recommended answer | Needed by |
 | --- | --- | --- | --- |
-| O1 | Working title | LOB, Over (a radio sign-off; talk is the mechanic). Alternatives: LOB Radio; Three LOB | Kit cover (WO-04); can be changed in one place later |
-| O2 | City fine for pushing past a permit boundary | $10,000 placeholder in the scenarios, marked `_validate` | Table test |
-| O3 | Open-trench limit for the Texas city | 2 zones (3,000 ft) as the permit count; validators may prefer a footage rule | Table test |
-| O4 | Demobilization fee and delay | $5,000 and the city's 1–3 days | Table test |
-| O5 | Rain rework rule | 1 day per 500 ft open, pump halves | Table test |
-| O6 | Drainage pump price | $4,000 + $60 a day placeholder | Table test |
-| O7 | Which of F1–F5 are frequent enough on real jobs to teach | Keep F1, F2, F3 for the Texas stages; F4 and F5 for Stage 3 | Stage 3 authoring |
-| O8 | P1 option A's "Day 2/1/0" column in the workbook versus the game's 3/2/1 clearing days | Keep 3/2/1 for both own and hired machines until Phumpat says otherwise | Table test |
-| O9 | Stage 1 finish under the full rules (order lag, 2-day clearing, rain at 50% plus 1 day of rework per 500 ft open) lands later than the design doc's "36 to 38", likely 38 to 41 against the promise of 35 and the deadline of 47 | Let WO-02's scripted run report the number, then either keep it (push hurts more) or soften the rework rule to half a day per 500 ft; update the design doc's Stage 1 table from the measured run | After WO-02 |
-| O12 | Conflict detection uses the leader's `rate x mult`, so a leader idling at a permit boundary or hold point (mult 1, moving 0 ft) never triggers an argument and the trailer silently idles against it; pipe can therefore never argue with excavation in these stages (crane 180 < excavator 220). Matches WO-02's formula; flagged against the design's "would cross its leader within the next day" | Keep as is for the table test (an argument fires only when both would move); revisit if the Stage 2 test wants an argument at a hold point | Stage 3 authoring |
+| O14 | Where do the three players talk? | In one room: the headset player sees the others through passthrough. Remote players use the web seats over Zoom; voice chat inside the headset is out of scope | Before any remote session |
+| O15 | Is this the voice concern: the headset player repeating what a voice says instead of working out what changed and what the problem is? | Yes; `VOICE.md` "The problem to avoid" is written on that reading | Before WO-S10 |
+| O16 | Live AI voices (players question a foreman) | Not now; if tried, `VOICE.md`'s principles bind them | After the showcase |
 
 ## How to add a line
 
