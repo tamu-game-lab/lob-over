@@ -16,6 +16,25 @@ Playwright against the static server the WO adds (`npm --prefix Monitor run show
 
 `dotnet test Sim/LOBOver.Sim.Tests` from the repo root is the acceptance; read its summary, not its full output. A parity failure is a reject whose note quotes the first failing assertion (which transcript, which day, which field, expected versus actual). Never loosen a tolerance; if a rule is ambiguous in the JavaScript, the JavaScript is the specification.
 
+## Unity through the MCP (preferred when the Unity MCP is connected)
+
+When Claude Code has the LOB-OVER Editor's MCP server (CoPlay "MCP for Unity", HTTP on 127.0.0.1:8081, registered as `unity-lobover`), you drive the Editor yourself and stop for Bryan only where a headset is on someone's head. Confirm the connection at step 0 with one console read; if the tools are not there, fall back to the section above. Exactly one Editor is open, on LOB-OVER; if the console read shows another project's path, stop and say so.
+
+Loop for WO-S3 (repeat after every fix until it passes):
+
+1. Read the console with errors only. Any `error CS` line: fix a one-liner yourself, otherwise dispatch Astra with the lines quoted (a rejection round).
+2. If `Assets/TextMesh Pro` is missing, import the TMP essentials (menu `Window/TextMeshPro/Import TMP Essential Resources`, or have Astra call `TMP_PackageResourceImporter.ImportResources(true, false, false)` at the top of the scene builder so it never depends on a click again).
+3. Execute `LOB Over/Build/Sync Data`, then `LOB Over/Build/Site Scene`. Read the console. If the item threw or `Assets/LOBOver/Scenes/Site.unity` does not exist afterwards, that console text is the rejection note.
+4. Open `Site.unity`, enter Play, wait 25 s, read the console, take `LOB Over/Debug/Screenshot`, wait to 60 s, screenshot again, exit Play. Look at both PNGs: the first must show the slumped wall and standing water at 5+20 with the crane stopped and two foremen face to face; the second the rain. No exceptions in the console during Play. Desktop mode is the default in the Editor when no headset is present; if the start panel blocks, select Desktop and Start through the MCP's UI or send the start command the panel exposes.
+5. Run the EditMode and PlayMode suites under `Assets/LOBOver/Tests` through the MCP test runner. All pass, or reject with the first failing test's message.
+6. Accept, commit, push.
+
+Loop for WO-S4: steps 1, 3 (the builder now adds the rig, truck, start panel and diorama root), 4 with the start panel visible in Play (screenshot it), 5, then `LOB Over/Build/Check Android Settings` (every reported failure that a setting fixes, Astra fixes in the checker's own suggestions or you set through the MCP; if a module is missing from the Hub, stop and tell Bryan). Accept the machine-checkable part, commit, push.
+
+Then WO-S5 (the Build and Run menu item): dispatch, verify the item exists, and with the headset plugged in execute `LOB Over/Build/Build and Run Quest` through the MCP. When the app starts on the headset, stop with a four-line message: put the headset on, try VR Site (ride, dismount, look, stop work, listen, confirm) and MR Diorama (room, table model, point at a crew, chart), reply `OK` or one line of what was wrong. His reply closes WO-S4; print `READY_FOR_HEADSET`.
+
+Rules that stay: never edit scene or prefab YAML; every scene change goes through the builder; Astra never runs Unity; one Editor; commit and push after each acceptance.
+
 ## Verifying Unity work (WO-S3, WO-S4) without the Unity MCP
 
 1. Compile check, only when the Editor is closed (no `Temp/UnityLockfile` in the project): `"C:\Program Files\Unity\Hub\Editor\6000.3.8f1\Editor\Unity.exe" -batchmode -nographics -quit -projectPath . -logFile Monitor/out/unity-compile.log`, wait for it to exit (up to 15 minutes on the first import of the copied assets), then `grep -c "error CS" Monitor/out/unity-compile.log` must be 0. Any `error CS` line is a reject with that line quoted. If the lockfile exists, skip this and go to 2.

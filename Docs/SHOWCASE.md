@@ -48,3 +48,12 @@ Out, until after the showcase: the Node host for LAN study sessions (still works
 | WO-S2 | The C# simulation as a plain .NET library with xunit parity tests against the JavaScript transcripts, consumed by Unity through an asmdef | `dotnet test` |
 | WO-S3 | The site in Unity from LOB-Game's assets, driven by the embedded simulation and an autoplan director; desktop preview with keyboard verbs | compile check; you in Play mode |
 | WO-S4 | Start panel with the three modes; VR Site seat; MR Diorama; Android build settings | compile check; you with Build and Run |
+
+
+## Third goal (when the Unity MCP is connected; replaces the Editor checks you were asked to do by hand)
+
+Preparation, once: in Unity (LOB-OVER open, ECLIPSE closed) open Window → MCP for Unity and confirm the server is running on 127.0.0.1:8081; register it for Claude Code with the command that window shows for "Claude Code" (HTTP transport), or `claude mcp add --transport http unity-lobover http://127.0.0.1:8081/mcp`; `/mcp` inside Claude Code must list it as connected. Import TMP Essentials if Unity asks (Window → TextMeshPro → Import TMP Essential Resources). Start Claude Code with `$env:CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1; claude --model fable --effort max`.
+
+```
+/goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md, section "Unity through the MCP", and follow it. Commit the pending Docs changes and WO-S5 first. Using the unity-lobover MCP, verify and fix WO-S3 (console, Sync Data, Site Scene, Play with screenshots at 25 s and 60 s, tests), then WO-S4 (start panel, Android settings check), dispatching Astra through bash Tools/astra.sh for any fix larger than one line; accept, commit and push each. Then dispatch WO-S5, verify it, and with the headset connected execute LOB Over/Build/Build and Run Quest through the MCP. Stop only when the app is running on the headset and ask me for the VR Site and MR Diorama check in four lines. Done when READY_FOR_HEADSET is printed or a stop condition is reported to me.
+```

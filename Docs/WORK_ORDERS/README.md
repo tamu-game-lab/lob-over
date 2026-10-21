@@ -15,6 +15,7 @@ One file per bounded job for Astra. The orchestrator dispatches them in order wi
 | WO-S2 | C# simulation as a plain .NET library with parity tests | WO-05a (transcripts) | `Assets/LOBOver/Sim/`, `Sim/` |
 | WO-S3 | The site in Unity from LOB-Game's assets, embedded simulation, autoplan director, desktop preview | WO-S2, copied assets | `Assets/LOBOver/` |
 | WO-S4 | Start panel, VR Site seat, MR Diorama, Android build checks | WO-S3 | `Assets/LOBOver/` |
+| WO-S5 | One menu item that builds the APK and runs it on the headset | WO-S4 | `Assets/LOBOver/Editor/QuestBuild.cs` |
 | WO-06 to WO-10 | Superseded (VR seat as a client of a LAN host); their world and verb sections are cited by WO-S3 and WO-S4 | — | — |
 | WO-07 | Quest client core (WebSocket, protocol, site-state model, HUD) | WO-06, imported assets | `Assets/LOBOver/Runtime/Client/` |
 | WO-08 | The site in VR: scene built by script, world in step with `state` | WO-07 | `Assets/LOBOver/Runtime/World/`, `Assets/LOBOver/Editor/` |
