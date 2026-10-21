@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using LOBOver.Runtime;
+using LOBOver.XR;
 using LOBOver.Sim;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -14,6 +15,7 @@ namespace LOBOver.World
     public sealed class DesktopPreview : MonoBehaviour
     {
         public Director director;
+        public XRRig xr;
         public SiteWorld world;
         public Camera previewCamera;
         public string LastInspection { get; private set; } = "";
@@ -36,6 +38,7 @@ namespace LOBOver.World
             return;
 #else
             if (director == null) return;
+            if (xr != null) xr.Resolve();
             director.Message += OnMessage; director.Voice += OnVoice; director.Loaded += Clear;
             if (voiceSource == null) voiceSource = WorldDrawing.Sound(WorldDrawing.Group("VoiceAudio", transform), false);
 #endif

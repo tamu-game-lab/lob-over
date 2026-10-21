@@ -5,6 +5,11 @@ using LOBOver.VR;
 using LOBOver.World;
 using TMPro;
 using UnityEngine;
+using LOBOver.XR;
+using UnityEngine.UI;
+using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
+using System.Collections.Generic;
 
 namespace LOBOver.Start
 {
@@ -17,22 +22,25 @@ namespace LOBOver.Start
         public Director director;
         public WorldAssets assets;
         public AudioClip clickClip;
-        public OVRCameraRig rig;
-        public OVRManager manager;
-        public OVRPassthroughLayer passthrough;
-        public ControllerPointer pointer;
+        public XRRig xr;
+        public DesktopPreview preview;
         public GameObject fullScaleRoot, vrRoot, mrRoot, desktopRoot, fullScalePlan;
         public Transform panel;
-        public Transform listener, desktopEye;
         public GameObject worldTruck;
         public DioramaSeat diorama;
         public ShowcaseMode SelectedMode { get; private set; }
         public string SelectedScenario { get; private set; } = "slice_texas";
         public bool Autoplan { get; private set; } = true;
         public bool Running { get; private set; }
-        private TextMeshPro selection;
+        private TextMeshProUGUI selection;
+        public bool Placed { get; private set; }
+#if UNITY_EDITOR
+        private Vector3 previewPosition;
+        private Quaternion previewRotation;
+#endif
         private bool beginning;
-        private const float PanelAhead = 1.5f; // WO-S4 item 1.
+        private const float PanelAhead = 0.6f; // WO-S6 item 7.
+        private const float ChestBelowEye = 0.3f; // Presentation offset for chest-height placement (WO-S6).
         private static readonly string[] Scenarios = { "slice_texas", "stage1_texas", "stage2_texas" };
         private static readonly string[] ScenarioNames = { "Slice", "Stage 1", "Stage 2" };
         private void Awake()
@@ -41,27 +49,38 @@ namespace LOBOver.Start
             director.enabled = false;
             ReadPreferences();
             SetRoots(false, false, false, false);
-            if (panel != null && assets != null) BuildControls();
+            if (panel != null && assets != null) { BuildControls(); panel.gameObject.SetActive(false); }
+#if UNITY_EDITOR
+            if (preview != null)
+            {
+                previewPosition = preview.previewCamera.transform.position; previewRotation = preview.previewCamera.transform.rotation;
+            }
+            if (preview != null && !OVRManager.isHmdPresent)
+            {
+                preview.enabled = false; desktopRoot.SetActive(true);
+                if (xr != null && xr.TryHeadPose(out var pose)) preview.previewCamera.transform.SetPositionAndRotation(pose.position, pose.rotation);
+            }
+#endif
         }
         private IEnumerator Start()
         {
-            // Allow the rig's first tracking update before placing the eye-height menu.
             yield return null;
-            if (panel == null || rig == null) yield break;
-            var eye = rig.centerEyeAnchor;
-            var forward = Vector3.ProjectOnPlane(eye.forward, Vector3.up).normalized;
-            if (forward.sqrMagnitude < 0.1f) forward = Vector3.forward;
-            panel.position = eye.position + forward * PanelAhead;
-            panel.rotation = Quaternion.LookRotation(forward);
-            ConfigurePerformance();
+            if (panel == null || xr == null) yield break;
+            Pose pose;
+            while (!xr.TryHeadPose(out pose)) yield return null;
+            PlaceOnce(pose);
         }
-        private static void ConfigurePerformance()
+        public void PlaceOnce(Pose pose)
         {
-            if (!OVRManager.isHmdPresent) return;
-            // WO-S4 item 5: 72 Hz and fixed foveation level 2 (Medium).
-            if (OVRManager.display != null) OVRManager.display.displayFrequency = 72;
-            OVRManager.useDynamicFoveatedRendering = false;
-            OVRManager.foveatedRenderingLevel = OVRManager.FoveatedRenderingLevel.Medium;
+            if (Placed || panel == null) return;
+            var forward = Vector3.ProjectOnPlane(pose.rotation * Vector3.forward, Vector3.up).normalized;
+            if (forward.sqrMagnitude < 0.1f) forward = Vector3.forward;
+            panel.SetPositionAndRotation(pose.position + forward * PanelAhead - Vector3.up * ChestBelowEye, Quaternion.LookRotation(forward));
+            panel.gameObject.SetActive(true); Placed = true;
+#if UNITY_EDITOR
+            if (preview != null && !OVRManager.isHmdPresent)
+                preview.previewCamera.transform.SetPositionAndRotation(pose.position, Quaternion.LookRotation(panel.position - pose.position));
+#endif
         }
         private void ReadPreferences()
         {
@@ -80,24 +99,41 @@ namespace LOBOver.Start
         }
         private void BuildControls()
         {
-            selection = WorldDrawing.Text("Selection", panel, new Vector3(0, 0.31f, -0.025f), new Vector2(1.1f, 0.16f), 0.035f, assets.font);
+            selection = Label("Selection", new Vector2(0, 310), new Vector2(1100, 160), 35);
             var names = new[] { "VR Site", "MR Diorama", "Desktop" };
             for (var i = 0; i < names.Length; i++)
             {
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if !UNITY_EDITOR
                 if (i == 2) continue;
 #endif
                 var mode = (ShowcaseMode)i;
-                RayButton.Create(panel, names[i], new Vector3((i - 1) * 0.37f, 0.11f, -0.025f), new Vector2(0.34f, 0.14f), assets, clickClip, () => SelectMode(mode));
+                Button(names[i], new Vector2((i - 1) * 370, 110), new Vector2(340, 140), () => SelectMode(mode));
             }
             for (var i = 0; i < Scenarios.Length; i++)
             {
                 var scenario = Scenarios[i];
-                RayButton.Create(panel, ScenarioNames[i], new Vector3((i - 1) * 0.37f, -0.08f, -0.025f), new Vector2(0.34f, 0.12f), assets, clickClip, () => SelectScenario(scenario));
+                Button(ScenarioNames[i], new Vector2((i - 1) * 370, -80), new Vector2(340, 120), () => SelectScenario(scenario));
             }
-            RayButton.Create(panel, "Autoplan", new Vector3(-0.25f, -0.28f, -0.025f), new Vector2(0.44f, 0.13f), assets, clickClip, () => { Autoplan = !Autoplan; Refresh(); });
-            RayButton.Create(panel, "Start", new Vector3(0.25f, -0.28f, -0.025f), new Vector2(0.44f, 0.13f), assets, clickClip, Begin);
+            Button("Autoplan", new Vector2(-250, -280), new Vector2(440, 130), () => { Autoplan = !Autoplan; Refresh(); });
+            Button("Start", new Vector2(250, -280), new Vector2(440, 130), Begin);
             Refresh();
+        }
+        private TextMeshProUGUI Label(string name, Vector2 position, Vector2 size, float fontSize)
+        {
+            var obj = new GameObject(name, typeof(RectTransform)); obj.transform.SetParent(panel, false);
+            var label = obj.AddComponent<TextMeshProUGUI>(); label.font = assets.font; label.fontSize = fontSize;
+            label.alignment = TextAlignmentOptions.Center; label.richText = false; label.raycastTarget = false;
+            label.rectTransform.anchoredPosition = position; label.rectTransform.sizeDelta = size; return label;
+        }
+        private void Button(string title, Vector2 position, Vector2 size, UnityEngine.Events.UnityAction action)
+        {
+            var obj = new GameObject(title, typeof(RectTransform)); obj.transform.SetParent(panel, false);
+            var rect = (RectTransform)obj.transform; rect.anchoredPosition = position; rect.sizeDelta = size;
+            var image = obj.AddComponent<Image>(); image.color = new Color(0.85f, 0.43f, 0.15f);
+            var button = obj.AddComponent<Button>(); button.targetGraphic = image; button.transition = Selectable.Transition.None;
+            var sound = obj.AddComponent<AudioSource>(); sound.playOnAwake = false; sound.spatialBlend = 1; sound.clip = clickClip;
+            button.onClick.AddListener(() => { if (sound.clip != null) sound.Play(); }); button.onClick.AddListener(action);
+            var label = Label(title + "Label", Vector2.zero, size * 0.9f, 35); label.text = title; label.transform.SetParent(rect, false);
         }
         private void Refresh()
         {
@@ -107,12 +143,10 @@ namespace LOBOver.Start
         public void Begin()
         {
             if (beginning || Running) return;
-            beginning = true; StartCoroutine(BeginAfterRecenter());
+            beginning = true; StartCoroutine(BeginMode());
         }
-        private IEnumerator BeginAfterRecenter()
+        private IEnumerator BeginMode()
         {
-            if (OVRManager.isHmdPresent && OVRManager.display != null) OVRManager.display.RecenterPose();
-            ConfigurePerformance();
             yield return null;
             ActivateMode(SelectedMode);
             director.AutoplanEnabled = Autoplan; director.scenarioId = SelectedScenario;
@@ -126,24 +160,17 @@ namespace LOBOver.Start
         {
             SelectedMode = mode; Running = true;
             var vr = mode == ShowcaseMode.VRSite; var mr = mode == ShowcaseMode.MRDiorama;
-            // Move the shared rig out before disabling a previous cab.
-            if (rig != null) rig.transform.SetParent(null, true);
-            if (listener != null) listener.SetParent(mode == ShowcaseMode.Desktop ? desktopEye : rig.centerEyeAnchor, false);
             SetRoots(vr || mode == ShowcaseMode.Desktop, vr, mr, mode == ShowcaseMode.Desktop);
             if (fullScalePlan != null) fullScalePlan.SetActive(mode == ShowcaseMode.Desktop);
             if (worldTruck != null) worldTruck.SetActive(mode != ShowcaseMode.VRSite);
             if (panel != null) panel.gameObject.SetActive(false);
-            if (rig != null) rig.gameObject.SetActive(vr || mr);
-            if (pointer != null) pointer.gameObject.SetActive(vr || mr);
-            if (manager != null) manager.isInsightPassthroughEnabled = mr;
-            if (passthrough != null) passthrough.enabled = mr;
-            if (rig != null)
-                foreach (var camera in rig.GetComponentsInChildren<Camera>(true))
-                {
-                    // Same background settings as Meta's Passthrough Building Block.
-                    camera.clearFlags = mr ? CameraClearFlags.SolidColor : CameraClearFlags.Skybox;
-                    camera.backgroundColor = mr ? Color.clear : Color.black;
-                }
+#if UNITY_EDITOR
+            if (preview != null)
+            {
+                preview.previewCamera.transform.SetPositionAndRotation(previewPosition, previewRotation);
+                preview.enabled = mode == ShowcaseMode.Desktop;
+            }
+#endif
             if (mr && diorama != null) diorama.Place();
         }
         private void SetRoots(bool full, bool vr, bool mr, bool desktop)
@@ -155,6 +182,18 @@ namespace LOBOver.Start
         }
         private void Update()
         {
+#if UNITY_EDITOR
+            // Editor mouse uses the same uGUI Button events; device presses come solely from ISDK.
+            if (!Running && Placed && preview != null && !OVRManager.isHmdPresent && Mouse.current != null
+                && Mouse.current.leftButton.wasReleasedThisFrame && EventSystem.current != null)
+            {
+                var data = new PointerEventData(EventSystem.current) { position = Mouse.current.position.ReadValue() };
+                var hits = new List<RaycastResult>();
+                panel.GetComponent<Canvas>().worldCamera = preview.previewCamera;
+                panel.GetComponent<GraphicRaycaster>().Raycast(data, hits);
+                if (hits.Count > 0) ExecuteEvents.ExecuteHierarchy(hits[0].gameObject, data, ExecuteEvents.pointerClickHandler);
+            }
+#endif
             if (director != null && director.LoadError != null && selection != null)
             { panel.gameObject.SetActive(true); selection.text = director.LoadError; }
         }

@@ -4,6 +4,7 @@ using System.Linq;
 using LOBOver.Runtime;
 using LOBOver.Sim;
 using LOBOver.World;
+using LOBOver.XR;
 using Newtonsoft.Json.Linq;
 using TMPro;
 using UnityEngine;
@@ -14,8 +15,9 @@ namespace LOBOver.VR
     {
         public Director director;
         public SiteWorld world;
-        public OVRCameraRig rig;
-        public ControllerPointer pointer;
+        public XRRig xr;
+        public Transform siteSpace;
+        public IInspectorInput Input { get; set; } = new OvrInput();
         public Transform cab, dashboard, wrist;
         public WorldAssets assets;
         public AudioClip clickClip;
@@ -51,7 +53,7 @@ namespace LOBOver.VR
             if (InputLayer == null) BuildControls();
             wrist.gameObject.SetActive(true);
             director.ViewsChanged += OnViews; director.Message += OnMessage; director.Loaded += ResetSeat;
-            pointer.AnyPress += DismissCard; voice.MissingVoice += MissingVoice;
+            InspectTarget.Selected += Point; voice.MissingVoice += MissingVoice;
             ResetSeat();
             if (director.SiteView != null) OnViews(director.SiteView, null);
         }
@@ -59,7 +61,7 @@ namespace LOBOver.VR
         {
             if (director == null) return;
             director.ViewsChanged -= OnViews; director.Message -= OnMessage; director.Loaded -= ResetSeat;
-            pointer.AnyPress -= DismissCard; voice.MissingVoice -= MissingVoice;
+            InspectTarget.Selected -= Point; voice.MissingVoice -= MissingVoice;
             if (ride != null) StopCoroutine(ride);
             ride = null; if (engine != null) engine.Stop(); if (fade != null) fade.SetExplicitFade(0);
             wrist.gameObject.SetActive(false);
@@ -115,7 +117,8 @@ namespace LOBOver.VR
                 () => { fadeSeconds = fadeSeconds == ShortFade ? LongFade : ShortFade; });
             cardText = WorldDrawing.Text("EventCard", dashboard, new Vector3(0, 0.42f, -0.04f), new Vector2(0.8f, 0.45f), 0.035f, assets.font);
             engine = WorldDrawing.Sound(cab.gameObject, true); engine.clip = assets.dozer;
-            reticle = WorldDrawing.Line("DwellReticle", rig.centerEyeAnchor, assets.ink, Color.white, 0.0005f);
+            reticle = WorldDrawing.Line("DwellReticle", transform, assets.ink, Color.white, 0.0005f);
+            reticle.gameObject.AddComponent<RigAnchorFollower>().rig = xr;
             reticle.positionCount = 33;
         }
         private void RefreshDestinations()
@@ -159,13 +162,21 @@ namespace LOBOver.VR
             station = truck.stationFt; dismounted = truck.dismounted;
             cab.localPosition = new Vector3((float)station * WorldUnits.MetresPerFoot, 0, WorldUnits.RoadZ);
             cab.localRotation = Quaternion.Euler(0, 90, 0);
-            rig.transform.SetParent(dismounted ? transform : cab, true);
-            var desired = transform.TransformPoint(new Vector3((float)station * WorldUnits.MetresPerFoot,
+            var eye = xr.CentreEye;
+            // Preserve the existing discrete ride while keeping the tracked rig fixed: move only our site.
+            var desired = siteSpace.TransformPoint(new Vector3((float)station * WorldUnits.MetresPerFoot,
                 dismounted ? StandingEye : SeatEye, dismounted ? WorldUnits.TrenchWidth / 2 + EdgeOffset : WorldUnits.RoadZ));
-            var yaw = (dismounted ? 180 : 90) + transform.eulerAngles.y - rig.centerEyeAnchor.eulerAngles.y;
-            rig.transform.RotateAround(rig.centerEyeAnchor.position, Vector3.up, yaw);
-            rig.transform.position += desired - rig.centerEyeAnchor.position;
-            world.sky.observer = rig.centerEyeAnchor;
+            var yaw = eye.eulerAngles.y - ((dismounted ? 180 : 90) + siteSpace.eulerAngles.y);
+            siteSpace.RotateAround(desired, Vector3.up, yaw);
+            siteSpace.position += eye.position - desired;
+            world.sky.observer = eye;
+        }
+        private void Point(InspectTarget target, Vector3 position)
+        {
+            if (director.SiteView == null || !target.transform.IsChildOf(world.transform.parent)) return;
+            DismissCard();
+            if (director.SiteView.truck.dismounted && !director.SiteView.truck.moving)
+                director.Send(new JObject { ["action"] = "inspect", ["target"] = target.target });
         }
         private IEnumerator Ride(bool engineOn = true)
         {
@@ -185,9 +196,9 @@ namespace LOBOver.VR
         private void Update()
         {
             if (InputLayer == null || director.SiteView == null) return;
-            var input = pointer.Input;
+            var input = Input;
             if (input.MountDown) DismissCard();
-            var eye = rig.centerEyeAnchor;
+            var eye = xr.CentreEye;
             InspectTarget target = null;
             if (ride == null && Physics.Raycast(eye.position, eye.forward, out var hit, 6000, ~0, QueryTriggerInteraction.Collide))
                 target = hit.collider.GetComponentInParent<InspectTarget>();
@@ -195,7 +206,7 @@ namespace LOBOver.VR
             if (input.GoDown) { DismissCard(); RideSelected(); }
             if (Mathf.Abs(input.Turn) < 0.3f) turnLatched = false;
             if (!turnLatched && Mathf.Abs(input.Turn) > 0.7f && ride == null)
-            { rig.transform.RotateAround(eye.position, Vector3.up, Mathf.Sign(input.Turn) * SnapDegrees); turnLatched = true; }
+            { siteSpace.RotateAround(eye.position, Vector3.up, -Mathf.Sign(input.Turn) * SnapDegrees); turnLatched = true; }
             if (Mathf.Abs(input.Navigate) < 0.3f) navLatched = false;
             if (!navLatched && Mathf.Abs(input.Navigate) > 0.7f) { Select(input.Navigate > 0 ? 1 : -1); navLatched = true; }
             for (var i = 0; i < 33; i++)

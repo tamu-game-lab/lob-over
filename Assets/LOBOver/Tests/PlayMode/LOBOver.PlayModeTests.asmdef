@@ -1,21 +1,24 @@
 {
-    "name":  "LOBOver.PlayModeTests",
-    "references":  [
-                       "LOBOver.Director",
-                       "LOBOver.World",
-                       "LOBOver.Sim",
-                       "Unity.TextMeshPro",
-                       "LOBOver.VR",
-                       "LOBOver.MR",
-                       "LOBOver.Start",
-                       "Oculus.VR"
-                   ],
-    "optionalUnityReferences":  [
-                                    "TestAssemblies"
-                                ],
-    "overrideReferences":  true,
-    "precompiledReferences":  [
-                                  "Newtonsoft.Json.dll",
-                                  "nunit.framework.dll"
-                              ]
+  "name": "LOBOver.PlayModeTests",
+  "references": [
+    "LOBOver.Director",
+    "LOBOver.World",
+    "LOBOver.Sim",
+    "Unity.TextMeshPro",
+    "LOBOver.VR",
+    "LOBOver.MR",
+    "LOBOver.Start",
+    "Oculus.VR",
+    "LOBOver.XR",
+    "Oculus.Interaction",
+    "UnityEngine.UI"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "Newtonsoft.Json.dll",
+    "nunit.framework.dll"
+  ]
 }

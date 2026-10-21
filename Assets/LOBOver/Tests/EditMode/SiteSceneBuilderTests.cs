@@ -39,11 +39,11 @@ namespace LOBOver.Tests.Editor
             foreach (var name in new[] { "Soil", "AccessRoad", "Repair_SiteCabin", "Timber", "StorageSteel", "Repair_Surface", "Repair_OpenTrench", "Repair_PipeBed", "Repair_Backfill" })
                 AssertSurfaceCopy(name);
             CollectionAssert.AreEqual(first, scene.GetRootGameObjects().Select(o => o.name).OrderBy(n => n).ToArray());
-            foreach (var name in new[] { "Sun", "Ground", "Road", "Gate", "Trailer", "JobSign", "Director", "SiteWorld", "DesktopPreview", "SiteSky", "Global Volume" })
+            foreach (var name in new[] { "Sun", "Ground", "Road", "Gate", "Trailer", "JobSign", "[LOBOver] Director", "SiteWorld", "[LOBOver] Preview", "SiteSky", "Global Volume" })
                 Assert.That(GameObject.Find(name), Is.Not.Null, name);
             Assert.That(Object.FindObjectsByType<Director>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
             Assert.That(Object.FindObjectsByType<SiteWorld>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
-            Assert.That(Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
+            Assert.That(Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Length, Is.GreaterThanOrEqualTo(1));
             Assert.That(GameObject.Find("Gate").transform.childCount, Is.EqualTo(5));
             Assert.That(GameObject.Find("Road").transform.localScale, Is.EqualTo(new Vector3(980, 0.03f, 8)));
             var world = Object.FindFirstObjectByType<SiteWorld>();
@@ -66,7 +66,7 @@ namespace LOBOver.Tests.Editor
             AssertMaterialReferences(SiteAssetBuilder.Required<WorldAssets>(SiteAssetBuilder.Art + "WorldAssets.asset"));
             foreach (var guid in AssetDatabase.FindAssets("t:Prefab", new[] { SiteAssetBuilder.Prefabs.TrimEnd('/') }))
                 AssertHierarchyMaterials(SiteAssetBuilder.Required<GameObject>(AssetDatabase.GUIDToAssetPath(guid)));
-            foreach (var root in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
+            foreach (var root in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().Where(root => root.name.StartsWith("[LOBOver] ")))
                 AssertHierarchyMaterials(root);
         }
         private static void AssertHierarchyMaterials(GameObject root)

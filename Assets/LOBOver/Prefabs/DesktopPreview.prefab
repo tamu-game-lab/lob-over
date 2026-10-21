@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1642296153054573667}
   - component: {fileID: 2347279485534817112}
-  - component: {fileID: 3569376681274670736}
   m_Layer: 0
   m_Name: DesktopFlyCamera
   m_TagString: MainCamera
@@ -69,7 +68,7 @@ Camera:
   field of view: 65
   orthographic: 0
   orthographic size: 5
-  m_Depth: 0
+  m_Depth: 10
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -84,14 +83,6 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!81 &3569376681274670736
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6202162206738357359}
-  m_Enabled: 1
 --- !u!1 &8276412328546089326
 GameObject:
   m_ObjectHideFlags: 0
@@ -138,5 +129,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: LOBOver.World::LOBOver.World.DesktopPreview
   director: {fileID: 0}
+  xr: {fileID: 0}
   world: {fileID: 0}
   previewCamera: {fileID: 2347279485534817112}

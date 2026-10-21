@@ -41,7 +41,6 @@ namespace LOBOver.Tests
             Object.FindFirstObjectByType<Director>().gameObject.SetActive(false);
             var start = Object.FindFirstObjectByType<StartPanel>();
             start.enabled = false; start.fullScaleRoot.SetActive(true);
-            start.rig.gameObject.SetActive(false); start.pointer.gameObject.SetActive(false);
             Object.FindFirstObjectByType<DesktopPreview>(FindObjectsInactive.Include).gameObject.SetActive(false);
         }
         [TearDown]

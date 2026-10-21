@@ -1,0 +1,5 @@
+{
+  "name": "LOBOver.XR",
+  "references": ["Oculus.VR", "Oculus.Interaction", "Oculus.Interaction.OVR", "Meta.XR.BuildingBlocks", "UnityEngine.UI"],
+  "overrideReferences": true
+}

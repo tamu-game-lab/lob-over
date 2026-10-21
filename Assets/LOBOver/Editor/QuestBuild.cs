@@ -38,6 +38,7 @@ namespace LOBOver.Editor
                     Debug.LogError("LOB Over: run LOB Over/Build/Site Scene first");
                     return;
                 }
+                if (!BuildingBlocksSetup.CheckSite()) return;
                 // Missing() includes the active target itself; switching must still be possible.
                 // A switch always returns without building, so all checks run again after reimport.
                 if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)

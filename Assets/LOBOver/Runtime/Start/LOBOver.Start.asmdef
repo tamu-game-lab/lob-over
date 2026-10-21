@@ -8,7 +8,10 @@
     "LOBOver.MR",
     "Oculus.VR",
     "Unity.TextMeshPro",
-    "UnityEngine.UI"
+    "UnityEngine.UI",
+    "LOBOver.XR",
+    "Oculus.Interaction",
+    "Unity.InputSystem"
   ],
   "overrideReferences": true,
   "precompiledReferences": [

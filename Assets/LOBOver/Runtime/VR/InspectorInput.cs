@@ -18,7 +18,7 @@ namespace LOBOver.VR
     }
     public sealed class OvrInput : IInspectorInput
     {
-        public bool TriggerDown => OVRInput.GetDown(OVRInput.RawButton.RIndexTrigger);
+        public bool TriggerDown => false; // Selection is delivered by Interaction SDK pointer events.
         public bool GoDown => OVRInput.GetDown(OVRInput.RawButton.A);
         public bool MountDown => OVRInput.GetDown(OVRInput.RawButton.B);
         public bool GripHeld => OVRInput.Get(OVRInput.RawButton.RHandTrigger);

@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using LOBOver.Runtime;
 using LOBOver.World;
+using LOBOver.XR;
+using Meta.XR.BuildingBlocks;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -16,27 +18,63 @@ namespace LOBOver.Editor
     public static class SiteSceneBuilder
     {
         public const string ScenePath = "Assets/LOBOver/Scenes/Site.unity";
+        private const float HubFloorSize = 20; // WO-S6 item 6, metres.
         [MenuItem("LOB Over/Build/Site Scene")]
         public static void BuildMenu()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
             Build();
         }
+        public static Scene OpenExisting()
+        {
+            var scene = SceneManager.GetSceneByPath(ScenePath);
+            if (!scene.IsValid() || !scene.isLoaded) scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            SceneManager.SetActiveScene(scene); return scene;
+        }
+        private static readonly string[] LegacyRoots = { "ControllerPointer", "Director", "MRDiorama", "StartPanel",
+            "FullScaleRoot", "VRSite", "Sun", "Global Volume", "DesktopPreview" };
+        private static readonly string[] OwnedRoots = { "[LOBOver] Lighting", "[LOBOver] Director", "[LOBOver] Hub",
+            "[LOBOver] Site", "[LOBOver] Start", "[LOBOver] Preview" };
         public static Scene Build(bool saveScene = true)
         {
-            // The new scene comes first: NewScene(Single) unloads prefab components that WorldAssets would already reference.
-            DataSync.Sync(); var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            if (!File.Exists(ScenePath))
+            {
+                var empty = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+                Directory.CreateDirectory("Assets/LOBOver/Scenes");
+                EditorSceneManager.SaveScene(empty, ScenePath);
+                Debug.LogError("LOB Over: add the blocks listed by Check Building Blocks, then run Site Scene again.");
+                BuildingBlocksSetup.Check(empty); return empty;
+            }
+            var scene = OpenExisting();
+            if (!BuildingBlocksSetup.Check(scene)) throw new InvalidOperationException("Site Scene stopped: add the missing Building Blocks.");
+            var replaced = scene.GetRootGameObjects().Where(root => OwnedRoots.Contains(root.name)
+                || LegacyRoots.Contains(root.name)).ToArray();
+            // Validate the entire deletion set before changing anything, including accidentally nested blocks.
+            foreach (var root in replaced)
+                if (root.GetComponentInChildren<BuildingBlock>(true) != null || root.GetComponentInChildren<OVRCameraRig>(true) != null
+                    || root.GetComponentsInChildren<Transform>(true).Any(t => t.name.StartsWith("[BuildingBlock]", StringComparison.Ordinal) || t.name == "OVRCameraRig"))
+                    throw new InvalidOperationException("Site Scene stopped: protected block/rig under " + root.name + ". Nothing removed.");
+            foreach (var root in replaced) Object.DestroyImmediate(root);
+            DataSync.Sync();
+            var lighting = new GameObject("[LOBOver] Lighting").transform;
+            var site = new GameObject("[LOBOver] Site").transform;
+            var full = WorldDrawing.Group("FullScaleWorld", site).transform;
+            var hub = new GameObject("[LOBOver] Hub").transform;
+            // WO-S6: invisible 20 m square floor, top exactly at tracked floor y=0.
+            var floor = WorldDrawing.Group("TrackedFloor", hub).AddComponent<BoxCollider>();
+            floor.size = new Vector3(HubFloorSize, 0.1f, HubFloorSize); floor.center = new Vector3(0, -0.05f, 0);
+            WorldDrawing.Group("ModelAnchor", hub); WorldDrawing.Group("PMStandeePlaceholder", hub);
             var assets = SiteAssetBuilder.Build();
-            var light = new GameObject("Sun").AddComponent<Light>(); light.type = LightType.Directional;
+            var light = WorldDrawing.Group("Sun", lighting).AddComponent<Light>(); light.type = LightType.Directional;
             light.color = new Color(1, 0.94f, 0.82f); light.intensity = 1.2f; light.shadows = LightShadows.Soft;
             light.transform.rotation = Quaternion.Euler(48, -35, 0); RenderSettings.sun = light;
             RenderSettings.ambientMode = AmbientMode.Trilight; RenderSettings.ambientSkyColor = new Color(0.65f, 0.75f, 0.85f);
             RenderSettings.ambientEquatorColor = new Color(0.48f, 0.5f, 0.52f); RenderSettings.ambientGroundColor = new Color(0.25f, 0.23f, 0.2f);
             RenderSettings.skybox = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Skybox.mat");
-            var volume = new GameObject("Global Volume").AddComponent<Volume>(); volume.isGlobal = true;
+            var volume = WorldDrawing.Group("Global Volume", lighting).AddComponent<Volume>(); volume.isGlobal = true;
             volume.sharedProfile = SiteAssetBuilder.Required<VolumeProfile>("Assets/Settings/DefaultVolumeProfile.asset");
-            BuildGround(assets);
-            var gate = new GameObject("Gate"); gate.transform.position = new Vector3(-20, 0, WorldUnits.RoadZ);
+            BuildGround(assets, full);
+            var gate = WorldDrawing.Group("Gate", full); gate.transform.position = new Vector3(-20, 0, WorldUnits.RoadZ);
             for (var i = 0; i < 2; i++)
             {
                 var barrier = (GameObject)PrefabUtility.InstantiatePrefab(assets.barrier); barrier.name = "GateBarrier_" + (i + 1);
@@ -47,34 +85,36 @@ namespace LOBOver.Editor
             var ticket = WorldDrawing.Box("GateTicket", gate.transform, new Vector3(0, 1.5f, 3), new Vector3(0.7f, 0.5f, 0.04f), assets.steel);
             InspectTarget.Attach(ticket, "ticket");
             var gateText = WorldDrawing.Text("GateText", gate.transform, new Vector3(0, 1.5f, 2.96f), new Vector2(0.65f, 0.45f), 0.08f, assets.font);
-            var trailer = WorldDrawing.Box("Trailer", null, new Vector3(-15, 1.5f, 14), new Vector3(6, 3, 3), SiteAssetBuilder.Material("Repair_SiteCabin"));
+            var trailer = WorldDrawing.Box("Trailer", full, new Vector3(-15, 1.5f, 14), new Vector3(6, 3, 3), SiteAssetBuilder.Material("Repair_SiteCabin"));
             var siteBoard = Board("TrailerBoard", new Vector3(-15, 1.9f, 12.44f), new Vector2(2, 1), assets).AddComponent<TrailerBoard>();
             var planBoard = Board("PlanPanel", new Vector3(-15, 1.9f, 15.56f), new Vector2(3, 1.5f), assets).AddComponent<PlanPanel>();
             planBoard.transform.rotation = Quaternion.Euler(0, 180, 0);
             // Boards remain at unit scale; parenting preserves their world dimensions.
             siteBoard.transform.SetParent(trailer.transform, true); planBoard.transform.SetParent(trailer.transform, true);
-            var sign = new GameObject("JobSign"); sign.transform.position = new Vector3(-20, 0, 10);
+            var sign = WorldDrawing.Group("JobSign", full); sign.transform.position = new Vector3(-20, 0, 10);
             for (var side = -1; side <= 1; side += 2) WorldDrawing.Box("TimberPost", sign.transform, new Vector3(side * 0.45f, 0.9f, 0), new Vector3(0.08f, 1.8f, 0.08f), assets.timber);
             WorldDrawing.Box("SignBoard", sign.transform, new Vector3(0, 1.6f, 0), new Vector3(1.2f, 0.8f, 0.05f), assets.steel);
             var jobSign = sign.AddComponent<JobSign>(); jobSign.label = WorldDrawing.Text("Job", sign.transform, new Vector3(0, 1.6f, -0.04f), new Vector2(1.1f, 0.7f), 0.1f, assets.font);
-            var director = new GameObject("Director").AddComponent<Director>();
-            var world = new GameObject("SiteWorld").AddComponent<SiteWorld>(); world.director = director; world.assets = assets;
+            var director = new GameObject("[LOBOver] Director").AddComponent<Director>();
+            director.gameObject.AddComponent<XRRig>(); director.gameObject.AddComponent<XRRuntimeSettings>();
+            var world = WorldDrawing.Group("SiteWorld", full).AddComponent<SiteWorld>(); world.director = director; world.assets = assets;
             world.trailerBoard = siteBoard; world.planPanel = planBoard; world.jobSign = jobSign; world.gateText = gateText;
             world.truck = new GameObject("SiteTruck").transform; world.truck.SetParent(world.transform, false); world.truck.localPosition = new Vector3(0, 0, WorldUnits.RoadZ);
             var truckFrame = WorldDrawing.Box("TruckFrame", world.truck, new Vector3(-1, 0.55f, 0), new Vector3(2.2f, 0.3f, 2), assets.steel);
             // Preview marker only; the XR cab and its comfort presentation belong to WO-S4.
             var previewPrefab = BuildPreviewPrefab();
-            var preview = ((GameObject)PrefabUtility.InstantiatePrefab(previewPrefab)).GetComponent<DesktopPreview>(); preview.name = "DesktopPreview";
+            var preview = ((GameObject)PrefabUtility.InstantiatePrefab(previewPrefab)).GetComponent<DesktopPreview>(); preview.name = "[LOBOver] Preview"; preview.gameObject.tag = "EditorOnly";
             preview.director = director; preview.world = world;
             preview.previewCamera.transform.position = new Vector3(160, 9, 20); preview.previewCamera.transform.LookAt(new Vector3(140, -0.5f, 0));
-            world.sky = BuildSky(assets, preview.previewCamera.transform);
+            world.sky = BuildSky(assets, preview.previewCamera.transform); world.sky.transform.SetParent(full, true);
             // Metadata appears in Edit mode without putting a facilitator view in any player board.
             var source = JObject.Parse(File.ReadAllText("Data/Scenarios/slice_texas.json")); jobSign.Apply((JObject)source["job"]["sign"]);
             // The XR extension has its own asmdef under the WO-S4-allowed Start folder.
             var extension = Type.GetType("LOBOver.Start.Editor.XRSceneSetup, LOBOver.XR.Editor", true);
             extension.GetMethod("Build").Invoke(null, new object[] { world, preview, assets });
             SiteAssetBuilder.ConvertPrefabMaterials();
-            foreach (var root in scene.GetRootGameObjects()) SiteAssetBuilder.ConvertRendererMaterials(root);
+            foreach (var root in scene.GetRootGameObjects().Where(root => OwnedRoots.Contains(root.name)))
+                SiteAssetBuilder.ConvertRendererMaterials(root);
             Selection.activeGameObject = world.gameObject;
             if (saveScene)
             {
@@ -85,10 +125,10 @@ namespace LOBOver.Editor
             }
             AssetDatabase.SaveAssets(); Debug.Log("LOB Over: Site Scene built. Press Play, choose a mode, then Start."); return scene;
         }
-        private static void BuildGround(WorldAssets assets)
+        private static void BuildGround(WorldAssets assets, Transform parent)
         {
             // WO-08: 1200 x 200 m terrain. Separate banks leave the 1.2 m trench visible down to its floor.
-            var ground = new GameObject("Ground");
+            var ground = WorldDrawing.Group("Ground", parent);
             const float length = 1200, width = 200, corridor = WorldUnits.TrenchWidth;
             for (var side = -1; side <= 1; side += 2)
                 WorldDrawing.Box(side < 0 ? "FarBank" : "NearBank", ground.transform, new Vector3(500, -1, side * (width + corridor) / 4),
@@ -96,8 +136,8 @@ namespace LOBOver.Editor
             WorldDrawing.Box("Subsoil", ground.transform, new Vector3(500, -2.1f, 0), new Vector3(length, 0.2f, width), assets.soil);
             WorldDrawing.Box("BeforeTrench", ground.transform, new Vector3(-50, -1, 0), new Vector3(100, 2, corridor), assets.soil);
             // Initial slice length; stations beyond it are generated when a longer stage loads.
-            WorldDrawing.Box("Road", null, new Vector3(460, 0.015f, WorldUnits.RoadZ), new Vector3(980, 0.03f, 8), SiteAssetBuilder.Material("AccessRoad"));
-            new GameObject("TrenchCorridor");
+            WorldDrawing.Box("Road", parent, new Vector3(460, 0.015f, WorldUnits.RoadZ), new Vector3(980, 0.03f, 8), SiteAssetBuilder.Material("AccessRoad"));
+            WorldDrawing.Group("TrenchCorridor", parent);
         }
         private static GameObject Board(string name, Vector3 position, Vector2 size, WorldAssets assets)
         {
@@ -112,7 +152,7 @@ namespace LOBOver.Editor
                 var preview = root.AddComponent<DesktopPreview>();
                 var cameraObject = new GameObject("DesktopFlyCamera"); cameraObject.transform.SetParent(root.transform, false);
                 preview.previewCamera = cameraObject.AddComponent<Camera>(); preview.previewCamera.nearClipPlane = 0.05f; preview.previewCamera.farClipPlane = 6000;
-                preview.previewCamera.fieldOfView = 65; cameraObject.tag = "MainCamera"; cameraObject.AddComponent<AudioListener>();
+                preview.previewCamera.fieldOfView = 65; cameraObject.tag = "MainCamera"; preview.previewCamera.depth = 10;
                 return PrefabUtility.SaveAsPrefabAsset(root, SiteAssetBuilder.Prefabs + "DesktopPreview.prefab");
             }
             finally { Object.DestroyImmediate(root); }

@@ -5,6 +5,7 @@ using LOBOver.Runtime;
 using LOBOver.Sim;
 using LOBOver.VR;
 using LOBOver.World;
+using LOBOver.XR;
 using Newtonsoft.Json.Linq;
 using TMPro;
 using UnityEngine;
@@ -15,8 +16,10 @@ namespace LOBOver.MR
     {
         public Director director;
         public SiteWorld world;
-        public Transform model, eye, wrist;
-        public ControllerPointer pointer;
+        public Transform model, wrist;
+        public XRRig xr;
+        private Transform eye => xr == null ? null : xr.CentreEye;
+        public IInspectorInput Input { get; set; } = new OvrInput();
         public SeatAudio voice;
         public WorldAssets assets;
         public AudioClip clickClip;
@@ -41,7 +44,7 @@ namespace LOBOver.MR
             if (label == null) BuildControls();
             wrist.gameObject.SetActive(true);
             director.Loaded += Configure; director.ViewsChanged += OnViews; director.Event += OnEvent;
-            pointer.TargetPressed += Point; voice.MissingVoice += MissingVoice;
+            InspectTarget.Selected += Point; voice.MissingVoice += MissingVoice;
             if (director.Ready) Configure();
             Place();
         }
@@ -49,7 +52,7 @@ namespace LOBOver.MR
         {
             if (director == null) return;
             director.Loaded -= Configure; director.ViewsChanged -= OnViews; director.Event -= OnEvent;
-            pointer.TargetPressed -= Point; voice.MissingVoice -= MissingVoice;
+            InspectTarget.Selected -= Point; voice.MissingVoice -= MissingVoice;
             wrist.gameObject.SetActive(false); dragging = false;
         }
         private void BuildControls()
@@ -123,16 +126,14 @@ namespace LOBOver.MR
                     InspectTarget.Attach(crew.gameObject, "crew");
                 }
         }
-        private void Point(RaycastHit hit)
+        private void Point(InspectTarget target, Vector3 point)
         {
-            if (!director.Ready || !hit.transform.IsChildOf(model)) return;
-            var target = hit.collider.GetComponentInParent<InspectTarget>();
-            if (target == null) return;
+            if (!director.Ready || target == null || !target.transform.IsChildOf(model)) return;
             var crew = target.GetComponentInParent<CrewRig>(); var cell = target.GetComponentInParent<StationCell>();
             var board = target.GetComponentInParent<ZoneBoard>();
             var ft = crew != null ? crew.StationFt : cell != null ? cell.StationFt : board != null
                 ? (double)director.Job["zones"].OfType<JObject>().First(z => (int)z["id"] == board.Zone)["fromFt"]
-                : Mathf.Clamp(world.transform.InverseTransformPoint(hit.point).x / WorldUnits.MetresPerFoot, 0, (float)world.LengthFt);
+                : Mathf.Clamp(world.transform.InverseTransformPoint(point).x / WorldUnits.MetresPerFoot, 0, (float)world.LengthFt);
             var reply = director.InspectAt(target.target, ft);
             label.text = (string)reply?["text"]; labelTarget = target.transform; labelUntil = Time.unscaledTime + LabelSeconds;
         }
@@ -146,9 +147,9 @@ namespace LOBOver.MR
         { label.text = text; labelTarget = null; labelUntil = Time.unscaledTime + 8; } // WO-09 missing-clip fallback.
         private void Update()
         {
-            if (pointer.Input.GoDown) Place();
-            var hand = pointer.rightHand.position;
-            if (pointer.Input.GripHeld)
+            if (Input.GoDown) Place();
+            var hand = xr.RightController.position;
+            if (Input.GripHeld)
             { if (dragging) model.position += hand - previousHand; dragging = true; }
             else dragging = false;
             previousHand = hand;

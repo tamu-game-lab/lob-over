@@ -1,5 +1,6 @@
 using System;
 using LOBOver.World;
+using LOBOver.XR;
 using TMPro;
 using UnityEngine;
 
@@ -33,7 +34,10 @@ namespace LOBOver.VR
             button.label = WorldDrawing.Text("Label", root.transform, new Vector3(0, 0, -0.006f), size * 0.9f, size.y * 0.27f, assets.font);
             button.label.alignment = TextAlignmentOptions.Center; button.label.text = title;
             button.click = WorldDrawing.Sound(root, false, 2); button.click.clip = sound;
-            button.Pressed = action; return button;
+            button.Pressed = action;
+            var surface = WorldDrawing.Group("ButtonSurface", root.transform); surface.transform.localPosition = new Vector3(0, 0, -0.006f);
+            InteractionSurface.Button(surface, size).Selected += _ => button.Press();
+            return button;
         }
     }
 }

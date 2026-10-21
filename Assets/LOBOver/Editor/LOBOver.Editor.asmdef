@@ -1,8 +1,27 @@
 {
   "name": "LOBOver.Editor",
   "rootNamespace": "LOBOver.Editor",
-  "references": ["LOBOver.Sim", "LOBOver.Director", "LOBOver.World", "Unity.TextMeshPro", "UnityEngine.UI", "Unity.RenderPipelines.Core.Runtime", "Unity.RenderPipelines.Core.Editor", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Universal.Editor"],
-  "includePlatforms": ["Editor"],
+  "references": [
+    "LOBOver.Sim",
+    "LOBOver.Director",
+    "LOBOver.World",
+    "Unity.TextMeshPro",
+    "UnityEngine.UI",
+    "Unity.RenderPipelines.Core.Runtime",
+    "Unity.RenderPipelines.Core.Editor",
+    "Unity.RenderPipelines.Universal.Runtime",
+    "Unity.RenderPipelines.Universal.Editor",
+    "LOBOver.XR",
+    "Oculus.VR",
+    "Oculus.Interaction",
+    "Oculus.Interaction.OVR",
+    "Meta.XR.BuildingBlocks"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
   "overrideReferences": true,
-  "precompiledReferences": ["Newtonsoft.Json.dll"]
+  "precompiledReferences": [
+    "Newtonsoft.Json.dll"
+  ]
 }

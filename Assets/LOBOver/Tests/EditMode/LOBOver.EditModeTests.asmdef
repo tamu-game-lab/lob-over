@@ -1,8 +1,26 @@
 {
   "name": "LOBOver.EditModeTests",
-  "references": ["LOBOver.Editor", "LOBOver.Director", "LOBOver.World", "LOBOver.Sim", "Unity.TextMeshPro"],
-  "includePlatforms": ["Editor"],
-  "optionalUnityReferences": ["TestAssemblies"],
+  "references": [
+    "LOBOver.Editor",
+    "LOBOver.Director",
+    "LOBOver.World",
+    "LOBOver.Sim",
+    "Unity.TextMeshPro",
+    "LOBOver.XR",
+    "LOBOver.Start",
+    "Oculus.VR",
+    "Oculus.Interaction",
+    "Meta.XR.BuildingBlocks"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
   "overrideReferences": true,
-  "precompiledReferences": ["Newtonsoft.Json.dll", "nunit.framework.dll"]
+  "precompiledReferences": [
+    "Newtonsoft.Json.dll",
+    "nunit.framework.dll"
+  ]
 }

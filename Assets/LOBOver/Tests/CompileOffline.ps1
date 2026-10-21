@@ -42,11 +42,21 @@ try {
     $baseReferences += (Get-ChildItem (Join-Path $UnityData 'NetStandard/compat/2.1.0/shims/netfx') -Filter '*.dll').FullName
     $jsonDll = (Get-ChildItem 'Library/PackageCache/com.unity.nuget.newtonsoft-json*/Runtime/Newtonsoft.Json.dll').FullName
     $baseReferences += $jsonDll
+    $sdkAssemblies = @(Get-ChildItem 'Library/ScriptAssemblies/Oculus.Interaction*.dll', 'Library/ScriptAssemblies/Meta.XR.BuildingBlocks*.dll')
+    $sdkPackages = @(Get-ChildItem 'Library/PackageCache' -Directory | Where-Object Name -Like 'com.meta.xr.sdk.interaction*')
+    $sdkSources = @(Get-ChildItem $sdkPackages.FullName -Recurse -Filter '*.cs')
+    foreach ($required in @('PointableCanvas.cs', 'RayInteractable.cs', 'PokeInteractable.cs', 'FirstPersonLocomotor.cs', 'CharacterController.cs', 'PlayerLocomotor.cs')) {
+        if (!($sdkSources | Where-Object Name -EQ $required)) { throw "Missing installed Interaction SDK source: $required" }
+    }
+    if ($sdkAssemblies.Count -eq 0) { throw 'Missing imported Interaction SDK / Building Blocks assemblies' }
+    Write-Output "SDK inputs: $($sdkAssemblies.Count) imported assemblies; $($sdkSources.Count) installed package sources (no restore)."
     $engineReferences = (Get-ChildItem (Join-Path $UnityData 'Managed/UnityEngine') -Filter '*.dll').FullName
     Compile-Assembly 'LOBOver.Sim' 'Assets/LOBOver/Sim' $baseReferences
     $runtimeReferences = $baseReferences + $engineReferences + @((Join-Path $scratch 'LOBOver.Sim.dll'))
     Compile-Assembly 'LOBOver.Director' 'Assets/LOBOver/Runtime/Director' $runtimeReferences
     $worldReferences = $runtimeReferences + @((Join-Path $scratch 'LOBOver.Director.dll'), 'Library/ScriptAssemblies/Unity.TextMeshPro.dll', 'Library/ScriptAssemblies/Unity.InputSystem.dll', 'Library/ScriptAssemblies/UnityEngine.UI.dll')
+    Compile-Assembly 'LOBOver.XR' 'Assets/LOBOver/Runtime/XR' $worldReferences
+    Compile-Assembly 'LOBOver.XR.Android' 'Assets/LOBOver/Runtime/XR' $worldReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
     Compile-Assembly 'LOBOver.World' 'Assets/LOBOver/Runtime/World' $worldReferences
     # Compile the conditional Android reader too, without opening the Editor or changing build settings.
     Compile-Assembly 'LOBOver.Director.Android' 'Assets/LOBOver/Runtime/Director' $runtimeReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
