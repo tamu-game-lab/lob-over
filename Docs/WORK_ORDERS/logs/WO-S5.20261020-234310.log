@@ -1,0 +1,1999 @@
+=== WO-S5 dispatched 20261020-234310
+=== root: /c/Users/bryan/Documents/TAMU/02-Research/Creative Care/Unity/LOB-OVER
+=== flags: --sandbox workspace-write -c approval_policy=never 
+=== note: Carry out WO-S5 including its 'Amendment 1' (two Android devices are attached on this PC: install and start on the Quest by serial, never AutoRunPlayer). The settings check lives in Assets/LOBOver/Runtime/Start/Editor/AndroidSettingsCheck.cs (public static List<string> Missing() and Check()) and Assets/LOBOver/Editor/BuildChecks.cs (menu item only): if you need Passes(out string report), add it to BuildChecks.cs as the WO allows, implemented on AndroidSettingsCheck.Missing(). The Editor is open and driven by the orchestrator through the Unity MCP; you cannot run Unity, adb or a build. Extend Assets/LOBOver/Tests/CompileOffline.ps1 only if your new file is not already compiled by it (it compiles Assets/LOBOver/Editor), run it and paste its summary. Builds/ is already gitignored. Do not touch Assets/LOBGame/**, Monitor/, Showcase/ or Sim/.
+
+Reading additional input from stdin...
+OpenAI Codex v0.163.0-alpha.10.2
+--------
+workdir: C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+model: gpt-6-astra
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a15cc5-3893-7581-9286-a6f7a3ebd6a8
+--------
+user
+You are Astra, the implementer on this repository. Read AGENTS.md first and obey it.
+Then read Docs/WORK_ORDERS/WO-S5.md and carry out that work order exactly: only the files it allows,
+only the behaviour it specifies, every acceptance check run by you before you finish.
+Do not commit. Do not touch Data/ unless the work order says so. Do not add dependencies.
+If something outside your scope blocks you, stop and report BLOCKED with the exact reason.
+Finish with the STATUS block in the format AGENTS.md gives, as the very last thing you print.
+Orchestrator note for this dispatch: Carry out WO-S5 including its 'Amendment 1' (two Android devices are attached on this PC: install and start on the Quest by serial, never AutoRunPlayer). The settings check lives in Assets/LOBOver/Runtime/Start/Editor/AndroidSettingsCheck.cs (public static List<string> Missing() and Check()) and Assets/LOBOver/Editor/BuildChecks.cs (menu item only): if you need Passes(out string report), add it to BuildChecks.cs as the WO allows, implemented on AndroidSettingsCheck.Missing(). The Editor is open and driven by the orchestrator through the Unity MCP; you cannot run Unity, adb or a build. Extend Assets/LOBOver/Tests/CompileOffline.ps1 only if your new file is not already compiled by it (it compiles Assets/LOBOver/Editor), run it and paste its summary. Builds/ is already gitignored. Do not touch Assets/LOBGame/**, Monitor/, Showcase/ or Sim/.
+warning: Codex is ignoring 2 unrecognized configuration settings. Check for typos or deprecated settings.
+  user (C:\Users\bryan\.codex\config.toml): `features.rmcp_client` is ignored.
+  user (C:\Users\bryan\.codex\config.toml): `mcp_servers.code-review-graph.type` is ignored.
+warning: Codex is ignoring 2 unrecognized configuration settings. Check for typos or deprecated settings.
+  user (C:\Users\bryan\.codex\config.toml): `features.rmcp_client` is ignored.
+  user (C:\Users\bryan\.codex\config.toml): `mcp_servers.code-review-graph.type` is ignored.
+warning: loading hooks from both C:\Users\bryan\.codex\hooks.json and C:\Users\bryan\.codex\config.toml; prefer a single representation for this layer
+warning: clamping SessionEnd hook timeout to 3s in C:\Users\bryan\.codex\hooks.json
+warning: clamping SessionEnd hook timeout to 3s in C:\Users\bryan\.codex\config.toml
+2026-10-21T04:43:12.012022Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://mcp.consensus.app/.well-known/oauth-protected-resource\", scope=\"search\"" })
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+hook: UserPromptSubmit Completed
+codex
+Step 1 of 4: I’ll read `AGENTS.md` and `WO-S5.md`, then implement within the allowed scope and run the available checks. I’ll report any build or device checks blocked by the dispatch restrictions.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath AGENTS.md' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 46ms:
+# AGENTS.md â€” rules for the implementer (Codex / Astra)
+
+You are the implementer on LOB, Over, a three-seat cooperative construction-scheduling game (VR inspector, web scheduler, paper spec-keeper). An orchestrator (Claude Code) writes you bounded work orders, verifies the result, and accepts or rejects it. You do not decide design questions; you build exactly what the work order says and report precisely.
+
+## Read first, every time
+
+1. This file.
+2. The work order you were given: `Docs/WORK_ORDERS/WO-xx.md`. It names the files you may touch, the acceptance checks, and what is out of scope.
+3. Only the design files the work order points you to (usually one or two sections of `Docs/DESIGN_v0.md`, `Docs/PROTOCOL.md`, `Docs/SCENARIO_SCHEMA.md`). Do not read the whole design doc unless the work order says so.
+
+## Repository layout (root = the Unity project root)
+
+```
+Assets/ Packages/ ProjectSettings/   Unity (Phase 1; do not touch in Phase 0 work orders)
+Data/        catalog.json, Scenarios/*.json, goldens/*.json   â€” source of truth for sim, kit and voice
+Docs/        DESIGN_v0.md, PROTOCOL.md, SCENARIO_SCHEMA.md, ORCHESTRATOR.md, WORK_ORDERS/, WORKLOG.md, DECISIONS.md
+Monitor/     Node host + JS reference simulation + browser pages (Plan page, 2D Site page, facilitator page)
+Paper/       field manual source and generated printable kit
+Tools/       astra.sh (dispatch), reference/ (Python oracle for goldens), voice/ (Kokoro batch)
+Voice/       generated WAV lines (output)
+```
+
+## Hard rules
+
+- **Scope.** Touch only the files and folders the work order lists under "You may change". If the job needs a change elsewhere, stop and say so in the STATUS block (`BLOCKED`), do not make it.
+- **No design decisions.** If the work order is ambiguous, pick the reading that is simplest to change later, state the choice in `NOTES`, and continue. Never invent game rules, numbers, event behaviours or UI feedback that the work order or the pointed-to design section does not state.
+- **No verdict feedback, ever.** Nothing in any player-facing surface may tell players that a choice was right or wrong: no green/red for decisions, no "correct", no score, no hint text, no "you should have". Boards post facts (a permit number, a day count, a dollar figure). This is the project's core educational rule (design doc, "No verdicts during play"). Typo-level rejection of a code that is not on file is allowed; judgement of whether entering it was wise is not.
+- **Determinism.** The simulation is seeded and must produce identical output for identical input and seed. No `Math.random()` without the seeded RNG, no wall-clock reads inside the simulation, no iteration-order dependence on object keys for anything that affects state.
+- **One truth, filtered per seat.** The host holds one state; each seat gets a filtered view (`Docs/PROTOCOL.md`). Never send the Plan seat live field truth, and never send the Site seat the plan or the money.
+- **No network from your sandbox.** Dependencies are installed by the orchestrator before you run. If a module is missing, say so in `BLOCKED`; do not try to install it or vendor a copy.
+- **Data files are authored, not generated by you.** Do not modify `Data/Scenarios/*.json`, `Data/catalog.json` or `Data/goldens/*.json` unless the work order says so explicitly.
+- **Git.** This is a git repo. Do not commit, branch, stash or reset; the orchestrator commits. Never run git on any other folder (LOB-Game is under Plastic SCM and is read-only reference material).
+- **Keep it plain.** Vanilla JS (ES modules), Node 20+, no framework, no bundler, no TypeScript in Phase 0. Tests with Node's built-in `node:test`. Pages are single HTML files with inline CSS and JS, served by the host.
+- **Code style.** Small modules, pure functions for the simulation (`state, input -> state`), named constants for every number that comes from the design, each constant with a comment naming its source (catalog, workbook, decided rule). Comments say why, not what.
+- **Do not touch** `Assets/`, `Packages/`, `ProjectSettings/`, `.gitignore`, `AGENTS.md`, `CLAUDE.md`, `Docs/ORCHESTRATOR.md`, or anything under `Docs/WORK_ORDERS/logs/`.
+
+## How to work a work order
+
+1. Restate the acceptance checks to yourself; they are what the orchestrator will run.
+2. Build the smallest thing that passes them, then stop. No extra features, no refactors of files outside scope, no "while I was here".
+3. Run every acceptance check yourself. Paste the actual command output (trimmed) into `TESTS`.
+4. If a check cannot pass because of something outside your scope, report `BLOCKED` with the exact reason and the smallest change that would unblock it.
+5. Scope check: `git status --short` must show only your own changes. Ignore `Docs/WORK_ORDERS/logs/` (the dispatch log being written while you run) and `Docs/WORKLOG.md` / `Docs/DECISIONS.md` if the orchestrator left them modified; never clean those up and never treat them as a blocker.
+6. Windows shell: your commands run in PowerShell, where `npm` and `npx` resolve to `.ps1` shims that the execution policy blocks. Call `npm.cmd` and `npx.cmd` instead; the acceptance checks mean exactly that. `node`, `python`, `pip` and `git` work as written.
+
+## STATUS block (always the last thing you print)
+
+```
+STATUS: DONE | PARTIAL | BLOCKED
+WO: WO-xx
+CHANGED:
+  - path/one.js  (new)        one line on what it is
+  - path/two.html (modified)  one line on what changed
+TESTS:
+  - <command>  ->  <pass/fail, key numbers>
+NOTES:
+  - choices you made where the order was silent, each in one line
+  - anything the verifier must know (known gaps, follow-ups, risks)
+```
+
+`DONE` means every acceptance check passed on your machine. `PARTIAL` means some passed and you list which did not and why. `BLOCKED` means you could not proceed; name the blocker. Never claim a check passed that you did not run.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath Docs/WORK_ORDERS/WO-S5.md' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 34ms:
+# WO-S5 â€” One menu item that builds the APK and runs it on the headset
+
+## Goal
+
+`LOB Over â†’ Build â†’ Build and Run Quest` builds `Builds/LOBOver-<yyyyMMdd-HHmm>.apk` (Android, the project's current player settings) and installs and starts it on the connected Quest in one go, so the orchestrator can trigger it through the Unity MCP and Bryan only puts the headset on. `LOB Over â†’ Build â†’ Build Quest APK` does the same without running.
+
+## Read
+
+- `AGENTS.md`, `Docs/ORCHESTRATOR_SHOWCASE.md`
+- `Assets/LOBOver/Editor/BuildChecks.cs` (WO-S4's Android settings check; call it first and abort on any failure)
+- `ProjectSettings/EditorBuildSettings.asset` (scene list; `Site.unity` must be first and enabled)
+
+## You may change
+
+- `Assets/LOBOver/Editor/QuestBuild.cs` (new), `Assets/LOBOver/Editor/BuildChecks.cs` (only to expose a `static bool Passes(out string report)` if it does not have one), `.gitignore` (`Builds/` if missing)
+
+## Build
+
+1. `QuestBuild.cs`: two `[MenuItem]`s under `LOB Over/Build/`. Both: run the Android settings check and abort with its report in the console if it fails; make sure `Assets/LOBOver/Scenes/Site.unity` exists (else log "run LOB Over/Build/Site Scene first" and abort); if the active build target is not Android, switch it with `EditorUserBuildSettings.SwitchActiveBuildTarget` and return (the switch reimports; the user re-runs the item); create `Builds/`; `BuildPipeline.BuildPlayer` with the enabled scenes, `BuildTarget.Android`, `BuildOptions.None` for the APK item and `BuildOptions.AutoRunPlayer` for the Build and Run item; log the summary (result, size, time, output path) as one line; on failure log the first error step.
+2. Before Build and Run, check `adb devices` through `System.Diagnostics.Process` using the Android SDK's `platform-tools/adb` that Unity's `AndroidExternalToolsSettings.sdkRootPath` points at; if no device is listed, log "no Quest connected (developer mode on, cable in, allow USB debugging in the headset)" and build without running.
+3. Write `Builds/last-build.txt` with the output path, the git short hash and the time; the start panel's `BuildInfo` (WO-S4) may read the hash from the resources file it already uses.
+
+## Acceptance checks
+
+```
+# Orchestrator through the Unity MCP: execute LOB Over/Build/Check Android Settings -> no failures in the console
+# execute LOB Over/Build/Build and Run Quest with the headset connected -> console shows the one-line summary with "Succeeded", Builds/LOBOver-*.apk exists, the app starts on the headset (adb logcat -d | grep -c LOBOver > 0 within 30 s)
+git status --short     # only Assets/LOBOver/Editor/QuestBuild.cs (+ BuildChecks.cs, .gitignore)
+```
+
+## Out of scope
+
+No signing beyond the debug keystore, no settings changes other than the build target switch, no IL2CPP or SDK installation (if the check reports them missing, Bryan installs them through the Hub).
+
+## Amendment 1 (orchestrator, 2026-10-20): more than one Android device
+
+On this PC `adb devices -l` lists two devices: the Quest 3S (`model:Quest_3S`, serial `340YC10GBC0BRS`) and an Android phone (`model:SM_N986N`). `BuildOptions.AutoRunPlayer` leaves the choice of device to Unity, which could install the headset app on the phone. So, for `Build and Run Quest`:
+
+1. Find the device with `adb devices -l` (the SDK's `platform-tools/adb.exe` under `AndroidExternalToolsSettings.sdkRootPath`): use the first line in state `device` whose `model:` contains `Quest`. None: log "no Quest connected (developer mode on, cable in, allow USB debugging in the headset)" and build the APK without installing, as item 2 says. Unauthorized: log "Quest connected but not authorized: put the headset on and allow USB debugging" and build without installing.
+2. Build with `BuildOptions.None` (not `AutoRunPlayer`), then install and start on that serial only: `adb -s <serial> install -r <apk>`, then `adb -s <serial> shell monkey -p <PlayerSettings.applicationIdentifier> -c android.intent.category.LAUNCHER 1`. Log one line per step with the serial and the exit code. The one-line build summary from item 1 stays; append "installed and started on <serial>" or the failing step.
+3. Run the adb calls with `System.Diagnostics.Process` (no shell), a 120 s timeout for install and 30 s for the others, stdout and stderr captured into the log line on failure.
+
+The rest of the work order stands.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'git status --short' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 33ms:
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+?? Docs/WORK_ORDERS/logs/WO-S5.20261020-234310.log
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath Docs/ORCHESTRATOR_SHOWCASE.md' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+ succeeded in 0ms:
+# ORCHESTRATOR_SHOWCASE.md â€” addendum for the showcase track (WO-05a, WO-S1 to WO-S4)
+
+`Docs/ORCHESTRATOR.md` applies unchanged: dispatch with `bash Tools/astra.sh`, verify, accept or reject in at most two rounds, commit, worklog, stop conditions, token discipline. This addendum says how to verify each kind of work in this track. `Docs/ORCHESTRATOR_PHASE1.md` (Unity MCP, batch builds, adb) is retired; do not follow it.
+
+## Step 0 additions
+
+- `dotnet --version` must print 8.x or newer; if not, stop and tell Bryan (step 2 of `Docs/SHOWCASE.md`).
+- After WO-05a is accepted, generate the JavaScript transcripts the C# port is measured against: for each of `slice_play`, `slice_pull_play`, `slice_autoplan`, `stage1_pm_play`, `stage2_pull_play`, `stage1_noaction` run `node Monitor/src/sim/headless.js Data/Scenarios/<stage>.json --script Monitor/test/scripts/<name>.json --out Data/transcripts/<name>.json` (no `--script` for `stage1_noaction`; the stage is the one the script name starts with). Commit `Data/transcripts/`. Regenerate and recommit whenever the JavaScript simulation changes.
+- For the second goal only: run `Tools/import_lobgame_assets.ps1` (PowerShell) yourself before dispatching WO-S3; it copies about 1.7 GB from `..\LOB-Game\Assets` into `Assets\LOBGame\` with the `.meta` files, read-only on the source. Astra never touches LOB-Game. `Assets/LOBGame/` is gitignored; the script is the source of truth.
+
+## Verifying web work (WO-S1)
+
+Playwright against the static server the WO adds (`npm --prefix Monitor run showcase:serve`), never against `file://` (ES modules do not load from files). Open the landing page, start a showcase with the slice and autoplan on, open the Plan and Site tabs in the same browser context, press Start on the host tab, and check the WO's list. Screenshots at 1280Ã—800 and at 390Ã—844 (phone) into `Monitor/out/showcase/`; look at them. After Bryan publishes (his step 4), `curl -s -o /dev/null -w "%{http_code}" https://tamu-game-lab.github.io/lob-over/` is the last check of the first goal; if it is not 200 yet, say so and still print `READY_FOR_PAGES` once WO-S2 is accepted, because publishing is his step.
+
+## Verifying the C# simulation (WO-S2)
+
+`dotnet test Sim/LOBOver.Sim.Tests` from the repo root is the acceptance; read its summary, not its full output. A parity failure is a reject whose note quotes the first failing assertion (which transcript, which day, which field, expected versus actual). Never loosen a tolerance; if a rule is ambiguous in the JavaScript, the JavaScript is the specification.
+
+## Unity through the MCP (preferred when the Unity MCP is connected)
+
+When Claude Code has the LOB-OVER Editor's MCP server (CoPlay "MCP for Unity", HTTP on 127.0.0.1:8081, registered as `unity-lobover`), you drive the Editor yourself and stop for Bryan only where a headset is on someone's head. Confirm the connection at step 0 with one console read; if the tools are not there, fall back to the section above. Exactly one Editor is open, on LOB-OVER; if the console read shows another project's path, stop and say so.
+
+Loop for WO-S3 (repeat after every fix until it passes):
+
+1. Read the console with errors only. Any `error CS` line: fix a one-liner yourself, otherwise dispatch Astra with the lines quoted (a rejection round).
+2. If `Assets/TextMesh Pro` is missing, import the TMP essentials (menu `Window/TextMeshPro/Import TMP Essential Resources`, or have Astra call `TMP_PackageResourceImporter.ImportResources(true, false, false)` at the top of the scene builder so it never depends on a click again).
+3. Execute `LOB Over/Build/Sync Data`, then `LOB Over/Build/Site Scene`. Read the console. If the item threw or `Assets/LOBOver/Scenes/Site.unity` does not exist afterwards, that console text is the rejection note.
+4. Open `Site.unity`, enter Play, wait 25 s, read the console, take `LOB Over/Debug/Screenshot`, wait to 60 s, screenshot again, exit Play. Look at both PNGs: the first must show the slumped wall and standing water at 5+20 with the crane stopped and two foremen face to face; the second the rain. No exceptions in the console during Play. Desktop mode is the default in the Editor when no headset is present; if the start panel blocks, select Desktop and Start through the MCP's UI or send the start command the panel exposes.
+5. Run the EditMode and PlayMode suites under `Assets/LOBOver/Tests` through the MCP test runner. All pass, or reject with the first failing test's message.
+6. Accept, commit, push.
+
+Loop for WO-S4: steps 1, 3 (the builder now adds the rig, truck, start panel and diorama root), 4 with the start panel visible in Play (screenshot it), 5, then `LOB Over/Build/Check Android Settings` (every reported failure that a setting fixes, Astra fixes in the checker's own suggestions or you set through the MCP; if a module is missing from the Hub, stop and tell Bryan). Accept the machine-checkable part, commit, push.
+
+Then WO-S5 (the Build and Run menu item): dispatch, verify the item exists, and with the headset plugged in execute `LOB Over/Build/Build and Run Quest` through the MCP. When the app starts on the headset, stop with a four-line message: put the headset on, try VR Site (ride, dismount, look, stop work, listen, confirm) and MR Diorama (room, table model, point at a crew, chart), reply `OK` or one line of what was wrong. His reply closes WO-S4; print `READY_FOR_HEADSET`.
+
+Rules that stay: never edit scene or prefab YAML; every scene change goes through the builder; Astra never runs Unity; one Editor; commit and push after each acceptance.
+
+## Verifying Unity work (WO-S3, WO-S4) without the Unity MCP
+
+1. Compile check, only when the Editor is closed (no `Temp/UnityLockfile` in the project): `"C:\Program Files\Unity\Hub\Editor\6000.3.8f1\Editor\Unity.exe" -batchmode -nographics -quit -projectPath . -logFile Monitor/out/unity-compile.log`, wait for it to exit (up to 15 minutes on the first import of the copied assets), then `grep -c "error CS" Monitor/out/unity-compile.log` must be 0. Any `error CS` line is a reject with that line quoted. If the lockfile exists, skip this and go to 2.
+2. Then stop for Bryan with a message of at most six lines: what to open, which menu item to run, what to press, what he should see in the first 60 seconds, and what to reply. His one-line reply is the check's result; record it in the worklog. If he reports something wrong, that is the rejection note's content, in his words plus the WO section it belongs to.
+3. Never open, edit or review scene or prefab YAML; Astra builds scenes from editor scripts, and the only acceptable scene is one the menu item regenerates.
+
+## Publishing (second goal, before any Unity work)
+
+One public repository holds everything: `https://github.com/tamu-game-lab/lob-over` (Bryan created it with a blank README). Source lives on `main`, the built site on `gh-pages`, Pages serves `https://tamu-game-lab.github.io/lob-over/`. Steps, in order, all run by you (ops, not feature code; `.claude/settings.json` allows `git push`, `powershell`, `gh`, `dotnet`):
+
+1. `git remote get-url origin || git remote add origin https://github.com/tamu-game-lab/lob-over.git`, then `git fetch origin`.
+2. If `git log --oneline origin/main` shows exactly one commit and `git show --stat origin/main` touches only `README.md`, the remote holds nothing of value: `git push --force -u origin main`. Otherwise `git merge --allow-unrelated-histories -X ours origin/main -m "Merge GitHub initial commit"` and `git push -u origin main`. Bryan may have to complete a GitHub sign-in window the first time; wait for it.
+3. Local path fix: the showcase test server and e2e assume the old subpath. In `Monitor/src/showcase/serve.js` change `/lob-over-showcase` to `/lob-over`; in `Monitor/e2e/showcase.e2e.js` change the base to `http://localhost:7340/lob-over/`; grep `Monitor/` for any other `lob-over-showcase`; run `npm --prefix Monitor run e2e`; commit "Showcase: one repository, /lob-over path".
+4. `Sim/NuGet.Config` now points at nuget.org again (it was cleared for Astra's offline sandbox): run `dotnet restore Sim/LOBOver.Sim.Tests` and `dotnet test Sim/LOBOver.Sim.Tests -c Release` once with network; commit if the lock files changed.
+5. Publish: `powershell -ExecutionPolicy Bypass -File Tools/publish_showcase.ps1` (it builds `Showcase/dist`, pushes it to `gh-pages` through a worktree in `Showcase/.publish`, and prints the URL).
+6. Pages: `gh auth status`; if signed in, `gh api --method POST -H "Accept: application/vnd.github+json" /repos/tamu-game-lab/lob-over/pages -f "source[branch]=gh-pages" -f "source[path]=/"`; a 409 means Pages already exists, then `gh api --method PUT ... /repos/tamu-game-lab/lob-over/pages -f "source[branch]=gh-pages" -f "source[path]=/"`. If `gh` is missing or not signed in, print for Bryan: "GitHub â†’ lob-over â†’ Settings â†’ Pages â†’ Build and deployment â†’ Source: Deploy from a branch â†’ Branch: gh-pages, / (root) â†’ Save" and continue; re-check at the end of the run.
+7. `README.md`: add one line under the title, "Play it in the browser: https://tamu-game-lab.github.io/lob-over/ (the field manual PDF is linked on the landing page)"; commit and push.
+8. Verify: poll `curl -s -o /dev/null -w "%{http_code}" https://tamu-game-lab.github.io/lob-over/` every 30 s for up to 10 minutes after Pages is enabled; 200 is the check. Then open the live landing page, host, Plan and Site with Playwright once (same checks as WO-S1, against the live URL) and keep the screenshots in `Monitor/out/showcase-live/`. Record the URL and the gh-pages commit in the worklog.
+
+After every accepted Unity work order in this goal, `git push` as well, so the public repository stays current.
+
+## Finish lines
+
+- First goal: `READY_FOR_PAGES` when WO-05a, WO-S1 and WO-S2 are ACCEPTED.
+- Second goal: `READY_FOR_HEADSET` when the site answers 200 at its Pages URL, WO-S3 and WO-S4 are ACCEPTED with Bryan's Play-mode check recorded, and `main` is pushed. Build and Run is his step.
+
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath ProjectSettings/EditorBuildSettings.asset' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath Assets/LOBOver/Tests/CompileOffline.ps1' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath Assets/LOBOver/Editor/BuildChecks.cs; Get-Content -LiteralPath Assets/LOBOver/Runtime/Start/Editor/AndroidSettingsCheck.cs' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 0ms:
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/LOBOver/Scenes/Site.unity
+    guid: 736e21f98d473934eb38fecc01d3a195
+  - enabled: 1
+    path: Assets/Scenes/SampleScene.unity
+    guid: 99c9720ab356a0642a771bea13969a05
+  m_configObjects:
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: c026c88f56c386742a9796533a27eb4d, type: 2}
+    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 24056addbd35dd342885b6bc3c348aeb, type: 2}
+  m_UseUCBPForAssetBundles: 0
+
+ succeeded in 0ms:
+param([string]$UnityData = 'C:/Program Files/Unity/Hub/Editor/6000.3.8f1/Editor/Data')
+$ErrorActionPreference = 'Stop'
+$projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '../../..')).Path
+Set-Location -LiteralPath $projectRoot
+$scratch = Join-Path $PSScriptRoot '.offline'
+New-Item -ItemType Directory -Path $scratch -Force | Out-Null
+$generated = [System.Collections.Generic.List[string]]::new()
+$script:compiledCount = 0
+function Compile-Assembly([string]$name, [string]$folder, [string[]]$references, [string]$defines = 'UNITY_EDITOR;UNITY_6000_3_OR_NEWER;UNITY_INCLUDE_TESTS') {
+    # Match Unity's declared assembly graph; a broad compiler reference set can hide missing asmdef references.
+    $definition = Get-ChildItem -LiteralPath $folder -Filter '*.asmdef' | Select-Object -First 1
+    if ($definition) {
+        $asm = Get-Content -LiteralPath $definition.FullName -Raw | ConvertFrom-Json
+        $references = @($baseReferences)
+        if (!$asm.noEngineReferences) { $references += $engineReferences }
+        foreach ($dependency in $asm.references) {
+            $compiled = Join-Path $scratch ($dependency + '.dll')
+            $references += $(if (Test-Path -LiteralPath $compiled) { $compiled } else { 'Library/ScriptAssemblies/' + $dependency + '.dll' })
+        }
+        if ($asm.optionalUnityReferences -contains 'TestAssemblies') {
+            $references += 'Library/ScriptAssemblies/UnityEngine.TestRunner.dll', 'Library/ScriptAssemblies/UnityEditor.TestRunner.dll'
+        }
+        if ($asm.precompiledReferences -contains 'nunit.framework.dll') {
+            $references += (Get-ChildItem 'Library/PackageCache/com.unity.ext.nunit*/net40/unity-custom/nunit.framework.dll').FullName
+        }
+    }
+    $output = Join-Path $scratch ($name + '.dll')
+    $response = Join-Path $scratch ($name + '.rsp')
+    $generated.Add($output)
+    $generated.Add($response)
+    $argsForCompiler = @('-nologo', '-target:library', '-langversion:9', '-nostdlib+', ('-define:' + $defines), ('-out:"' + $output + '"'))
+    foreach ($reference in $references) { $argsForCompiler += '-r:"' + $reference + '"' }
+    foreach ($source in (Get-ChildItem -LiteralPath $folder -Recurse -Filter '*.cs' | Where-Object { $folder -notmatch 'Runtime/(VR|MR|Start)$' -or $_.FullName -notmatch '[\\/]Editor[\\/]' })) { $argsForCompiler += '"' + $source.FullName + '"' }
+    $argsForCompiler | Set-Content -LiteralPath $response -Encoding UTF8
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') (Join-Path $UnityData 'DotNetSdkRoslyn/csc.dll') ('@' + $response)
+    if ($LASTEXITCODE -ne 0) { throw "Offline compilation failed: $name" }
+    $script:compiledCount++
+    Write-Output "$name`: 0 errors"
+}
+try {
+    $baseReferences = @((Join-Path $UnityData 'NetStandard/ref/2.1.0/netstandard.dll'))
+    $baseReferences += (Get-ChildItem (Join-Path $UnityData 'NetStandard/compat/2.1.0/shims/netfx') -Filter '*.dll').FullName
+    $jsonDll = (Get-ChildItem 'Library/PackageCache/com.unity.nuget.newtonsoft-json*/Runtime/Newtonsoft.Json.dll').FullName
+    $baseReferences += $jsonDll
+    $engineReferences = (Get-ChildItem (Join-Path $UnityData 'Managed/UnityEngine') -Filter '*.dll').FullName
+    Compile-Assembly 'LOBOver.Sim' 'Assets/LOBOver/Sim' $baseReferences
+    $runtimeReferences = $baseReferences + $engineReferences + @((Join-Path $scratch 'LOBOver.Sim.dll'))
+    Compile-Assembly 'LOBOver.Director' 'Assets/LOBOver/Runtime/Director' $runtimeReferences
+    $worldReferences = $runtimeReferences + @((Join-Path $scratch 'LOBOver.Director.dll'), 'Library/ScriptAssemblies/Unity.TextMeshPro.dll', 'Library/ScriptAssemblies/Unity.InputSystem.dll', 'Library/ScriptAssemblies/UnityEngine.UI.dll')
+    Compile-Assembly 'LOBOver.World' 'Assets/LOBOver/Runtime/World' $worldReferences
+    # Compile the conditional Android reader too, without opening the Editor or changing build settings.
+    Compile-Assembly 'LOBOver.Director.Android' 'Assets/LOBOver/Runtime/Director' $runtimeReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    Compile-Assembly 'LOBOver.World.Android' 'Assets/LOBOver/Runtime/World' $worldReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    # SDK assemblies are already installed/imported; this check never restores packages.
+    $xrReferences = $worldReferences + @((Join-Path $scratch 'LOBOver.World.dll'),
+        'Library/ScriptAssemblies/Oculus.VR.dll', 'Library/ScriptAssemblies/Unity.XR.OpenXR.dll',
+        'Library/ScriptAssemblies/Unity.XR.Management.dll')
+    foreach ($assembly in @('VR', 'MR', 'Start')) {
+        $folder = 'Assets/LOBOver/Runtime/' + $assembly
+        if (!(Test-Path -LiteralPath $folder)) { continue }
+        Compile-Assembly ('LOBOver.' + $assembly) $folder $xrReferences
+        Compile-Assembly ('LOBOver.' + $assembly + '.Android') $folder $xrReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+        $xrReferences += (Join-Path $scratch ('LOBOver.' + $assembly + '.dll'))
+    }
+    $editorReferences = $worldReferences + @((Join-Path $scratch 'LOBOver.World.dll'), 'Library/ScriptAssemblies/Unity.RenderPipelines.Core.Runtime.dll')
+    Compile-Assembly 'LOBOver.Editor' 'Assets/LOBOver/Editor' $editorReferences
+    $xrEditorReferences = $xrReferences + $editorReferences + @((Join-Path $scratch 'LOBOver.Editor.dll'),
+        'Library/ScriptAssemblies/Unity.XR.Management.Editor.dll', 'Library/ScriptAssemblies/Unity.XR.OpenXR.Editor.dll',
+        'Library/ScriptAssemblies/Unity.XR.OpenXR.Features.MetaQuestSupport.dll')
+    Compile-Assembly 'LOBOver.XR.Editor' 'Assets/LOBOver/Runtime/Start/Editor' $xrEditorReferences
+    $testReferences = $xrEditorReferences + @((Join-Path $scratch 'LOBOver.Editor.dll'), 'Library/ScriptAssemblies/UnityEngine.TestRunner.dll', 'Library/ScriptAssemblies/UnityEditor.TestRunner.dll')
+    $testReferences += (Get-ChildItem 'Library/PackageCache/com.unity.ext.nunit*/net40/unity-custom/nunit.framework.dll').FullName
+    Compile-Assembly 'LOBOver.EditModeTests' 'Assets/LOBOver/Tests/EditMode' $testReferences
+    Compile-Assembly 'LOBOver.PlayModeTests' 'Assets/LOBOver/Tests/PlayMode' $testReferences
+    Write-Output "PASS: $script:compiledCount offline assembly compilations; Unity import, tests and rendering still require the Editor."
+    $fixtureProgram = Join-Path $scratch 'VerifyFixtures.dll'
+    $fixtureResponse = Join-Path $scratch 'VerifyFixtures.rsp'
+    $fixtureConfig = Join-Path $scratch 'VerifyFixtures.runtimeconfig.json'
+    $fixtureJson = Join-Path $scratch 'Newtonsoft.Json.dll'
+    foreach ($file in @($fixtureProgram, $fixtureResponse, $fixtureConfig, $fixtureJson)) { $generated.Add($file) }
+    $fixtureArgs = @('-nologo', '-target:exe', '-langversion:9', '-nostdlib+', ('-out:"' + $fixtureProgram + '"'), ('-r:"' + (Join-Path $scratch 'LOBOver.Sim.dll') + '"'))
+    foreach ($reference in $baseReferences) { $fixtureArgs += '-r:"' + $reference + '"' }
+    $fixtureArgs += '-r:"' + (Join-Path $scratch 'LOBOver.VR.dll') + '"'
+    $fixtureArgs += '"' + (Join-Path $PSScriptRoot 'VerifyFixtures.cs.txt') + '"'
+    $fixtureArgs += '"' + (Join-Path $PSScriptRoot 'VerifyPresenter.cs.txt') + '"'
+    $fixtureArgs | Set-Content -LiteralPath $fixtureResponse -Encoding UTF8
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') (Join-Path $UnityData 'DotNetSdkRoslyn/csc.dll') ('@' + $fixtureResponse)
+    if ($LASTEXITCODE -ne 0) { throw 'Fixture verifier did not compile' }
+    Copy-Item -LiteralPath (Join-Path $UnityData 'DotNetSdkRoslyn/csc.runtimeconfig.json') -Destination $fixtureConfig
+    Copy-Item -LiteralPath $jsonDll -Destination $fixtureJson
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') $fixtureProgram
+    if ($LASTEXITCODE -ne 0) { throw 'Fixture replay failed' }
+}
+finally {
+    # Only exact outputs from this invocation are removed; never traverse another workspace.
+    foreach ($file in $generated) { if (Test-Path -LiteralPath $file) { Remove-Item -LiteralPath $file -Force } }
+    if ((Get-ChildItem -LiteralPath $scratch -Force | Measure-Object).Count -eq 0) { Remove-Item -LiteralPath $scratch }
+}
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 164ms:
+using System;
+using UnityEditor;
+namespace LOBOver.Editor
+{
+    public static class BuildChecks
+    {
+        [MenuItem("LOB Over/Build/Check Android Settings")]
+        public static void CheckAndroidSettings() =>
+            Type.GetType("LOBOver.Start.Editor.AndroidSettingsCheck, LOBOver.XR.Editor", true)
+                .GetMethod("Check").Invoke(null, null);
+    }
+}
+using System.Collections.Generic;
+using System.Linq;
+using LOBOver.Editor;
+using UnityEditor;
+using UnityEditor.Build;
+using UnityEditor.XR.Management;
+using UnityEditor.XR.OpenXR.Features;
+using UnityEngine;
+using UnityEngine.XR.OpenXR;
+using UnityEngine.XR.OpenXR.Features.MetaQuestSupport;
+
+namespace LOBOver.Start.Editor
+{
+    public static class AndroidSettingsCheck
+    {
+        public static void Check()
+        {
+            var missing = Missing();
+            foreach (var line in missing) Debug.LogWarning("LOB Over: " + line);
+            if (missing.Count == 0) Debug.Log("LOB Over: Android settings check passed; no settings changed.");
+        }
+        public static List<string> Missing()
+        {
+            var missing = new List<string>();
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
+                missing.Add("Android: File > Build Profiles > Android > Switch Platform.");
+            if (PlayerSettings.Android.targetArchitectures != AndroidArchitecture.ARM64)
+                missing.Add("ARM64: Player Settings > Android > Other Settings > Target Architectures > ARM64 only.");
+            if (PlayerSettings.GetScriptingBackend(NamedBuildTarget.Android) != ScriptingImplementation.IL2CPP)
+                missing.Add("IL2CPP: Player Settings > Android > Other Settings > Scripting Backend > IL2CPP.");
+            if ((int)PlayerSettings.Android.minSdkVersion < 32)
+                missing.Add("Minimum SDK 32: Player Settings > Android > Other Settings > Minimum API Level > API 32.");
+            var general = XRGeneralSettingsPerBuildTarget.XRGeneralSettingsForBuildTarget(BuildTargetGroup.Android);
+            if (general == null || general.Manager == null || !general.Manager.activeLoaders.Any(l => l is OpenXRLoader))
+                missing.Add("OpenXR loader: Project Settings > XR Plug-in Management > Android > OpenXR.");
+            var groups = OpenXRFeatureSetManager.FeatureSetsForBuildTarget(BuildTargetGroup.Android);
+            var settings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+            var quest = settings == null ? null : settings.GetFeature<MetaQuestFeature>();
+            // OpenXR 1.18 exposes Meta Quest Support directly; older versions also have a named set.
+            var questGroup = groups.FirstOrDefault(g => g.name.Contains("Meta Quest"));
+            if (quest == null || !quest.enabled || questGroup != null && !questGroup.isEnabled)
+                missing.Add("Meta Quest feature group: Project Settings > XR Plug-in Management > OpenXR > Android > Meta Quest Support.");
+            var hasTarget = false;
+            if (quest != null)
+            {
+                var targets = new SerializedObject(quest).FindProperty("targetDevices");
+                if (targets != null)
+                    for (var i = 0; i < targets.arraySize; i++)
+                    {
+                        var target = targets.GetArrayElementAtIndex(i);
+                        if (target.FindPropertyRelative("manifestName").stringValue == "quest3s" && target.FindPropertyRelative("enabled").boolValue) hasTarget = true;
+                    }
+            }
+            if (!hasTarget) missing.Add("Quest 3S target: Project Settings > XR Plug-in Management > OpenXR > Android > Meta Quest Support > Target Devices > Quest 3S.");
+            var scenes = EditorBuildSettings.scenes;
+            if (scenes.Length == 0 || scenes[0].path != SiteSceneBuilder.ScenePath || !scenes[0].enabled || AssetDatabase.LoadAssetAtPath<SceneAsset>(SiteSceneBuilder.ScenePath) == null)
+                missing.Add("Site.unity first: File > Build Profiles > Scene List > put Assets/LOBOver/Scenes/Site.unity first and enable it (or LOB Over > Build > Site Scene).");
+            if (EditorUserBuildSettings.androidBuildSubtarget != MobileTextureSubtarget.ASTC)
+                missing.Add("ASTC: File > Build Profiles > Android > Texture Compression > ASTC.");
+            return missing;
+        }
+    }
+}
+
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "rg --files -g AGENTS.md -g '*QuestBuild*' -g '*BuildInfo*' -g '*Stub*' Assets; Get-Content -LiteralPath .gitignore; Test-Path -LiteralPath Assets/LOBOver/Scenes/Site.unity" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 646ms:
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:1
++ rg --files -g AGENTS.md -g '*QuestBuild*' -g '*BuildInfo*' -g '*Stub* ...
++ ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+# Unity
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.apk
+*.aab
+*.unitypackage
+*.app
+/Assets/AssetStoreTools*
+/Assets/Plugins/Editor/JetBrains*
+.vs/
+.idea/
+.vscode/
+crashlytics-build.properties
+# copied from /Data at build time (WO-07)
+/Assets/StreamingAssets/Data/
+# copied from /Monitor/web at build time (WO-08)
+/Assets/StreamingAssets/web/
+
+# Node (Monitor)
+Monitor/node_modules/
+Monitor/out/
+Monitor/test-results/
+Monitor/playwright-report/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Kit outputs (regenerated from Data/)
+Paper/out/
+Voice/**/*.wav
+!Voice/**/manifest.json
+
+# Work-order logs are kept; nothing else from local runs
+Docs/WORK_ORDERS/logs/*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local-only (added by the orchestrator at kickoff, 2026-10-15)
+# Plastic SCM workspace metadata that Unity Hub created; git is the VCS here
+/.plastic/
+/ignore.conf
+# Claude Code MCP cache (has its own .gitignore) and per-machine settings
+/.code-review-graph/
+/.claude/settings.local.json
+# The delivered kit archive; its contents are the repo
+/LOB-Over-Kickoff.zip
+
+# Phase 1
+Tools/import/
+Builds/
+Assets/StreamingAssets/Voice/
+Monitor/out/unity/
+
+# Showcase track
+Showcase/dist/
+Showcase/.publish/
+Assets/LOBGame/
+Assets/LOBGame.meta
+Assets/StreamingAssets/Data/
+Sim/**/bin/
+Sim/**/obj/
+Data/transcripts/*.tmp
+True
+
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-ChildItem -LiteralPath 'C:/Program Files/Unity/Hub/Editor/6000.3.8f1/Editor/Data/PlaybackEngines/AndroidPlayer' -Filter '*Editor*'; Get-ChildItem -LiteralPath 'C:/Program Files/Unity/Hub/Editor/6000.3.8f1/Editor/Data/Managed' -Filter '*Android*' -Recurse | Select-Object -ExpandProperty FullName; Select-String -LiteralPath Assets/LOBOver/Editor/SiteSceneBuilder.cs -Pattern 'ScenePath|namespace'" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Item -LiteralPath Assets/AGENTS.md, Assets/LOBOver/AGENTS.md, Assets/LOBOver/Editor/AGENTS.md -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName; Get-Content -LiteralPath $_.FullName }; Get-Content -LiteralPath Assets/LOBOver/Editor/LOBOver.Editor.asmdef; Get-ChildItem -LiteralPath Assets/LOBOver/Editor -File | Select-Object -ExpandProperty Name; Get-Content -LiteralPath Assets/LOBOver/Runtime/Start/Editor/LOBOver.XR.Editor.asmdef' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 103ms:
+{
+  "name": "LOBOver.Editor",
+  "rootNamespace": "LOBOver.Editor",
+  "references": ["LOBOver.Sim", "LOBOver.Director", "LOBOver.World", "Unity.TextMeshPro", "UnityEngine.UI", "Unity.RenderPipelines.Core.Runtime", "Unity.RenderPipelines.Core.Editor", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Universal.Editor"],
+  "includePlatforms": ["Editor"],
+  "overrideReferences": true,
+  "precompiledReferences": ["Newtonsoft.Json.dll"]
+}
+BuildChecks.cs
+BuildChecks.cs.meta
+DataSync.cs
+DataSync.cs.meta
+LOBOver.Editor.asmdef
+LOBOver.Editor.asmdef.meta
+SiteAssetBuilder.cs
+SiteAssetBuilder.cs.meta
+SiteSceneBuilder.cs
+SiteSceneBuilder.cs.meta
+{
+  "name": "LOBOver.XR.Editor",
+  "references": ["LOBOver.Editor", "LOBOver.Start", "LOBOver.MR", "LOBOver.VR", "LOBOver.World", "LOBOver.Director", "LOBOver.Sim", "Oculus.VR", "Unity.TextMeshPro", "Unity.XR.Management", "Unity.XR.Management.Editor", "Unity.XR.OpenXR", "Unity.XR.OpenXR.Editor", "Unity.XR.OpenXR.Features.MetaQuestSupport"],
+  "includePlatforms": ["Editor"],
+  "overrideReferences": true,
+  "precompiledReferences": ["Newtonsoft.Json.dll"]
+}
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 215ms:
+
+
+    Directory: C:\Program Files\Unity\Hub\Editor\6000.3.8f1\Editor\Data\PlaybackEngines\AndroidPlayer
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          2/4/2026  12:23 AM         574464 UnityEditor.Android.Extensions.dll                                   
+-a----          2/4/2026  12:23 AM         201056 UnityEditor.Android.Extensions.pdb                                   
+C:\Program Files\Unity\Hub\Editor\6000.3.8f1\Editor\Data\Managed\UnityEngine\UnityEngine.AndroidJNIModule.dll
+C:\Program Files\Unity\Hub\Editor\6000.3.8f1\Editor\Data\Managed\UnityEngine\UnityEngine.AndroidJNIModule.xml
+
+IgnoreCase : True
+LineNumber : 14
+Line       : namespace LOBOver.Editor
+Filename   : SiteSceneBuilder.cs
+Path       : C:\Users\bryan\Documents\TAMU\02-Research\Creative 
+             Care\Unity\LOB-OVER\Assets\LOBOver\Editor\SiteSceneBuilder.cs
+Pattern    : ScenePath|namespace
+Context    : 
+Matches    : {0}
+
+
+IgnoreCase : True
+LineNumber : 18
+Line       :         public const string ScenePath = "Assets/LOBOver/Scenes/Site.unity";
+Filename   : SiteSceneBuilder.cs
+Path       : C:\Users\bryan\Documents\TAMU\02-Research\Creative 
+             Care\Unity\LOB-OVER\Assets\LOBOver\Editor\SiteSceneBuilder.cs
+Pattern    : ScenePath|namespace
+Context    : 
+Matches    : {0}
+
+
+IgnoreCase : True
+LineNumber : 82
+Line       :                 if (!EditorSceneManager.SaveScene(scene, ScenePath)) throw new IOException("Could not 
+             save " + ScenePath);
+Filename   : SiteSceneBuilder.cs
+Path       : C:\Users\bryan\Documents\TAMU\02-Research\Creative 
+             Care\Unity\LOB-OVER\Assets\LOBOver\Editor\SiteSceneBuilder.cs
+Pattern    : ScenePath|namespace
+Context    : 
+Matches    : {0}
+
+
+IgnoreCase : True
+LineNumber : 83
+Line       :                 EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) }
+Filename   : SiteSceneBuilder.cs
+Path       : C:\Users\bryan\Documents\TAMU\02-Research\Creative 
+             Care\Unity\LOB-OVER\Assets\LOBOver\Editor\SiteSceneBuilder.cs
+Pattern    : ScenePath|namespace
+Context    : 
+Matches    : {0}
+
+
+IgnoreCase : True
+LineNumber : 84
+Line       :                     .Concat(EditorBuildSettings.scenes.Where(s => s.path != ScenePath)).ToArray();
+Filename   : SiteSceneBuilder.cs
+Path       : C:\Users\bryan\Documents\TAMU\02-Research\Creative 
+             Care\Unity\LOB-OVER\Assets\LOBOver\Editor\SiteSceneBuilder.cs
+Pattern    : ScenePath|namespace
+Context    : 
+Matches    : {0}
+
+
+
+
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+Step 1 of 4 done. `Site.unity` is first and enabled, `Builds/` is ignored, and the offline compiler already includes the new file’s folder.
+
+Step 2 of 4: I’ll add Quest-only device selection and serial-targeted install/start. The settings checker also rejects non-Android targets; the menu will report those failures, perform the required target switch, and return without building.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+apply patch
+patch: completed
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Editor\BuildChecks.cs
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Editor\QuestBuild.cs
+diff --git a/Assets/LOBOver/Editor/BuildChecks.cs b/Assets/LOBOver/Editor/BuildChecks.cs
+index aedd6950c225d19c555b5dc77c4264476e32f8d7..a3158281024e2ae184211e3f048e96e34e9e6a6f
+--- a/Assets/LOBOver/Editor/BuildChecks.cs
++++ b/Assets/LOBOver/Editor/BuildChecks.cs
+@@ -1,9 +1,18 @@
+ using System;
++using System.Collections.Generic;
+ using UnityEditor;
+ namespace LOBOver.Editor
+ {
+     public static class BuildChecks
+     {
++        public static bool Passes(out string report)
++        {
++            var missing = (List<string>)Type.GetType("LOBOver.Start.Editor.AndroidSettingsCheck, LOBOver.XR.Editor", true)
++                .GetMethod("Missing").Invoke(null, null);
++            report = string.Join(Environment.NewLine, missing);
++            return missing.Count == 0;
++        }
++
+         [MenuItem("LOB Over/Build/Check Android Settings")]
+         public static void CheckAndroidSettings() =>
+             Type.GetType("LOBOver.Start.Editor.AndroidSettingsCheck, LOBOver.XR.Editor", true)
+diff --git a/Assets/LOBOver/Editor/QuestBuild.cs b/Assets/LOBOver/Editor/QuestBuild.cs
+new file mode 100644
+index 0000000000000000000000000000000000000000..7c4397b49f05b0abdb0e17d4de46d42b645ca484
+--- /dev/null
++++ b/Assets/LOBOver/Editor/QuestBuild.cs
+@@ -0,0 +1,242 @@
++using System;
++using System.IO;
++using System.Linq;
++using System.Text;
++using System.Threading.Tasks;
++using UnityEditor;
++using UnityEditor.Build.Reporting;
++using UnityEngine;
++using Process = System.Diagnostics.Process;
++using ProcessStartInfo = System.Diagnostics.ProcessStartInfo;
++using Stopwatch = System.Diagnostics.Stopwatch;
++
++namespace LOBOver.Editor
++{
++    public static class QuestBuild
++    {
++        // WO-S5 Amendment 1 sets the install and other adb deadlines.
++        const int InstallTimeoutMs = 120000;
++        const int CommandTimeoutMs = 30000;
++        const string NoQuest = "no Quest connected (developer mode on, cable in, allow USB debugging in the headset)";
++
++        [MenuItem("LOB Over/Build/Build Quest APK")]
++        public static void BuildQuestApk() => Build(false);
++
++        [MenuItem("LOB Over/Build/Build and Run Quest")]
++        public static void BuildAndRunQuest() => Build(true);
++
++        static void Build(bool run)
++        {
++            try
++            {
++                var passes = BuildChecks.Passes(out var settingsReport);
++                if (!passes) Debug.LogError("LOB Over: " + settingsReport);
++                if (!File.Exists(SiteSceneBuilder.ScenePath))
++                {
++                    Debug.LogError("LOB Over: run LOB Over/Build/Site Scene first");
++                    return;
++                }
++                // Missing() includes the active target itself; switching must still be possible.
++                // A switch always returns without building, so all checks run again after reimport.
++                if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
++                {
++                    var switched = EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
++                    if (switched) Debug.Log("LOB Over: switched to Android; re-run the build menu item after reimport.");
++                    else Debug.LogError("LOB Over: Android build target switch failed.");
++                    return;
++                }
++                if (!passes) return;
++
++                var root = Directory.GetParent(Application.dataPath).FullName;
++                string adb = null;
++                var serial = run ? FindQuest(root, out adb) : null;
++                var directory = Path.Combine(root, "Builds");
++                Directory.CreateDirectory(directory);
++                var output = Path.Combine(directory, "LOBOver-" + DateTime.Now.ToString("yyyyMMdd-HHmm") + ".apk");
++                var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
++                {
++                    scenes = EditorBuildSettings.scenes.Where(scene => scene.enabled).Select(scene => scene.path).ToArray(),
++                    locationPathName = output,
++                    target = BuildTarget.Android,
++                    // Never let Unity choose between the Quest and an attached phone (Amendment 1).
++                    options = BuildOptions.None
++                });
++                WriteLastBuild(root, report.summary.outputPath);
++
++                string deployment = "";
++                if (report.summary.result == BuildResult.Succeeded && run)
++                    deployment = serial == null ? "; APK only (no authorized Quest)" : "; " + InstallAndStart(adb, serial, output, root);
++                var summary = report.summary;
++                Debug.Log("LOB Over: " + summary.result + "; size=" + summary.totalSize + " bytes; time=" + summary.totalTime
++                    + "; output=" + OneLine(summary.outputPath) + deployment);
++                if (summary.result != BuildResult.Succeeded) LogFirstError(report);
++            }
++            catch (Exception exception)
++            {
++                Debug.LogError("LOB Over: Quest build failed: " + OneLine(exception.GetBaseException().Message));
++            }
++        }
++
++        static string FindQuest(string root, out string adb)
++        {
++            adb = null;
++            try
++            {
++                // The Android extension is optional and absent from the offline compiler's references.
++                var settings = Type.GetType("UnityEditor.Android.AndroidExternalToolsSettings, UnityEditor.Android.Extensions", true);
++                var sdk = (string)settings.GetProperty("sdkRootPath").GetValue(null);
++                adb = Path.Combine(sdk, "platform-tools", Application.platform == RuntimePlatform.WindowsEditor ? "adb.exe" : "adb");
++            }
++            catch (Exception exception)
++            {
++                Debug.LogWarning("LOB Over: adb devices -l failed: " + OneLine(exception.GetBaseException().Message));
++                Debug.LogWarning("LOB Over: " + NoQuest);
++                return null;
++            }
++
++            var result = RunProcess(adb, new[] { "devices", "-l" }, root, CommandTimeoutMs);
++            if (!result.Succeeded)
++            {
++                LogProcess("devices -l", "none", result);
++                Debug.LogWarning("LOB Over: " + NoQuest);
++                return null;
++            }
++            var serial = SelectQuest(result.Stdout, out var unauthorized);
++            if (serial == null)
++                Debug.LogWarning("LOB Over: " + (unauthorized
++                    ? "Quest connected but not authorized: put the headset on and allow USB debugging"
++                    : NoQuest));
++            return serial;
++        }
++
++        static string SelectQuest(string devices, out bool unauthorized)
++        {
++            unauthorized = false;
++            foreach (var line in devices.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
++            {
++                var fields = line.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
++                if (fields.Length < 2 || !fields.Skip(2).Any(field => field.StartsWith("model:", StringComparison.Ordinal)
++                    && field.IndexOf("Quest", StringComparison.OrdinalIgnoreCase) >= 0)) continue;
++                if (fields[1] == "device") return fields[0];
++                if (fields[1] == "unauthorized") unauthorized = true;
++            }
++            return null;
++        }
++
++        static string InstallAndStart(string adb, string serial, string apk, string root)
++        {
++            var install = RunProcess(adb, new[] { "-s", serial, "install", "-r", apk }, root, InstallTimeoutMs);
++            LogProcess("install", serial, install);
++            if (!install.Succeeded) return "install failed on " + serial;
++            var start = RunProcess(adb, new[] { "-s", serial, "shell", "monkey", "-p", PlayerSettings.applicationIdentifier,
++                "-c", "android.intent.category.LAUNCHER", "1" }, root, CommandTimeoutMs);
++            LogProcess("start", serial, start);
++            return start.Succeeded ? "installed and started on " + serial : "start failed on " + serial;
++        }
++
++        static void WriteLastBuild(string root, string output)
++        {
++            var hash = RunProcess("git", new[] { "rev-parse", "--short", "HEAD" }, root, CommandTimeoutMs);
++            if (!hash.Succeeded) LogProcess("git rev-parse --short HEAD", "none", hash);
++            try
++            {
++                File.WriteAllText(Path.Combine(root, "Builds", "last-build.txt"), "output=" + output
++                    + Environment.NewLine + "git=" + (hash.Succeeded ? hash.Stdout.Trim() : "unavailable")
++                    + Environment.NewLine + "time=" + DateTimeOffset.Now.ToString("o") + Environment.NewLine);
++            }
++            catch (Exception exception)
++            {
++                Debug.LogError("LOB Over: last-build.txt failed: " + OneLine(exception.Message));
++            }
++        }
++
++        static void LogFirstError(BuildReport report)
++        {
++            foreach (var step in report.steps)
++                foreach (var message in step.messages)
++                    if (message.type == LogType.Error || message.type == LogType.Exception)
++                    {
++                        Debug.LogError("LOB Over: first error step " + OneLine(step.name) + ": " + OneLine(message.content));
++                        return;
++                    }
++            Debug.LogError("LOB Over: build " + report.summary.result + "; no error step was reported.");
++        }
++
++        sealed class ProcessResult
++        {
++            public int ExitCode = -1;
++            public bool TimedOut;
++            public string Stdout = "";
++            public string Stderr = "";
++            public bool Succeeded => ExitCode == 0 && !TimedOut;
++        }
++
++        static ProcessResult RunProcess(string executable, string[] arguments, string root, int timeoutMs)
++        {
++            var result = new ProcessResult();
++            try
++            {
++                using (var process = new Process())
++                {
++                    process.StartInfo = new ProcessStartInfo
++                    {
++                        FileName = executable,
++                        Arguments = string.Join(" ", arguments.Select(QuoteArgument)),
++                        WorkingDirectory = root,
++                        UseShellExecute = false,
++                        CreateNoWindow = true,
++                        RedirectStandardOutput = true,
++                        RedirectStandardError = true
++                    };
++                    process.Start();
++                    var timer = Stopwatch.StartNew();
++                    var stdout = process.StandardOutput.ReadToEndAsync();
++                    var stderr = process.StandardError.ReadToEndAsync();
++                    var exited = process.WaitForExit(timeoutMs);
++                    var remaining = (int)Math.Max(0, timeoutMs - timer.ElapsedMilliseconds);
++                    result.TimedOut = !exited || !Task.WaitAll(new Task[] { stdout, stderr }, remaining);
++                    if (result.TimedOut && !process.HasExited)
++                    {
++                        process.Kill();
++                        // Bound cleanup too; never hang the Editor waiting for a failed adb call.
++                        process.WaitForExit(1000);
++                    }
++                    result.ExitCode = exited ? process.ExitCode : -1;
++                    result.Stdout = stdout.IsCompleted ? stdout.GetAwaiter().GetResult() : "(capture incomplete)";
++                    result.Stderr = stderr.IsCompleted ? stderr.GetAwaiter().GetResult() : "(capture incomplete)";
++                }
++            }
++            catch (Exception exception)
++            {
++                result.ExitCode = -1;
++                result.Stderr += " " + exception.Message;
++            }
++            return result;
++        }
++
++        static void LogProcess(string step, string serial, ProcessResult result)
++        {
++            var line = "LOB Over: " + step + "; serial=" + serial + "; exit code=" + result.ExitCode;
++            if (result.Succeeded) Debug.Log(line);
++            else Debug.LogError(line + (result.TimedOut ? "; timed out" : "")
++                + "; stdout=" + OneLine(result.Stdout) + "; stderr=" + OneLine(result.Stderr));
++        }
++
++        static string OneLine(string value) => string.Join(" ", (value ?? "").Split((char[])null, StringSplitOptions.RemoveEmptyEntries));
++
++        static string QuoteArgument(string value)
++        {
++            // Windows process arguments require escaped quotes and doubled trailing backslashes.
++            var quoted = new StringBuilder("\"");
++            var slashes = 0;
++            foreach (var character in value)
++            {
++                if (character == '\\') { slashes++; continue; }
++                quoted.Append('\\', character == '"' ? slashes * 2 + 1 : slashes);
++                quoted.Append(character);
++                slashes = 0;
++            }
++            return quoted.Append('\\', slashes * 2).Append('"').ToString();
++        }
++    }
++}
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'powershell -NoProfile -ExecutionPolicy Bypass -File Assets/LOBOver/Tests/CompileOffline.ps1' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 10905ms:
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Sim: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Director: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.World: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Director.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.World.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.VR: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.VR.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.MR: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.MR.Android: 0 errors
+LOBOver.Start: 0 errors
+LOBOver.Start.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Editor: 0 errors
+LOBOver.XR.Editor: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.EditModeTests: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.PlayModeTests: 0 errors
+PASS: 15 offline assembly compilations; Unity import, tests and rendering still require the Editor.
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+PASS: wrong-stretch F3 stays uninspected by presenter; genuine Site inspect marks it.
+PASS: 20835 presenter queries preserve complete state and Drain across all three stages; all 9 targets match inspect replies; 4 fake-input checks pass.
+Argument at t=4.20: pipe 520.2 arguing; back 272.5 arguing; exc 869 stopped; ev_p1.
+PASS: all Site fields at days 1, 4, 5, 9, 16 match recorded JSON; t=4.20 argument matches Amendment 1 (positions within 1 ft).
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'git diff --check; git diff -- Assets/LOBOver/Editor/BuildChecks.cs; git status --short' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 121ms:
+warning: in the working copy of 'Assets/LOBOver/Editor/BuildChecks.cs', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'Assets/LOBOver/Editor/BuildChecks.cs', CRLF will be replaced by LF the next time Git touches it
+diff --git a/Assets/LOBOver/Editor/BuildChecks.cs b/Assets/LOBOver/Editor/BuildChecks.cs
+index 59f310e..3db3af6 100644
+--- a/Assets/LOBOver/Editor/BuildChecks.cs
++++ b/Assets/LOBOver/Editor/BuildChecks.cs
+@@ -1,9 +1,18 @@
+ using System;
++using System.Collections.Generic;
+ using UnityEditor;
+ namespace LOBOver.Editor
+ {
+     public static class BuildChecks
+     {
++        public static bool Passes(out string report)
++        {
++            var missing = (List<string>)Type.GetType("LOBOver.Start.Editor.AndroidSettingsCheck, LOBOver.XR.Editor", true)
++                .GetMethod("Missing").Invoke(null, null);
++            report = string.Join(Environment.NewLine, missing);
++            return missing.Count == 0;
++        }
++
+         [MenuItem("LOB Over/Build/Check Android Settings")]
+         public static void CheckAndroidSettings() =>
+             Type.GetType("LOBOver.Start.Editor.AndroidSettingsCheck, LOBOver.XR.Editor", true)
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+ M Assets/LOBOver/Editor/BuildChecks.cs
+ M Docs/WORKLOG.md
+?? Assets/LOBOver/Editor/QuestBuild.cs
+?? Docs/WORK_ORDERS/logs/WO-S5.20261020-234310.log
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+Step 2 of 4 done. Both menus compile; install and launch use the selected Quest serial, and neither uses `AutoRunPlayer`.
+
+Step 3 of 4: Offline compilation passed for all 15 assemblies, and the fixture checks passed. I’m checking device parsing and timeout handling before the final scope check.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+apply patch
+patch: completed
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Editor\QuestBuild.cs
+diff --git a/Assets/LOBOver/Editor/BuildChecks.cs b/Assets/LOBOver/Editor/BuildChecks.cs
+index aedd6950c225d19c555b5dc77c4264476e32f8d7..a3158281024e2ae184211e3f048e96e34e9e6a6f
+--- a/Assets/LOBOver/Editor/BuildChecks.cs
++++ b/Assets/LOBOver/Editor/BuildChecks.cs
+@@ -1,9 +1,18 @@
+ using System;
++using System.Collections.Generic;
+ using UnityEditor;
+ namespace LOBOver.Editor
+ {
+     public static class BuildChecks
+     {
++        public static bool Passes(out string report)
++        {
++            var missing = (List<string>)Type.GetType("LOBOver.Start.Editor.AndroidSettingsCheck, LOBOver.XR.Editor", true)
++                .GetMethod("Missing").Invoke(null, null);
++            report = string.Join(Environment.NewLine, missing);
++            return missing.Count == 0;
++        }
++
+         [MenuItem("LOB Over/Build/Check Android Settings")]
+         public static void CheckAndroidSettings() =>
+             Type.GetType("LOBOver.Start.Editor.AndroidSettingsCheck, LOBOver.XR.Editor", true)
+diff --git a/Assets/LOBOver/Editor/QuestBuild.cs b/Assets/LOBOver/Editor/QuestBuild.cs
+new file mode 100644
+index 0000000000000000000000000000000000000000..987a58856f420fc35af0728cc33671320e8c27a4
+--- /dev/null
++++ b/Assets/LOBOver/Editor/QuestBuild.cs
+@@ -0,0 +1,256 @@
++using System;
++using System.IO;
++using System.Linq;
++using System.Text;
++using System.Threading.Tasks;
++using UnityEditor;
++using UnityEditor.Build.Reporting;
++using UnityEngine;
++using Process = System.Diagnostics.Process;
++using ProcessStartInfo = System.Diagnostics.ProcessStartInfo;
++using Stopwatch = System.Diagnostics.Stopwatch;
++
++namespace LOBOver.Editor
++{
++    public static class QuestBuild
++    {
++        // WO-S5 Amendment 1 sets the install and other adb deadlines.
++        const int InstallTimeoutMs = 120000;
++        const int CommandTimeoutMs = 30000;
++        // Amendment 1 identifies this Quest; unauthorized adb rows can omit their model.
++        const string KnownQuestSerial = "340YC10GBC0BRS";
++        const string NoQuest = "no Quest connected (developer mode on, cable in, allow USB debugging in the headset)";
++
++        [MenuItem("LOB Over/Build/Build Quest APK")]
++        public static void BuildQuestApk() => Build(false);
++
++        [MenuItem("LOB Over/Build/Build and Run Quest")]
++        public static void BuildAndRunQuest() => Build(true);
++
++        static void Build(bool run)
++        {
++            try
++            {
++                var passes = BuildChecks.Passes(out var settingsReport);
++                if (!passes) Debug.LogError("LOB Over: " + settingsReport);
++                if (!File.Exists(SiteSceneBuilder.ScenePath))
++                {
++                    Debug.LogError("LOB Over: run LOB Over/Build/Site Scene first");
++                    return;
++                }
++                // Missing() includes the active target itself; switching must still be possible.
++                // A switch always returns without building, so all checks run again after reimport.
++                if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
++                {
++                    var switched = EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
++                    if (switched) Debug.Log("LOB Over: switched to Android; re-run the build menu item after reimport.");
++                    else Debug.LogError("LOB Over: Android build target switch failed.");
++                    return;
++                }
++                if (!passes) return;
++
++                var root = Directory.GetParent(Application.dataPath).FullName;
++                string adb = null;
++                var serial = run ? FindQuest(root, out adb) : null;
++                var directory = Path.Combine(root, "Builds");
++                Directory.CreateDirectory(directory);
++                var output = Path.Combine(directory, "LOBOver-" + DateTime.Now.ToString("yyyyMMdd-HHmm") + ".apk");
++                var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
++                {
++                    scenes = EditorBuildSettings.scenes.Where(scene => scene.enabled).Select(scene => scene.path).ToArray(),
++                    locationPathName = output,
++                    target = BuildTarget.Android,
++                    // Never let Unity choose between the Quest and an attached phone (Amendment 1).
++                    options = BuildOptions.None
++                });
++                WriteLastBuild(root, report.summary.outputPath);
++
++                string deployment = "";
++                if (report.summary.result == BuildResult.Succeeded && run)
++                    deployment = serial == null ? "; APK only (no authorized Quest)" : "; " + InstallAndStart(adb, serial, output, root);
++                var summary = report.summary;
++                Debug.Log("LOB Over: " + summary.result + "; size=" + summary.totalSize + " bytes; time=" + summary.totalTime
++                    + "; output=" + OneLine(summary.outputPath) + deployment);
++                if (summary.result != BuildResult.Succeeded) LogFirstError(report);
++            }
++            catch (Exception exception)
++            {
++                Debug.LogError("LOB Over: Quest build failed: " + OneLine(exception.GetBaseException().Message));
++            }
++        }
++
++        static string FindQuest(string root, out string adb)
++        {
++            adb = null;
++            try
++            {
++                // The Android extension is optional and absent from the offline compiler's references.
++                var settings = Type.GetType("UnityEditor.Android.AndroidExternalToolsSettings, UnityEditor.Android.Extensions", true);
++                var sdk = (string)settings.GetProperty("sdkRootPath").GetValue(null);
++                adb = Path.Combine(sdk, "platform-tools", Application.platform == RuntimePlatform.WindowsEditor ? "adb.exe" : "adb");
++            }
++            catch (Exception exception)
++            {
++                Debug.LogWarning("LOB Over: adb devices -l failed: " + OneLine(exception.GetBaseException().Message));
++                Debug.LogWarning("LOB Over: " + NoQuest);
++                return null;
++            }
++
++            var result = RunProcess(adb, new[] { "devices", "-l" }, root, CommandTimeoutMs);
++            if (!result.Succeeded)
++            {
++                LogProcess("devices -l", "none", result);
++                Debug.LogWarning("LOB Over: " + NoQuest);
++                return null;
++            }
++            var serial = SelectQuest(result.Stdout, out var unauthorized);
++            if (serial == null)
++                Debug.LogWarning("LOB Over: " + (unauthorized
++                    ? "Quest connected but not authorized: put the headset on and allow USB debugging"
++                    : NoQuest));
++            return serial;
++        }
++
++        static string SelectQuest(string devices, out bool unauthorized)
++        {
++            unauthorized = false;
++            foreach (var line in devices.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
++            {
++                var fields = line.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
++                if (fields.Length < 2) continue;
++                var questModel = fields.Skip(2).Any(field => field.StartsWith("model:", StringComparison.Ordinal)
++                    && field.IndexOf("Quest", StringComparison.OrdinalIgnoreCase) >= 0);
++                if (fields[1] == "unauthorized" && (questModel || fields[0] == KnownQuestSerial)) unauthorized = true;
++                if (!questModel) continue;
++                if (fields[1] == "device") return fields[0];
++            }
++            return null;
++        }
++
++        static string InstallAndStart(string adb, string serial, string apk, string root)
++        {
++            var install = RunProcess(adb, new[] { "-s", serial, "install", "-r", apk }, root, InstallTimeoutMs);
++            LogProcess("install", serial, install);
++            if (!install.Succeeded) return "install failed on " + serial;
++            var start = RunProcess(adb, new[] { "-s", serial, "shell", "monkey", "-p", PlayerSettings.applicationIdentifier,
++                "-c", "android.intent.category.LAUNCHER", "1" }, root, CommandTimeoutMs);
++            LogProcess("start", serial, start);
++            return start.Succeeded ? "installed and started on " + serial : "start failed on " + serial;
++        }
++
++        static void WriteLastBuild(string root, string output)
++        {
++            var hash = RunProcess("git", new[] { "rev-parse", "--short", "HEAD" }, root, CommandTimeoutMs);
++            if (!hash.Succeeded) LogProcess("git rev-parse --short HEAD", "none", hash);
++            try
++            {
++                File.WriteAllText(Path.Combine(root, "Builds", "last-build.txt"), "output=" + output
++                    + Environment.NewLine + "git=" + (hash.Succeeded ? hash.Stdout.Trim() : "unavailable")
++                    + Environment.NewLine + "time=" + DateTimeOffset.Now.ToString("o") + Environment.NewLine);
++            }
++            catch (Exception exception)
++            {
++                Debug.LogError("LOB Over: last-build.txt failed: " + OneLine(exception.Message));
++            }
++        }
++
++        static void LogFirstError(BuildReport report)
++        {
++            foreach (var step in report.steps)
++                foreach (var message in step.messages)
++                    if (message.type == LogType.Error || message.type == LogType.Exception)
++                    {
++                        Debug.LogError("LOB Over: first error step " + OneLine(step.name) + ": " + OneLine(message.content));
++                        return;
++                    }
++            Debug.LogError("LOB Over: build " + report.summary.result + "; no error step was reported.");
++        }
++
++        sealed class ProcessResult
++        {
++            public int ExitCode = -1;
++            public bool TimedOut;
++            public string Stdout = "";
++            public string Stderr = "";
++            public bool Succeeded => ExitCode == 0 && !TimedOut;
++        }
++
++        static ProcessResult RunProcess(string executable, string[] arguments, string root, int timeoutMs)
++        {
++            var result = new ProcessResult();
++            var stdout = new StringBuilder();
++            var stderr = new StringBuilder();
++            try
++            {
++                using (var process = new Process())
++                {
++                    process.StartInfo = new ProcessStartInfo
++                    {
++                        FileName = executable,
++                        Arguments = string.Join(" ", arguments.Select(QuoteArgument)),
++                        WorkingDirectory = root,
++                        UseShellExecute = false,
++                        CreateNoWindow = true,
++                        RedirectStandardOutput = true,
++                        RedirectStandardError = true
++                    };
++                    process.Start();
++                    var timer = Stopwatch.StartNew();
++                    var stdoutTask = CaptureOutput(process.StandardOutput, stdout);
++                    var stderrTask = CaptureOutput(process.StandardError, stderr);
++                    var exited = process.WaitForExit(timeoutMs);
++                    var remaining = (int)Math.Max(0, timeoutMs - timer.ElapsedMilliseconds);
++                    result.TimedOut = !exited || !Task.WaitAll(new[] { stdoutTask, stderrTask }, remaining);
++                    if (result.TimedOut && !process.HasExited)
++                    {
++                        process.Kill();
++                        // Bound cleanup too; never hang the Editor waiting for a failed adb call.
++                        process.WaitForExit(1000);
++                    }
++                    result.ExitCode = exited ? process.ExitCode : -1;
++                }
++            }
++            catch (Exception exception)
++            {
++                result.ExitCode = -1;
++                result.Stderr += " " + exception.Message;
++            }
++            lock (stdout) result.Stdout = stdout.ToString();
++            lock (stderr) result.Stderr = stderr + result.Stderr;
++            return result;
++        }
++
++        static async Task CaptureOutput(StreamReader reader, StringBuilder output)
++        {
++            var buffer = new char[4096];
++            int count;
++            while ((count = await reader.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) > 0)
++                lock (output) output.Append(buffer, 0, count);
++        }
++
++        static void LogProcess(string step, string serial, ProcessResult result)
++        {
++            var line = "LOB Over: " + step + "; serial=" + serial + "; exit code=" + result.ExitCode;
++            if (result.Succeeded) Debug.Log(line);
++            else Debug.LogError(line + (result.TimedOut ? "; timed out" : "")
++                + "; stdout=" + OneLine(result.Stdout) + "; stderr=" + OneLine(result.Stderr));
++        }
++
++        static string OneLine(string value) => string.Join(" ", (value ?? "").Split((char[])null, StringSplitOptions.RemoveEmptyEntries));
++
++        static string QuoteArgument(string value)
++        {
++            // Windows process arguments require escaped quotes and doubled trailing backslashes.
++            var quoted = new StringBuilder("\"");
++            var slashes = 0;
++            foreach (var character in value)
++            {
++                if (character == '\\') { slashes++; continue; }
++                quoted.Append('\\', character == '"' ? slashes * 2 + 1 : slashes);
++                quoted.Append(character);
++                slashes = 0;
++            }
++            return quoted.Append('\\', slashes * 2).Append('"').ToString();
++        }
++    }
++}
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$source = Get-Content -LiteralPath Assets/LOBOver/Editor/QuestBuild.cs -Raw
+$parts = @('"'SelectQuest', 'QuoteArgument', 'RunProcess', 'CaptureOutput') | ForEach-Object {
+    "'$pattern = '"'(?ms)"'^        static [''^'"\\r\\n]*\\b' + "'$_ + '"'\\(.*?"'^        }'"'
+    "'$match = [regex]::Match($source, $pattern)
+    if (!$match.Success) { throw ('"'Method not found: ' + "'$_) }
+    $match.Value -replace '"'"'^        static '"', '        public static '
+}
+"'$resultType = [regex]::Match($source, '"'(?ms)"'^        sealed class ProcessResult.*?''^        }'"').Value
+"'$resultType = $resultType.Replace('"'sealed class ProcessResult', 'public sealed class ProcessResult').Replace('public bool Succeeded => ExitCode == 0 && "'!TimedOut;'"', 'public bool Succeeded { get { return ExitCode == 0 && "'!TimedOut; } }'"')
+"'$constants = [regex]::Matches($source, '"'(?m)"'^        const [''^'"\\r\\n]+') | ForEach-Object { "'$_.Value }
+$probe = '"'using System; using System.IO; using System.Linq; using System.Text; using System.Threading.Tasks; using Process = System.Diagnostics.Process; using ProcessStartInfo = System.Diagnostics.ProcessStartInfo; using Stopwatch = System.Diagnostics.Stopwatch; public static class QuestBuildProbe {' + ("'$constants -join "`n") + ($parts -join "`n") + $resultType + '"'}'
+Add-Type -TypeDefinition "'$probe -Language CSharp
+$cases = @(
+    @{ Text = "List of devices attached`nphone device product:x model:SM_N986N transport_id:1`n340YC10GBC0BRS device product:x model:Quest_3S transport_id:2`n"; Serial = '"'340YC10GBC0BRS'; Unauthorized = "'$false },
+    @{ Text = '"'phone device model:SM_N986N'; Serial = "'$null; Unauthorized = $false },
+    @{ Text = '"'List of devices attached'; Serial = "'$null; Unauthorized = $false },
+    @{ Text = '"'340YC10GBC0BRS unauthorized transport_id:2'; Serial = "'$null; Unauthorized = $true },
+    @{ Text = '"'another unauthorized model:Quest_3'; Serial = "'$null; Unauthorized = $true },
+    @{ Text = '"'phone unauthorized model:SM_N986N'; Serial = "'$null; Unauthorized = $false },
+    @{ Text = '"'quest offline model:Quest_3S'; Serial = "'$null; Unauthorized = $false },
+    @{ Text = '"'340YC10GBC0BRS device transport_id:2'; Serial = "'$null; Unauthorized = $false },
+    @{ Text = "quest1 device model:Quest_3`nquest2 device model:Quest_3S"; Serial = '"'quest1'; Unauthorized = "'$false }
+)
+foreach ($case in $cases) {
+    $unauthorized = $false
+    $serial = [QuestBuildProbe]::SelectQuest($case.Text, [ref]$unauthorized)
+    if ($serial -cne $case.Serial -or $unauthorized -ne $case.Unauthorized) { throw ('"'Device selection failed: ' + "'$case.Text) }
+}
+Write-Output '"'PASS: 9 Quest selection cases; phones, offline and unidentified devices are never selected; unauthorized Quest warning supported.'
+"'$pythonExe = (Get-Command python -ErrorAction Stop).Source
+$arguments = @('"'path with spaces', 'a\"b', 'C:\\trailing\\', '', 'embedded\\\"quote', 'plain')
+"'$script = '"'import json,sys; print(json.dumps(sys.argv[1:])); print(\"failure detail\",file=sys.stderr); sys.exit(7)'
+"'$result = [QuestBuildProbe]::RunProcess($pythonExe, [string[]](@('"'-c', "'$script) + $arguments), (Get-Location).Path, 30000)
+$actual = @($result.Stdout | ConvertFrom-Json)
+if ($result.ExitCode -ne 7 -or $result.TimedOut -or $result.Stderr.Trim() -ne '"'failure detail' -or "'$actual.Count -ne $arguments.Count) { throw ('"'Process capture failed: ' + "'$result.Stderr) }
+for ($i = 0; $i -lt $arguments.Count; $i++) { if ($actual[$i] -cne $arguments[$i]) { throw ('"'Argument round-trip failed at ' + "'$i) } }
+Write-Output '"'PASS: 6 argument round-trips, exit code 7, stdout and stderr captured.'
+"'$timer = [Diagnostics.Stopwatch]::StartNew()
+$result = [QuestBuildProbe]::RunProcess($pythonExe, @('"'-c', 'import sys,time; print(\"before timeout\",flush=True); print(\"timeout detail\",file=sys.stderr,flush=True); time.sleep(10)'), (Get-Location).Path, 1000)
+if ("'!$result.TimedOut -or $result.ExitCode -ne -1 -or $timer.ElapsedMilliseconds -gt 5000 -or !$result.Stdout.Contains('"'before timeout') -or "'!$result.Stderr.Contains('"'timeout detail')) { throw ('Timeout failed: ' + "'$result.Stdout + '"' / ' + "'$result.Stderr) }
+Write-Output ('"'PASS: timeout killed test process in ' + "'$timer.ElapsedMilliseconds + '"' ms; partial stdout and stderr preserved.')" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ exited 1 in 433ms:
+PASS: 9 Quest selection cases; phones, offline and unidentified devices are never selected; unauthorized Quest warning supported.
+Process capture failed: failure detail
+At line:36 char:138
++ ... uments.Count) { throw ('Process capture failed: ' + $result.Stderr) }
++                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OperationStopped: (Process capture failed: failure detail
+:String) [], RuntimeException
+    + FullyQualifiedErrorId : Process capture failed: failure detail
+ 
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$source = Get-Content -LiteralPath Assets/LOBOver/Editor/QuestBuild.cs -Raw
+$parts = @('"'SelectQuest', 'QuoteArgument', 'RunProcess', 'CaptureOutput') | ForEach-Object {
+    "'$match = [regex]::Match($source, '"'(?ms)"'^        static [''^'"\\r\\n]*\\b' + "'$_ + '"'\\(.*?"'^        }'"')
+    if ("'!$match.Success) { throw ('"'Method not found: ' + "'$_) }
+    $match.Value -replace '"'"'^        static '"', '        public static '
+}
+"'$resultType = [regex]::Match($source, '"'(?ms)"'^        sealed class ProcessResult.*?''^        }'"').Value
+"'$resultType = $resultType.Replace('"'sealed class ProcessResult', 'public sealed class ProcessResult').Replace('public bool Succeeded => ExitCode == 0 && "'!TimedOut;'"', 'public bool Succeeded { get { return ExitCode == 0 && "'!TimedOut; } }'"')
+"'$constants = [regex]::Matches($source, '"'(?m)"'^        const [''^'"\\r\\n]+') | ForEach-Object { "'$_.Value }
+$probe = '"'using System; using System.IO; using System.Linq; using System.Text; using System.Threading.Tasks; using Process = System.Diagnostics.Process; using ProcessStartInfo = System.Diagnostics.ProcessStartInfo; using Stopwatch = System.Diagnostics.Stopwatch; public static class QuestBuildProbe {' + ("'$constants -join "`n") + ($parts -join "`n") + $resultType + '"'}'
+Add-Type -TypeDefinition "'$probe -Language CSharp
+$pythonExe = (Get-Command python -ErrorAction Stop).Source
+
+$arguments = @('"'path with spaces', 'a\"b', 'C:\\trailing\\', '', 'embedded\\\"quote', 'plain')
+"'$script = '"'import json,sys; print(json.dumps(sys.argv[1:])); print(\"failure detail\",file=sys.stderr); sys.exit(7)'
+"'$result = [QuestBuildProbe]::RunProcess($pythonExe, [string[]](@('"'-c', "'$script) + $arguments), (Get-Location).Path, 30000)
+$result | Format-List
+$actual = @($result.Stdout | ConvertFrom-Json)
+Write-Output ('"'actual count=' + "'$actual.Count + '"'; expected count=' + "'$arguments.Count)
+for ($i = 0; $i -lt $arguments.Count; $i++) { Write-Output ('"'argument ' + "'$i + '"': actual=[' + "'$actual[$i] + '"'] expected=[' + "'$arguments[$i] + '"']') }
+" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 301ms:
+
+
+Succeeded : False
+ExitCode  : 7
+TimedOut  : False
+Stdout    : ["path with spaces", "a\"b", "C:\\trailing\\", "", "embedded\\\"quote", "plain"]
+            
+Stderr    : failure detail
+            
+
+
+
+actual count=1; expected count=6
+argument 0: actual=[path with spaces a"b C:\trailing\  embedded\"quote plain] expected=[path with spaces]
+argument 1: actual=[] expected=[a"b]
+argument 2: actual=[] expected=[C:\trailing\]
+argument 3: actual=[] expected=[]
+argument 4: actual=[] expected=[embedded\"quote]
+argument 5: actual=[] expected=[plain]
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$source = Get-Content -LiteralPath Assets/LOBOver/Editor/QuestBuild.cs -Raw
+$parts = @('"'SelectQuest', 'QuoteArgument', 'RunProcess', 'CaptureOutput') | ForEach-Object {
+    "'$match = [regex]::Match($source, '"'(?ms)"'^        static [''^'"\\r\\n]*\\b' + "'$_ + '"'\\(.*?"'^        }'"')
+    if ("'!$match.Success) { throw ('"'Method not found: ' + "'$_) }
+    $match.Value -replace '"'"'^        static '"', '        public static '
+}
+"'$resultType = [regex]::Match($source, '"'(?ms)"'^        sealed class ProcessResult.*?''^        }'"').Value
+"'$resultType = $resultType.Replace('"'sealed class ProcessResult', 'public sealed class ProcessResult').Replace('public bool Succeeded => ExitCode == 0 && "'!TimedOut;'"', 'public bool Succeeded { get { return ExitCode == 0 && "'!TimedOut; } }'"')
+"'$constants = [regex]::Matches($source, '"'(?m)"'^        const [''^'"\\r\\n]+') | ForEach-Object { "'$_.Value }
+$probe = '"'using System; using System.IO; using System.Linq; using System.Text; using System.Threading.Tasks; using Process = System.Diagnostics.Process; using ProcessStartInfo = System.Diagnostics.ProcessStartInfo; using Stopwatch = System.Diagnostics.Stopwatch; public static class QuestBuildProbe {' + ("'$constants -join "`n") + ($parts -join "`n") + $resultType + '"'}'
+Add-Type -TypeDefinition "'$probe -Language CSharp
+$pythonExe = (Get-Command python -ErrorAction Stop).Source
+
+$cases = @(
+    @{ Text = "List of devices attached`nphone device product:x model:SM_N986N transport_id:1`n340YC10GBC0BRS device product:x model:Quest_3S transport_id:2`n"; Serial = '"'340YC10GBC0BRS'; Unauthorized = "'$false },
+    @{ Text = '"'phone device model:SM_N986N'; Serial = "'$null; Unauthorized = $false },
+    @{ Text = '"'List of devices attached'; Serial = "'$null; Unauthorized = $false },
+    @{ Text = '"'340YC10GBC0BRS unauthorized transport_id:2'; Serial = "'$null; Unauthorized = $true },
+    @{ Text = '"'another unauthorized model:Quest_3'; Serial = "'$null; Unauthorized = $true },
+    @{ Text = '"'phone unauthorized model:SM_N986N'; Serial = "'$null; Unauthorized = $false },
+    @{ Text = '"'quest offline model:Quest_3S'; Serial = "'$null; Unauthorized = $false },
+    @{ Text = '"'340YC10GBC0BRS device transport_id:2'; Serial = "'$null; Unauthorized = $false },
+    @{ Text = "quest1 device model:Quest_3`nquest2 device model:Quest_3S"; Serial = '"'quest1'; Unauthorized = "'$false }
+)
+foreach ($case in $cases) {
+    $unauthorized = $false
+    $serial = [QuestBuildProbe]::SelectQuest($case.Text, [ref]$unauthorized)
+    if ($serial -cne $case.Serial -or $unauthorized -ne $case.Unauthorized) { throw ('"'Device selection failed: ' + "'$case.Text) }
+}
+Write-Output '"'PASS: 9 Quest selection cases; phones, offline and unidentified devices are never selected; unauthorized Quest warning supported.'
+"'$arguments = @('"'path with spaces', 'a\"b', 'C:\\trailing\\', '', 'embedded\\\"quote', 'plain')
+"'$script = '"'import json,sys; print(json.dumps(sys.argv[1:])); print(\"failure detail\",file=sys.stderr); sys.exit(7)'
+"'$result = [QuestBuildProbe]::RunProcess($pythonExe, [string[]](@('"'-c', "'$script) + $arguments), (Get-Location).Path, 30000)
+$actual = ConvertFrom-Json -InputObject $result.Stdout
+if ($result.ExitCode -ne 7 -or $result.TimedOut -or $result.Stderr.Trim() -ne '"'failure detail' -or "'$actual.Count -ne $arguments.Count) { throw ('"'Process capture failed: ' + "'$result.Stderr) }
+for ($i = 0; $i -lt $arguments.Count; $i++) { if ($actual[$i] -cne $arguments[$i]) { throw ('"'Argument round-trip failed at ' + "'$i) } }
+Write-Output '"'PASS: 6 argument round-trips, exit code 7, stdout and stderr captured.'
+"'$timer = [Diagnostics.Stopwatch]::StartNew()
+$result = [QuestBuildProbe]::RunProcess($pythonExe, @('"'-c', 'import sys,time; print(\"before timeout\",flush=True); print(\"timeout detail\",file=sys.stderr,flush=True); time.sleep(10)'), (Get-Location).Path, 1000)
+if ("'!$result.TimedOut -or $result.ExitCode -ne -1 -or $timer.ElapsedMilliseconds -gt 5000 -or !$result.Stdout.Contains('"'before timeout') -or "'!$result.Stderr.Contains('"'timeout detail')) { throw ('Timeout failed: ' + "'$result.Stdout + '"' / ' + "'$result.Stderr) }
+Write-Output ('"'PASS: timeout killed test process in ' + "'$timer.ElapsedMilliseconds + '"' ms; partial stdout and stderr preserved.')
+"'$result = [QuestBuildProbe]::RunProcess($pythonExe, @('"'-c', 'print(\"success\")'), (Get-Location).Path, 30000)
+if ("'!$result.Succeeded -or $result.Stdout.Trim() -ne '"'success') { throw 'Successful process rejected.' }
+Write-Output 'PASS: successful process returns exit code 0.'
+" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 1444ms:
+PASS: 9 Quest selection cases; phones, offline and unidentified devices are never selected; unauthorized Quest warning supported.
+PASS: 6 argument round-trips, exit code 7, stdout and stderr captured.
+PASS: timeout killed test process in 1021 ms; partial stdout and stderr preserved.
+PASS: successful process returns exit code 0.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'powershell -NoProfile -ExecutionPolicy Bypass -File Assets/LOBOver/Tests/CompileOffline.ps1' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 10577ms:
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Sim: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Director: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.World: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Director.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.World.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.VR: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.VR.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.MR: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.MR.Android: 0 errors
+LOBOver.Start: 0 errors
+LOBOver.Start.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Editor: 0 errors
+LOBOver.XR.Editor: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.EditModeTests: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.PlayModeTests: 0 errors
+PASS: 15 offline assembly compilations; Unity import, tests and rendering still require the Editor.
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+PASS: wrong-stretch F3 stays uninspected by presenter; genuine Site inspect marks it.
+PASS: 20835 presenter queries preserve complete state and Drain across all three stages; all 9 targets match inspect replies; 4 fake-input checks pass.
+Argument at t=4.20: pipe 520.2 arguing; back 272.5 arguing; exc 869 stopped; ev_p1.
+PASS: all Site fields at days 1, 4, 5, 9, 16 match recorded JSON; t=4.20 argument matches Amendment 1 (positions within 1 ft).
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'git diff --check; git status --short' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath Assets/LOBOver/Editor/QuestBuild.cs' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 60ms:
+using System;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using UnityEditor;
+using UnityEditor.Build.Reporting;
+using UnityEngine;
+using Process = System.Diagnostics.Process;
+using ProcessStartInfo = System.Diagnostics.ProcessStartInfo;
+using Stopwatch = System.Diagnostics.Stopwatch;
+
+namespace LOBOver.Editor
+{
+    public static class QuestBuild
+    {
+        // WO-S5 Amendment 1 sets the install and other adb deadlines.
+        const int InstallTimeoutMs = 120000;
+        const int CommandTimeoutMs = 30000;
+        // Amendment 1 identifies this Quest; unauthorized adb rows can omit their model.
+        const string KnownQuestSerial = "340YC10GBC0BRS";
+        const string NoQuest = "no Quest connected (developer mode on, cable in, allow USB debugging in the headset)";
+
+        [MenuItem("LOB Over/Build/Build Quest APK")]
+        public static void BuildQuestApk() => Build(false);
+
+        [MenuItem("LOB Over/Build/Build and Run Quest")]
+        public static void BuildAndRunQuest() => Build(true);
+
+        static void Build(bool run)
+        {
+            try
+            {
+                var passes = BuildChecks.Passes(out var settingsReport);
+                if (!passes) Debug.LogError("LOB Over: " + settingsReport);
+                if (!File.Exists(SiteSceneBuilder.ScenePath))
+                {
+                    Debug.LogError("LOB Over: run LOB Over/Build/Site Scene first");
+                    return;
+                }
+                // Missing() includes the active target itself; switching must still be possible.
+                // A switch always returns without building, so all checks run again after reimport.
+                if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
+                {
+                    var switched = EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
+                    if (switched) Debug.Log("LOB Over: switched to Android; re-run the build menu item after reimport.");
+                    else Debug.LogError("LOB Over: Android build target switch failed.");
+                    return;
+                }
+                if (!passes) return;
+
+                var root = Directory.GetParent(Application.dataPath).FullName;
+                string adb = null;
+                var serial = run ? FindQuest(root, out adb) : null;
+                var directory = Path.Combine(root, "Builds");
+                Directory.CreateDirectory(directory);
+                var output = Path.Combine(directory, "LOBOver-" + DateTime.Now.ToString("yyyyMMdd-HHmm") + ".apk");
+                var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+                {
+                    scenes = EditorBuildSettings.scenes.Where(scene => scene.enabled).Select(scene => scene.path).ToArray(),
+                    locationPathName = output,
+                    target = BuildTarget.Android,
+                    // Never let Unity choose between the Quest and an attached phone (Amendment 1).
+                    options = BuildOptions.None
+                });
+                WriteLastBuild(root, report.summary.outputPath);
+
+                string deployment = "";
+                if (report.summary.result == BuildResult.Succeeded && run)
+                    deployment = serial == null ? "; APK only (no authorized Quest)" : "; " + InstallAndStart(adb, serial, output, root);
+                var summary = report.summary;
+                Debug.Log("LOB Over: " + summary.result + "; size=" + summary.totalSize + " bytes; time=" + summary.totalTime
+                    + "; output=" + OneLine(summary.outputPath) + deployment);
+                if (summary.result != BuildResult.Succeeded) LogFirstError(report);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError("LOB Over: Quest build failed: " + OneLine(exception.GetBaseException().Message));
+            }
+        }
+
+        static string FindQuest(string root, out string adb)
+        {
+            adb = null;
+            try
+            {
+                // The Android extension is optional and absent from the offline compiler's references.
+                var settings = Type.GetType("UnityEditor.Android.AndroidExternalToolsSettings, UnityEditor.Android.Extensions", true);
+                var sdk = (string)settings.GetProperty("sdkRootPath").GetValue(null);
+                adb = Path.Combine(sdk, "platform-tools", Application.platform == RuntimePlatform.WindowsEditor ? "adb.exe" : "adb");
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning("LOB Over: adb devices -l failed: " + OneLine(exception.GetBaseException().Message));
+                Debug.LogWarning("LOB Over: " + NoQuest);
+                return null;
+            }
+
+            var result = RunProcess(adb, new[] { "devices", "-l" }, root, CommandTimeoutMs);
+            if (!result.Succeeded)
+            {
+                LogProcess("devices -l", "none", result);
+                Debug.LogWarning("LOB Over: " + NoQuest);
+                return null;
+            }
+            var serial = SelectQuest(result.Stdout, out var unauthorized);
+            if (serial == null)
+                Debug.LogWarning("LOB Over: " + (unauthorized
+                    ? "Quest connected but not authorized: put the headset on and allow USB debugging"
+                    : NoQuest));
+            return serial;
+        }
+
+        static string SelectQuest(string devices, out bool unauthorized)
+        {
+            unauthorized = false;
+            foreach (var line in devices.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var fields = line.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
+                if (fields.Length < 2) continue;
+                var questModel = fields.Skip(2).Any(field => field.StartsWith("model:", StringComparison.Ordinal)
+                    && field.IndexOf("Quest", StringComparison.OrdinalIgnoreCase) >= 0);
+                if (fields[1] == "unauthorized" && (questModel || fields[0] == KnownQuestSerial)) unauthorized = true;
+                if (!questModel) continue;
+                if (fields[1] == "device") return fields[0];
+            }
+            return null;
+        }
+
+        static string InstallAndStart(string adb, string serial, string apk, string root)
+        {
+            var install = RunProcess(adb, new[] { "-s", serial, "install", "-r", apk }, root, InstallTimeoutMs);
+            LogProcess("install", serial, install);
+            if (!install.Succeeded) return "install failed on " + serial;
+            var start = RunProcess(adb, new[] { "-s", serial, "shell", "monkey", "-p", PlayerSettings.applicationIdentifier,
+                "-c", "android.intent.category.LAUNCHER", "1" }, root, CommandTimeoutMs);
+            LogProcess("start", serial, start);
+            return start.Succeeded ? "installed and started on " + serial : "start failed on " + serial;
+        }
+
+        static void WriteLastBuild(string root, string output)
+        {
+            var hash = RunProcess("git", new[] { "rev-parse", "--short", "HEAD" }, root, CommandTimeoutMs);
+            if (!hash.Succeeded) LogProcess("git rev-parse --short HEAD", "none", hash);
+            try
+            {
+                File.WriteAllText(Path.Combine(root, "Builds", "last-build.txt"), "output=" + output
+                    + Environment.NewLine + "git=" + (hash.Succeeded ? hash.Stdout.Trim() : "unavailable")
+                    + Environment.NewLine + "time=" + DateTimeOffset.Now.ToString("o") + Environment.NewLine);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError("LOB Over: last-build.txt failed: " + OneLine(exception.Message));
+            }
+        }
+
+        static void LogFirstError(BuildReport report)
+        {
+            foreach (var step in report.steps)
+                foreach (var message in step.messages)
+                    if (message.type == LogType.Error || message.type == LogType.Exception)
+                    {
+                        Debug.LogError("LOB Over: first error step " + OneLine(step.name) + ": " + OneLine(message.content));
+                        return;
+                    }
+            Debug.LogError("LOB Over: build " + report.summary.result + "; no error step was reported.");
+        }
+
+        sealed class ProcessResult
+        {
+            public int ExitCode = -1;
+            public bool TimedOut;
+            public string Stdout = "";
+            public string Stderr = "";
+            public bool Succeeded => ExitCode == 0 && !TimedOut;
+        }
+
+        static ProcessResult RunProcess(string executable, string[] arguments, string root, int timeoutMs)
+        {
+            var result = new ProcessResult();
+            var stdout = new StringBuilder();
+            var stderr = new StringBuilder();
+            try
+            {
+                using (var process = new Process())
+                {
+                    process.StartInfo = new ProcessStartInfo
+                    {
+                        FileName = executable,
+                        Arguments = string.Join(" ", arguments.Select(QuoteArgument)),
+                        WorkingDirectory = root,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true
+                    };
+                    process.Start();
+                    var timer = Stopwatch.StartNew();
+                    var stdoutTask = CaptureOutput(process.StandardOutput, stdout);
+                    var stderrTask = CaptureOutput(process.StandardError, stderr);
+                    var exited = process.WaitForExit(timeoutMs);
+                    var remaining = (int)Math.Max(0, timeoutMs - timer.ElapsedMilliseconds);
+                    result.TimedOut = !exited || !Task.WaitAll(new[] { stdoutTask, stderrTask }, remaining);
+                    if (result.TimedOut && !process.HasExited)
+                    {
+                        process.Kill();
+                        // Bound cleanup too; never hang the Editor waiting for a failed adb call.
+                        process.WaitForExit(1000);
+                    }
+                    result.ExitCode = exited ? process.ExitCode : -1;
+                }
+            }
+            catch (Exception exception)
+            {
+                result.ExitCode = -1;
+                result.Stderr += " " + exception.Message;
+            }
+            lock (stdout) result.Stdout = stdout.ToString();
+            lock (stderr) result.Stderr = stderr + result.Stderr;
+            return result;
+        }
+
+        static async Task CaptureOutput(StreamReader reader, StringBuilder output)
+        {
+            var buffer = new char[4096];
+            int count;
+            while ((count = await reader.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) > 0)
+                lock (output) output.Append(buffer, 0, count);
+        }
+
+        static void LogProcess(string step, string serial, ProcessResult result)
+        {
+            var line = "LOB Over: " + step + "; serial=" + serial + "; exit code=" + result.ExitCode;
+            if (result.Succeeded) Debug.Log(line);
+            else Debug.LogError(line + (result.TimedOut ? "; timed out" : "")
+                + "; stdout=" + OneLine(result.Stdout) + "; stderr=" + OneLine(result.Stderr));
+        }
+
+        static string OneLine(string value) => string.Join(" ", (value ?? "").Split((char[])null, StringSplitOptions.RemoveEmptyEntries));
+
+        static string QuoteArgument(string value)
+        {
+            // Windows process arguments require escaped quotes and doubled trailing backslashes.
+            var quoted = new StringBuilder("\"");
+            var slashes = 0;
+            foreach (var character in value)
+            {
+                if (character == '\\') { slashes++; continue; }
+                quoted.Append('\\', character == '"' ? slashes * 2 + 1 : slashes);
+                quoted.Append(character);
+                slashes = 0;
+            }
+            return quoted.Append('\\', slashes * 2).Append('"').ToString();
+        }
+    }
+}
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 121ms:
+warning: in the working copy of 'Assets/LOBOver/Editor/BuildChecks.cs', CRLF will be replaced by LF the next time Git touches it
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+ M Assets/LOBOver/Editor/BuildChecks.cs
+ M Docs/WORKLOG.md
+?? Assets/LOBOver/Editor/QuestBuild.cs
+?? Docs/WORK_ORDERS/logs/WO-S5.20261020-234310.log
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+Step 3 of 4 done: implementation and offline checks pass. Live Unity/headset acceptance remains blocked by the dispatch restrictions.
+
+```text
+STATUS: BLOCKED
+WO: WO-S5
+CHANGED:
+  - Assets/LOBOver/Editor/QuestBuild.cs (new) Both menus, Quest-only selection, serial-targeted install/start, timeouts, build reporting and last-build.txt.
+  - Assets/LOBOver/Editor/BuildChecks.cs (modified) Added Passes(out string report) using AndroidSettingsCheck.Missing().
+TESTS:
+  - powershell -NoProfile -ExecutionPolicy Bypass -File Assets/LOBOver/Tests/CompileOffline.ps1 -> exit 0
+    PASS: 15 offline assembly compilations; Unity import, tests and rendering still require the Editor.
+    PASS: 20835 presenter queries preserve complete state and Drain across all three stages; all 9 targets match inspect replies; 4 fake-input checks pass.
+  - PowerShell in-memory helper checks -> PASS: 9 Quest selection cases; 6 argument round-trips; stdout/stderr and exit-code capture.
+    PASS: timeout killed test process in 1021 ms; partial stdout and stderr preserved.
+  - git diff --check -> exit 0; no whitespace errors.
+  - git status --short -> only the two implementation files, excluding permitted WORKLOG.md and dispatch-log changes.
+  - Unity settings menu, APK build, headset launch and logcat acceptance -> NOT RUN; dispatch prohibits running Unity, adb or builds.
+NOTES:
+  - Non-Android targets report checker failures, switch to Android and return without building.
+  - Known Quest serial identifies unauthorized rows without model metadata; installation still requires an authorized Quest model.
+  - No dependencies added or commits made. CompileOffline.ps1 and .gitignore needed no changes.
+  - Orchestrator must complete live acceptance through Unity MCP.
+  - Next (under 2 minutes): execute LOB Over/Build/Check Android Settings through Unity MCP.
+```
+hook: Stop
+hook: Stop
+hook: Stop Completed
+hook: Stop Completed
+tokens used
+53,745
+Step 3 of 4 done: implementation and offline checks pass. Live Unity/headset acceptance remains blocked by the dispatch restrictions.
+
+```text
+STATUS: BLOCKED
+WO: WO-S5
+CHANGED:
+  - Assets/LOBOver/Editor/QuestBuild.cs (new) Both menus, Quest-only selection, serial-targeted install/start, timeouts, build reporting and last-build.txt.
+  - Assets/LOBOver/Editor/BuildChecks.cs (modified) Added Passes(out string report) using AndroidSettingsCheck.Missing().
+TESTS:
+  - powershell -NoProfile -ExecutionPolicy Bypass -File Assets/LOBOver/Tests/CompileOffline.ps1 -> exit 0
+    PASS: 15 offline assembly compilations; Unity import, tests and rendering still require the Editor.
+    PASS: 20835 presenter queries preserve complete state and Drain across all three stages; all 9 targets match inspect replies; 4 fake-input checks pass.
+  - PowerShell in-memory helper checks -> PASS: 9 Quest selection cases; 6 argument round-trips; stdout/stderr and exit-code capture.
+    PASS: timeout killed test process in 1021 ms; partial stdout and stderr preserved.
+  - git diff --check -> exit 0; no whitespace errors.
+  - git status --short -> only the two implementation files, excluding permitted WORKLOG.md and dispatch-log changes.
+  - Unity settings menu, APK build, headset launch and logcat acceptance -> NOT RUN; dispatch prohibits running Unity, adb or builds.
+NOTES:
+  - Non-Android targets report checker failures, switch to Android and return without building.
+  - Known Quest serial identifies unauthorized rows without model metadata; installation still requires an authorized Quest model.
+  - No dependencies added or commits made. CompileOffline.ps1 and .gitignore needed no changes.
+  - Orchestrator must complete live acceptance through Unity MCP.
+  - Next (under 2 minutes): execute LOB Over/Build/Check Android Settings through Unity MCP.
+```
+
+=== codex exit code: 0
+=== finished 20261020-234915
