@@ -212,3 +212,4 @@ WO-S5 CHECK Build and Run Quest through the MCP -> PASS: "LOB Over: Succeeded; s
 WO-S5 NOTE: the headset was asleep (mWakefulness=Asleep), so the app received APP_CMD_STOP right after starting; it resumes when the headset is worn (else Library > Unknown Sources > LOB-OVER). Meta XR logs a few optional-extension warnings (xrShareSpacesFB/META, xrAgenticRegisterExternalToolMETAX1 unsupported), benign.
 WO-S5 ACCEPTED 2026-10-21 00:00 commit=643dbca
 STOP FOR BRYAN 00:00: headset check of VR Site and MR Diorama (four lines in the chat). His reply closes WO-S4; then READY_FOR_HEADSET.
+BUILD-SIDE-EFFECTS 00:02: committed Meta's OculusProjectConfig (target devices without the retired Quest 1) and new OVRBuildConfig.asset, URP's Mobile_RPAsset prefilter flags and global settings list (all written by the build); reverted ProjectSettings/UnityConnectSettings.asset (Unity Services had switched itself on); .utmp/ (local build tool cache) added to .gitignore.
