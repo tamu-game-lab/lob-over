@@ -146,7 +146,7 @@ export function createHost({ scenario, catalog, pacing = {}, autoplan = [], stag
   const pacer = createPacer(() => sim, () => { snapshot(); drain(); observeGuide(); runAutoplan(); }, pacing);
   function handleCommand(socket, seat, message, send) {
     let reply;
-    if (scenario.rules.planControlsClock && seat === 'plan' && message.t === 'ctrl'
+    if (scenario.rules.planControlsClock && seat === 'plan' && message.t === 'ctrl' && !sim.done // a finished run has no argument left to settle; Run again must not be refused
       && sim.serialize().conflicts.some(conflict => !conflict.resolved)) {
       reply = { ok: false, reason: "The field won't take that order right now" };
     } else if (message.t === 'cmd' && message.action === 'ready') {
