@@ -26,10 +26,15 @@ namespace LOBOver.Editor
         private static AudioClip Audio(string name, string extension = ".ogg") => Required<AudioClip>(Imported + "Audio/Construction/" + name + extension);
         public static WorldAssets Build()
         {
+            if (!File.Exists("Assets/TextMesh Pro/Resources/TMP Settings.asset"))
+            {
+                TMP_PackageResourceImporter.ImportResources(true, false, false);
+                AssetDatabase.Refresh();
+            }
             Directory.CreateDirectory(Art); Directory.CreateDirectory(Prefabs); Directory.CreateDirectory(Prefabs + "Imported"); AssetDatabase.Refresh();
             var assets = AssetDatabase.LoadAssetAtPath<WorldAssets>(Art + "WorldAssets.asset");
             if (assets == null) { assets = ScriptableObject.CreateInstance<WorldAssets>(); AssetDatabase.CreateAsset(assets, Art + "WorldAssets.asset"); }
-            assets.font = Font(); assets.soil = Material("Soil"); assets.timber = Material("Timber"); assets.steel = Material("StorageSteel"); assets.orange = Material("SafetyOrange");
+            assets.font = TMP_Settings.defaultFontAsset; assets.soil = Material("Soil"); assets.timber = Material("Timber"); assets.steel = Material("StorageSteel"); assets.orange = Material("SafetyOrange");
             assets.ink = OwnMaterial("Ink", Color.white, false, "Universal Render Pipeline/Particles/Unlit");
             assets.cloud = OwnMaterial("Cloud", new Color(0.26f, 0.28f, 0.31f));
             assets.rain = OwnMaterial("Rain", new Color(0.65f, 0.72f, 0.8f, 0.5f), true);
@@ -67,34 +72,6 @@ namespace LOBOver.Editor
                 material.SetOverrideTag("RenderType", "Transparent"); material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT"); material.renderQueue = (int)RenderQueue.Transparent;
             }
             EditorUtility.SetDirty(material); return material;
-        }
-        private static TMP_FontAsset Font()
-        {
-            // TMP is installed but its optional Resources package need not have been imported.
-            // Keep settings and the generated font inside the work order's Art scope.
-            var settings = Resources.Load<TMP_Settings>("TMP Settings");
-            if (settings == null)
-            {
-                Directory.CreateDirectory(Art + "Resources"); AssetDatabase.Refresh();
-                settings = ScriptableObject.CreateInstance<TMP_Settings>();
-                AssetDatabase.CreateAsset(settings, Art + "Resources/TMP Settings.asset");
-                // Installed com.unity.ugui 2.0 TMP_Settings schema, avoiding the optional importer dialog.
-                var serialized = new SerializedObject(settings);
-                serialized.FindProperty("assetVersion").stringValue = "2";
-                serialized.FindProperty("m_ClearDynamicDataOnBuild").boolValue = false;
-                serialized.ApplyModifiedPropertiesWithoutUndo();
-            }
-            TMP_Settings.LoadDefaultSettings();
-            var path = Art + "SiteFont.asset"; var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
-            if (font != null) return font;
-            font = TMP_FontAsset.CreateFontAsset(Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
-            font.name = "SiteFont"; font.TryAddCharacters(string.Concat(Enumerable.Range(32, 95).Select(value => (char)value)) + "—–·×");
-            AssetDatabase.CreateAsset(font, path);
-            foreach (var atlas in font.atlasTextures) AssetDatabase.AddObjectToAsset(atlas, font);
-            AssetDatabase.AddObjectToAsset(font.material, font); EditorUtility.SetDirty(font);
-            if (AssetDatabase.GetAssetPath(settings).StartsWith(Art, StringComparison.Ordinal))
-            { TMP_Settings.defaultFontAsset = font; EditorUtility.SetDirty(settings); }
-            return font;
         }
         public static void StripMissing(GameObject instance)
         {

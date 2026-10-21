@@ -1,0 +1,2422 @@
+=== WO-S3 dispatched 20261020-203629
+=== root: /c/Users/bryan/Documents/TAMU/02-Research/Creative Care/Unity/LOB-OVER
+=== flags: --sandbox workspace-write -c approval_policy=never 
+=== note: Rejection 1: see Docs/WORK_ORDERS/WO-S3.rejection-1.md (two fixes in Assets/LOBOver/Editor/SiteAssetBuilder.cs and Assets/LOBOver/Art/: use the TMP Essential Resources instead of a LegacyRuntime font, delete Art/Text and Art/Resources). Environment: the Unity Editor is open on this project and driven by the orchestrator through the Unity MCP; you still cannot run it. Assets/TextMesh Pro (the essentials) is committed. The working tree holds files the failed builder run generated (Assets/LOBOver/Art/Resources, Art/WorldAssets.asset, Prefabs/Imported and modified .meta files under Art/Text): they are not yours to keep; delete Art/Text and Art/Resources as the note says and ignore the others in your scope check. Re-run Assets/LOBOver/Tests/CompileOffline.ps1 and paste its summary. Do not touch Assets/LOBGame/**, Monitor/, Showcase/ or Sim/.
+
+Reading additional input from stdin...
+OpenAI Codex v0.163.0-alpha.10.2
+--------
+workdir: C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+model: gpt-6-astra
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a15c1a-4f22-7e72-9ec5-b642e6297756
+--------
+user
+You are Astra, the implementer on this repository. Read AGENTS.md first and obey it.
+Then read Docs/WORK_ORDERS/WO-S3.md and carry out that work order exactly: only the files it allows,
+only the behaviour it specifies, every acceptance check run by you before you finish.
+Do not commit. Do not touch Data/ unless the work order says so. Do not add dependencies.
+If something outside your scope blocks you, stop and report BLOCKED with the exact reason.
+Finish with the STATUS block in the format AGENTS.md gives, as the very last thing you print.
+Orchestrator note for this dispatch: Rejection 1: see Docs/WORK_ORDERS/WO-S3.rejection-1.md (two fixes in Assets/LOBOver/Editor/SiteAssetBuilder.cs and Assets/LOBOver/Art/: use the TMP Essential Resources instead of a LegacyRuntime font, delete Art/Text and Art/Resources). Environment: the Unity Editor is open on this project and driven by the orchestrator through the Unity MCP; you still cannot run it. Assets/TextMesh Pro (the essentials) is committed. The working tree holds files the failed builder run generated (Assets/LOBOver/Art/Resources, Art/WorldAssets.asset, Prefabs/Imported and modified .meta files under Art/Text): they are not yours to keep; delete Art/Text and Art/Resources as the note says and ignore the others in your scope check. Re-run Assets/LOBOver/Tests/CompileOffline.ps1 and paste its summary. Do not touch Assets/LOBGame/**, Monitor/, Showcase/ or Sim/.
+warning: Codex is ignoring 2 unrecognized configuration settings. Check for typos or deprecated settings.
+  user (C:\Users\bryan\.codex\config.toml): `features.rmcp_client` is ignored.
+  user (C:\Users\bryan\.codex\config.toml): `mcp_servers.code-review-graph.type` is ignored.
+warning: Codex is ignoring 2 unrecognized configuration settings. Check for typos or deprecated settings.
+  user (C:\Users\bryan\.codex\config.toml): `features.rmcp_client` is ignored.
+  user (C:\Users\bryan\.codex\config.toml): `mcp_servers.code-review-graph.type` is ignored.
+warning: loading hooks from both C:\Users\bryan\.codex\hooks.json and C:\Users\bryan\.codex\config.toml; prefer a single representation for this layer
+warning: clamping SessionEnd hook timeout to 3s in C:\Users\bryan\.codex\hooks.json
+warning: clamping SessionEnd hook timeout to 3s in C:\Users\bryan\.codex\config.toml
+2026-10-21T01:36:31.739252Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://mcp.consensus.app/.well-known/oauth-protected-resource\", scope=\"search\"" })
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+hook: UserPromptSubmit Completed
+codex
+Step 1 of 3: I’ll read the repository rules, WO-S3, and the rejection note, then apply the scoped fixes and run the required checks.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -LiteralPath 'AGENTS.md'" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 99ms:
+# AGENTS.md â€” rules for the implementer (Codex / Astra)
+
+You are the implementer on LOB, Over, a three-seat cooperative construction-scheduling game (VR inspector, web scheduler, paper spec-keeper). An orchestrator (Claude Code) writes you bounded work orders, verifies the result, and accepts or rejects it. You do not decide design questions; you build exactly what the work order says and report precisely.
+
+## Read first, every time
+
+1. This file.
+2. The work order you were given: `Docs/WORK_ORDERS/WO-xx.md`. It names the files you may touch, the acceptance checks, and what is out of scope.
+3. Only the design files the work order points you to (usually one or two sections of `Docs/DESIGN_v0.md`, `Docs/PROTOCOL.md`, `Docs/SCENARIO_SCHEMA.md`). Do not read the whole design doc unless the work order says so.
+
+## Repository layout (root = the Unity project root)
+
+```
+Assets/ Packages/ ProjectSettings/   Unity (Phase 1; do not touch in Phase 0 work orders)
+Data/        catalog.json, Scenarios/*.json, goldens/*.json   â€” source of truth for sim, kit and voice
+Docs/        DESIGN_v0.md, PROTOCOL.md, SCENARIO_SCHEMA.md, ORCHESTRATOR.md, WORK_ORDERS/, WORKLOG.md, DECISIONS.md
+Monitor/     Node host + JS reference simulation + browser pages (Plan page, 2D Site page, facilitator page)
+Paper/       field manual source and generated printable kit
+Tools/       astra.sh (dispatch), reference/ (Python oracle for goldens), voice/ (Kokoro batch)
+Voice/       generated WAV lines (output)
+```
+
+## Hard rules
+
+- **Scope.** Touch only the files and folders the work order lists under "You may change". If the job needs a change elsewhere, stop and say so in the STATUS block (`BLOCKED`), do not make it.
+- **No design decisions.** If the work order is ambiguous, pick the reading that is simplest to change later, state the choice in `NOTES`, and continue. Never invent game rules, numbers, event behaviours or UI feedback that the work order or the pointed-to design section does not state.
+- **No verdict feedback, ever.** Nothing in any player-facing surface may tell players that a choice was right or wrong: no green/red for decisions, no "correct", no score, no hint text, no "you should have". Boards post facts (a permit number, a day count, a dollar figure). This is the project's core educational rule (design doc, "No verdicts during play"). Typo-level rejection of a code that is not on file is allowed; judgement of whether entering it was wise is not.
+- **Determinism.** The simulation is seeded and must produce identical output for identical input and seed. No `Math.random()` without the seeded RNG, no wall-clock reads inside the simulation, no iteration-order dependence on object keys for anything that affects state.
+- **One truth, filtered per seat.** The host holds one state; each seat gets a filtered view (`Docs/PROTOCOL.md`). Never send the Plan seat live field truth, and never send the Site seat the plan or the money.
+- **No network from your sandbox.** Dependencies are installed by the orchestrator before you run. If a module is missing, say so in `BLOCKED`; do not try to install it or vendor a copy.
+- **Data files are authored, not generated by you.** Do not modify `Data/Scenarios/*.json`, `Data/catalog.json` or `Data/goldens/*.json` unless the work order says so explicitly.
+- **Git.** This is a git repo. Do not commit, branch, stash or reset; the orchestrator commits. Never run git on any other folder (LOB-Game is under Plastic SCM and is read-only reference material).
+- **Keep it plain.** Vanilla JS (ES modules), Node 20+, no framework, no bundler, no TypeScript in Phase 0. Tests with Node's built-in `node:test`. Pages are single HTML files with inline CSS and JS, served by the host.
+- **Code style.** Small modules, pure functions for the simulation (`state, input -> state`), named constants for every number that comes from the design, each constant with a comment naming its source (catalog, workbook, decided rule). Comments say why, not what.
+- **Do not touch** `Assets/`, `Packages/`, `ProjectSettings/`, `.gitignore`, `AGENTS.md`, `CLAUDE.md`, `Docs/ORCHESTRATOR.md`, or anything under `Docs/WORK_ORDERS/logs/`.
+
+## How to work a work order
+
+1. Restate the acceptance checks to yourself; they are what the orchestrator will run.
+2. Build the smallest thing that passes them, then stop. No extra features, no refactors of files outside scope, no "while I was here".
+3. Run every acceptance check yourself. Paste the actual command output (trimmed) into `TESTS`.
+4. If a check cannot pass because of something outside your scope, report `BLOCKED` with the exact reason and the smallest change that would unblock it.
+5. Scope check: `git status --short` must show only your own changes. Ignore `Docs/WORK_ORDERS/logs/` (the dispatch log being written while you run) and `Docs/WORKLOG.md` / `Docs/DECISIONS.md` if the orchestrator left them modified; never clean those up and never treat them as a blocker.
+6. Windows shell: your commands run in PowerShell, where `npm` and `npx` resolve to `.ps1` shims that the execution policy blocks. Call `npm.cmd` and `npx.cmd` instead; the acceptance checks mean exactly that. `node`, `python`, `pip` and `git` work as written.
+
+## STATUS block (always the last thing you print)
+
+```
+STATUS: DONE | PARTIAL | BLOCKED
+WO: WO-xx
+CHANGED:
+  - path/one.js  (new)        one line on what it is
+  - path/two.html (modified)  one line on what changed
+TESTS:
+  - <command>  ->  <pass/fail, key numbers>
+NOTES:
+  - choices you made where the order was silent, each in one line
+  - anything the verifier must know (known gaps, follow-ups, risks)
+```
+
+`DONE` means every acceptance check passed on your machine. `PARTIAL` means some passed and you list which did not and why. `BLOCKED` means you could not proceed; name the blocker. Never claim a check passed that you did not run.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -LiteralPath 'Docs/WORK_ORDERS/WO-S3.md' -Encoding UTF8" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -LiteralPath 'Docs/WORK_ORDERS/WO-S3.rejection-1.md' -Encoding UTF8" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'git status --short' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 64ms:
+# WO-S3 — The site in Unity: LOB-Game's assets, the embedded simulation, an autoplan director, desktop preview
+
+## Goal
+
+Open the project, run **LOB Over → Build → Site Scene**, open `Assets/LOBOver/Scenes/Site.unity`, press Play: the slice runs by itself (Plan on autopilot through the C# `Autoplan`), the site shows LOB-Game's machines, workers, pipe and materials at 1 ft = 0.3048 m, every cell, board, crew and sky follows the simulation's Site view, the LOB chart with Plan's view hangs by the trailer, and a desktop camera lets anyone watch and try the Site verbs with the keyboard. No XR yet (WO-S4).
+
+## Read
+
+- `AGENTS.md`, `Docs/ORCHESTRATOR_SHOWCASE.md`, `Docs/SHOWCASE.md`
+- `Docs/WORK_ORDERS/WO-08.md` sections 1 to 6: the world specification (stations, crews, sky, sound, trailer board, SiteWorld) applies verbatim, with `Director` in place of `SiteClient`
+- `Docs/WORK_ORDERS/WO-S2.md` (the sim API you call), `Docs/PROTOCOL.md` "Per-seat views"
+- The copied assets under `Assets/LOBGame/` (same relative paths as in LOB-Game: `_Project/Art/Prefabs/Equipment/*.prefab`, `_Project/Art/Prefabs/Workers/ProjectWorker.prefab`, `_Project/Art/ProjectSite/**`, `3D_Models/**`, `Audio/Construction/*`, `PM/*.png`). `Assets/LOBGame/_Project/Code` does not exist; strip missing-script components on instances you create.
+
+## You may change
+
+- `Assets/LOBOver/Runtime/World/**`, `Assets/LOBOver/Runtime/Director/**`, `Assets/LOBOver/Editor/**`, `Assets/LOBOver/Scenes/Site.unity` (builder output), `Assets/LOBOver/Prefabs/**`, `Assets/LOBOver/Art/**`, `Assets/StreamingAssets/Data/**` and `Assets/StreamingAssets/Voice/**` (copied by your editor script; gitignored), `Assets/LOBOver/Tests/**`
+
+## Build
+
+1. **Data sync.** `LOB Over → Build → Sync Data` copies `Data/catalog.json`, `Data/Scenarios/*.json`, `Monitor/test/scripts/*.json` and `Voice/**/*.wav` into `Assets/StreamingAssets/`; the scene builder calls it. On Android read StreamingAssets with `UnityWebRequest`; in the Editor with `File`.
+2. **Director** (`Assets/LOBOver/Runtime/Director/Director.cs`): loads the catalog and the chosen scenario (default `slice_texas`), creates `LOBOver.Sim.Sim`, paces it with `Pacer` at the scenario's seconds per day, applies `Autoplan` with the scenario's default script (`slice_autoplan.json`; `stage1_pm_play`/`stage2_pull_play` minus their `site` entries for the stages), exposes `SiteView` and `PlanView` each frame, `Start/Pause/Reset/Load(scenarioId)`, `Speed`, `DisplayDay`, and a `Send(cmd)` for Site commands from the world. Events and voice messages from `Drain()` go to C# events. Transcripts are written to `Application.persistentDataPath/transcripts/`.
+3. **World.** `SiteWorld` and `StationCell`, `CrewRig`, sky, sound, trailer board exactly as WO-08 sections 2 to 6 (same names, same assets, same status-to-animation mapping, same mood postures); fed by `Director` instead of a network client.
+4. **Plan panel.** A world-space board (3 × 1.5 m) on the trailer's far wall drawing `PlanView`: planned lines per crew, reported actual lines (stepped), the promise and deadline rules, the budget strip, the last three inbox lines, the radio log, the Respond/keypad items shown as text only (no interaction in this WO). Showcase only: in the study the Plan seat is the web page; say so in a comment.
+5. **Desktop preview.** `DesktopPreview` prefab: a fly camera (WASD, right mouse to look, Shift fast), keys: `1..9` ride to stake ×100 ft... use `[`/`]` previous/next stake, `D` dismount/mount, `I` inspect what the crosshair hits (same targets as WO-09 section 4), `F` flag, `S` stop work, `C` confirm first landed order, `N` confirm not carried out, `Space` start/pause, `R` reset, `L` listen. An on-screen text (top left) with day, speed, truck station, last inspection text, last card; nothing judging anything.
+6. **Builder.** `LOB Over → Build → Site Scene` creates `Site.unity` with: light, ground, road, gate, trailer with the two boards, job sign, spoil piles, `Director`, `SiteWorld`, `DesktopPreview`, an `AudioListener` on the preview camera, URP volume as the project has. Idempotent: running it again rebuilds the same scene.
+7. **Tests.** EditMode `SiteSceneBuilderTests` (object names and counts after the builder runs; the imported prefabs load from their paths). PlayMode `SiteWorldTests` feeding recorded Site views from `Data/transcripts/slice_play.json` (days 1, 4, 5, 9, 16): cell 5+20 slumped with standing water on day 4, the pipe crew `stopped`, backfill `arguing` on day 5, rain on day 9, board 2 "no permit posted" on day 1 and "TX-0312" on day 9, the trailer board shows three lines on day 16. `LOB Over → Debug → Screenshot` saves `Monitor/out/unity/<name>.png`.
+
+## Acceptance checks
+
+```
+# Orchestrator, Editor closed: batchmode compile per ORCHESTRATOR_SHOWCASE.md -> no "error CS"
+# Bryan, Editor open (the orchestrator stops and asks): Build → Site Scene; open Site.unity; Play; after 20 s the collapse at 5+20 (slumped wall, water, crane stopped), then two foremen face to face, rain after about 45 s, the result on the Plan panel after about 3 minutes; keys work; no console errors. His one-line reply is the result.
+git status --short     # only Assets/LOBOver/** (StreamingAssets ignored)
+```
+
+## Out of scope
+
+No XR, no controllers, no Plan interaction on the panel, no Android settings, no edits to `Assets/LOBGame/**`.
+
+## Amendment 1 (orchestrator, 2026-10-20): the PlayMode fixture of item 7
+
+Astra reported BLOCKED: the recorded transcript has no per-day snapshot with the backfill crew `arguing`, because the slice argument runs from t 4.14 to the hold at t 4.35, between the snapshots. Item 7's expectations were written from the design beats; the recorded values below replace them. Everything else in this work order stands.
+
+`Data/transcripts/slice_play.json` holds `sim.view('facilitator')` per day: `snapshots[d].site` is the Site view at t = d (d = 0, 1, 2, ...), with keys `truck`, `crews` (id, stationFt, status, machinePlate, moodLevel), `trench` (one cell per 100 ft: stationFt, state, water, wall, protection, pipeDamage), `boards` (zone, permitNumber, inspectionNumber), `sky`, `gate`, `activeEvent`, `orders`.
+
+`SiteWorldTests` feed `snapshots[d].site` for d = 1, 4, 5, 9, 16, in that order, and assert:
+
+- d 1: exc at 220 ft `working`, pipe at 0 ft `working`, back at 0 ft `idle`; cell 5+00 `undug`, wall `sound`, water `none`; board zone 1 "TX-0311", board zone 2 shows no permit posted; sky `clear`.
+- d 4: cell 5+00 state `piped`, wall `slumped`, water `standing` (the collapse at 5+20); exc at 869 ft `stopped`, pipe at 520 ft `stopped`, back at 237.5 ft `working`; `activeEvent` is ev_p1; the truck stands at 270 ft dismounted.
+- d 5: back at 272.5 ft `held`, exc at 869 ft `working` with moodLevel 1, pipe at 520 ft `idle`; cell 5+00 still `slumped` with `standing` water.
+- d 9: sky `rain`, `activeEvent` ev_a2; cell 5+00 `backfilled`, wall `sound`, water `none`; board zone 2 "TX-0312"; all three crews `working`.
+- d 16: board zone 1 inspection "8403-5"; sky `clear`; the trailer board holds three crew lines with one point per fed day (five points each).
+
+The argument comes from a replay, not from the file: load the catalog and `slice_texas` from StreamingAssets, `Sim.Create`, then apply the entries of `slice_play.json` (copied to `StreamingAssets/Data/scripts/` by Sync Data) in t order with `Apply(seat, cmd)` for both seats exactly as `Monitor/src/sim/headless.js` does (tick 0.01 until an entry's t is reached, apply, continue), stop at t 4.20 and feed `View("site")`: pipe at 520 ft `arguing`, back at 272.5 ft `arguing`, exc at 869 ft `stopped`, `activeEvent` ev_p1; the two foremen face each other (the WO-08 posture). `Sim/LOBOver.Sim.Tests/Replay.cs` runs the same loop for xunit; copy its logic into the test, do not reference that project.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 65ms:
+# WO-S3 — rejection 1 (orchestrator, 2026-10-20 20:45, through the Unity MCP)
+
+Both failures happen in the Editor (LOB-OVER, 6000.3.8f1, TMP Essential Resources imported into `Assets/TextMesh Pro`). Fix them in `Assets/LOBOver/Editor/SiteAssetBuilder.cs` and `Assets/LOBOver/Art/`; nothing else changes.
+
+## 1. `LOB Over/Build/Site Scene` throws before saving the scene
+
+Command: `execute_menu_item LOB Over/Build/Site Scene` (after `Sync Data`, which works and logs "LOB Over: catalog, scenarios, scripts and voice synced to StreamingAssets.").
+
+Observed in the console: `Unable to load font face for [LegacyRuntime]. Make sure "Include Font Data" is enabled in the Font Import Settings.` followed by `NullReferenceException: Object reference not set to an instance of an object`; `Assets/LOBOver/Scenes/Site.unity` is not created and the line "LOB Over: Site Scene built. Press Play, choose a mode, then Start." never appears. Stack trace (Editor.log) appended below.
+
+Expected: the scene saved and that log line.
+
+File: `Assets/LOBOver/Editor/SiteAssetBuilder.cs`, `Font()`, line 90: `TMP_FontAsset.CreateFontAsset(Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"))` returns null in Unity 6000.3 (the TMP font engine cannot load the built-in font's face), then `font.name = ...` dereferences it.
+
+Fix (addendum "Unity through the MCP", step 2): depend on the TMP Essential Resources instead of a hand-made setup. At the start of `SiteAssetBuilder.Build()`, if `Assets/TextMesh Pro/Resources/TMP Settings.asset` does not exist, call `TMP_PackageResourceImporter.ImportResources(true, false, false)` and `AssetDatabase.Refresh()`. Then use `TMP_Settings.defaultFontAsset` (LiberationSans SDF from the essentials) as the site font for every text and drop the hand-made `TMP_Settings` under `Art/Resources` (lines 75 to 87) and the `SiteFont` creation (lines 88 to 96); if a dedicated font asset is wanted, create it from the essentials' `LiberationSans SDF` source font, never from LegacyRuntime. Delete the generated `Assets/LOBOver/Art/Resources/` folder (it holds that hand-made `TMP Settings.asset`, a second "TMP Settings" in a Resources folder).
+
+## 2. Fourteen TMP shader errors
+
+Command: `read_console types=[error]`.
+
+Observed: 14 lines like `Shader error in 'TextMeshPro/Distance Field': Couldn't open include file 'TMPro_Properties.cginc'. at Assets/TextMesh Pro/Shaders/TMP_SDF.shader(126)` (also Mobile/Distance Field Overlay, 2 Pass, SSD, Masking, both Surface shaders).
+
+Cause: `Assets/LOBOver/Art/Text/TMPro_Properties.cginc` and `TMP_SDF-Mobile.shader` were copied with the package's own `.meta` files (GUIDs `3997e2241185407d80309a82f9148466` and `fe393ace9b354375a9cb14cdbbc28be4`). When the essentials were imported, Unity skipped those two assets because their GUIDs already existed, so `Assets/TextMesh Pro/Shaders` has no `TMPro_Properties.cginc` and no `TMP_SDF-Mobile.shader`, and every TMP shader's include fails. No code references `Art/Text`.
+
+Fix: delete `Assets/LOBOver/Art/Text/` (the six files and `Text.meta`). The orchestrator re-imports the essentials through the Editor afterwards so the two files land in `Assets/TextMesh Pro/Shaders`.
+
+Expected after both fixes: console without `Shader error` and without the exception; `Site Scene` saves `Assets/LOBOver/Scenes/Site.unity` and logs its line; the WO-S3 loop continues (Play screenshots, tests).
+
+## Stack trace of the NullReferenceException (Editor.log)
+
+```
+1260:NullReferenceException: Object reference not set to an instance of an object
+1261-  at LOBOver.Editor.SiteAssetBuilder.Font () [0x00095] in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Editor\SiteAssetBuilder.cs:91 
+1262-  at LOBOver.Editor.SiteAssetBuilder.Build () [0x00051] in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Editor\SiteAssetBuilder.cs:32 
+1263-  at LOBOver.Editor.SiteSceneBuilder.Build (System.Boolean saveScene) [0x00005] in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Editor\SiteSceneBuilder.cs
+1264-  at LOBOver.Editor.SiteSceneBuilder.BuildMenu () [0x00008] in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Editor\SiteSceneBuilder.cs:23 
+1265-UnityEditor.EditorApplication:ExecuteMenuItemInternal_Injected(ManagedSpanWrapper&, Boolean)
+1266-UnityEditor.EditorApplication:ExecuteMenuItemInternal(String, Boolean)
+1267-UnityEditor.EditorApplication:ExecuteMenuItem(String)
+1268-MCPForUnity.Editor.Tools.ExecuteMenuItem:HandleCommand(JObject) (at .\Library\PackageCache\com.coplaydev.unity-mcp@da7b9ae4aeeb\Editor\Tools\ExecuteMenuItem.cs:38)
+1269-MCPForUnity.Editor.Tools.CommandRegistry:ExecuteCommand(String, JObject, TaskCompletionSource`1) (at .\Library\PackageCache\com.coplaydev.unity-mcp@da7b9ae4aeeb\Editor\Tools\CommandRegistry.cs:29
+1270-MCPForUnity.Editor.Services.Transport.TransportCommandDispatcher:ProcessCommand(String, PendingCommand) (at .\Library\PackageCache\com.coplaydev.unity-mcp@da7b9ae4aeeb\Editor\Services\Transport\T
+```
+
+ succeeded in 56ms:
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+ M Assets/LOBOver/Art/Text/LICENSE.md.meta
+ M Assets/LOBOver/Art/Text/SOURCE.md.meta
+ M Assets/LOBOver/Tests/VerifyFixtures.cs.txt.meta
+?? Assets/LOBOver/Art/Resources.meta
+?? Assets/LOBOver/Art/Resources/
+?? Assets/LOBOver/Art/WorldAssets.asset
+?? Assets/LOBOver/Art/WorldAssets.asset.meta
+?? Assets/LOBOver/Prefabs.meta
+?? Assets/LOBOver/Prefabs/
+?? Docs/WORK_ORDERS/logs/WO-S3.20261020-203629.log
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -LiteralPath 'Docs/WORK_ORDERS/WO-S2.md' -Encoding UTF8" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -LiteralPath 'Docs/SHOWCASE.md' -Encoding UTF8" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -LiteralPath 'Docs/ORCHESTRATOR_SHOWCASE.md' -Encoding UTF8" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "rg -n '"'^#{1,4} '"' Docs/WORK_ORDERS/WO-08.md Docs/PROTOCOL.md; rg --files -g AGENTS.md -g '*SiteAssetBuilder*' -g '*CompileOffline*' -g '*TMP_PackageResourceImporter*'; Get-Content -LiteralPath 'Assets/LOBOver/Editor/SiteAssetBuilder.cs' -Encoding UTF8; Get-Content -LiteralPath 'Assets/LOBOver/Tests/CompileOffline.ps1' -Encoding UTF8" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 115ms:
+# SHOWCASE.md — the stakeholder vertical slice
+
+Revised October 20, 2026. This replaces the "VR slice as a client of a local host" track in `Docs/VR_SLICE.md` sections B to E (kept for the study setup later). The showcase has three pieces, each self-contained, none needing a server on a LAN:
+
+1. **A web page on GitHub Pages.** The simulation runs in the browser. One tab is the Plan seat, another the Site seat, a third the facilitator; a phone can join the same run as the Site seat by room code. Plan can run on autopilot, so one presenter can show the whole chain alone. Links to the field manual (PDF) and the design summary sit on the landing page.
+2. **The field manual as a PDF**, generated from the scenario (already done by `Paper/make_kit.py`), published with the page.
+3. **A Quest 3S app you build yourself with Build and Run.** The simulation is embedded (a C# port proven against the JavaScript one), so the headset needs no PC. Two modes on the start panel: **VR Site**, the inspector seat at full scale, and **MR Diorama**, passthrough with the site as a two-metre model on the table in front of you, the LOB chart floating above it, crews moving, the collapse, the argument, the rain, pointable with the controller. The diorama is the stakeholder mode; the VR seat is the study mode.
+
+The three-minute slice (`Data/Scenarios/slice_texas.json`, measured in `Docs/VR_SLICE.md`) is the default scenario in all three; the two Texas stages remain selectable.
+
+## What you do (numbered, in order)
+
+1. PowerShell in `LOB-OVER`, Unity closed: `git add -A; git commit -m "Showcase plan, slice, work orders"`.
+2. `dotnet --version`. If it fails: `winget install Microsoft.DotNet.SDK.8`, reopen PowerShell. (The C# simulation is built and tested with `dotnet`, outside Unity, so the orchestrator can verify it.)
+3. Launch and paste the first goal (below). Walk away; it runs WO-05a, WO-S1, WO-S2 with no Unity. Two to four hours.
+4. When it prints `READY_FOR_PAGES`: one public repository holds everything, `https://github.com/tamu-game-lab/lob-over` (source on `main`, the built site on `gh-pages`). The second goal connects the local repository to it, pushes `main`, publishes `gh-pages` with `Tools\publish_showcase.ps1`, and turns Pages on through `gh` if it is installed and signed in; otherwise it tells you the three clicks (Settings → Pages → Deploy from a branch → `gh-pages` → `/ (root)`). Be at the PC for the first push: Git may open a GitHub sign-in window. The site is `https://tamu-game-lab.github.io/lob-over/`.
+5. Launch the second goal (below). It publishes the site, then copies the LOB-Game art into this project, writes the Unity code and the scene builder, and stops when it needs you. One to two days with your checks in between.
+6. When it says "check in Unity": open LOB-OVER in Unity 6000.3.8f1, menu **LOB Over → Build → Site Scene**, open `Assets/LOBOver/Scenes/Site.unity`, press **Play**. Desktop preview: the chain plays by itself (collapse Day 4, argument Day 5, rain Day 9, finish Day 24); WASD and mouse to look. Report what you saw in one line; the run continues.
+7. When it prints `READY_FOR_HEADSET`: headset plugged in, developer mode on; File → Build Profiles → Android → **Build and Run**. Put on the headset, pick MR Diorama. That is the stakeholder demo. Pick VR Site for the inspector seat.
+8. Each later change to a scenario, the manual or the voice lines: `python Paper\make_kit.py Data\Scenarios\slice_texas.json`, `.venv\Scripts\python Tools\voice\make_voice.py Data\Scenarios\slice_texas.json`, `Tools\publish_showcase.ps1`, and Build and Run again. Nothing else.
+
+## The two goals
+
+First (web and simulation, Unity closed):
+
+```
+/goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md and follow them. Dispatch WO-05a, then WO-S1, then WO-S2 through bash Tools/astra.sh; verify each with its acceptance checks; accept or reject (max two rounds); commit each; keep Docs/WORKLOG.md current. Done when all three are ACCEPTED and READY_FOR_PAGES is printed, or a stop condition is reported to me.
+```
+
+Second (publish, then Unity; Unity may be open or closed, the orchestrator checks):
+
+```
+/goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md and follow them, including the addendum's "Publishing" section: connect origin to https://github.com/tamu-game-lab/lob-over.git, push main, publish gh-pages with Tools/publish_showcase.ps1, enable Pages through gh if available, put the Pages link in README.md, and verify the site answers. Then run Tools/import_lobgame_assets.ps1 and dispatch WO-S3 then WO-S4 through bash Tools/astra.sh; verify what can be verified without Unity, then stop and ask me to check in Unity exactly as the addendum says; accept or reject (max two rounds); commit and push each; keep Docs/WORKLOG.md current. Done when the site is live, both WOs are ACCEPTED and READY_FOR_HEADSET is printed, or a stop condition is reported to me.
+```
+
+## What is in and what is out
+
+In: the three seats' views and verbs as designed; the slice and both Texas stages; the no-verdict rule; the manual PDF; the result card; voice placeholders; LOB-Game's machines, workers, pipe, site materials and sounds; passthrough diorama; the inspector seat.
+
+Out, until after the showcase: the Node host for LAN study sessions (still works, unchanged), the paper kit at the table (the PDF stands in), hand tracking, Stage 3 cities, recorded voice, a shared Plan seat on a second PC (the room code covers a phone Site seat; a second Plan device is Phase 2).
+
+## Work orders
+
+| WO | What exists when it is accepted | Verified by |
+| --- | --- | --- |
+| WO-05a | The simulation fixes already decided (O10, O11, O13) | `npm test`, headless runs |
+| WO-S1 | The web showcase: in-browser host, three seats in tabs, room code for a phone, autoplan, landing page, manual PDF, `Showcase/dist/`, publish script | Playwright against a static server; the Pages URL after you publish |
+| WO-S2 | The C# simulation as a plain .NET library with xunit parity tests against the JavaScript transcripts, consumed by Unity through an asmdef | `dotnet test` |
+| WO-S3 | The site in Unity from LOB-Game's assets, driven by the embedded simulation and an autoplan director; desktop preview with keyboard verbs | compile check; you in Play mode |
+| WO-S4 | Start panel with the three modes; VR Site seat; MR Diorama; Android build settings | compile check; you with Build and Run |
+
+
+## Third goal (when the Unity MCP is connected; replaces the Editor checks you were asked to do by hand)
+
+Preparation, once: in Unity (LOB-OVER open, ECLIPSE closed) open Window → MCP for Unity and confirm the server is running on 127.0.0.1:8081; register it for Claude Code with the command that window shows for "Claude Code" (HTTP transport), or `claude mcp add --transport http unity-lobover http://127.0.0.1:8081/mcp`; `/mcp` inside Claude Code must list it as connected. Import TMP Essentials if Unity asks (Window → TextMeshPro → Import TMP Essential Resources). Start Claude Code with `$env:CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1; claude --model fable --effort max`.
+
+```
+/goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md, section "Unity through the MCP", and follow it. Commit the pending Docs changes and WO-S5 first. Using the unity-lobover MCP, verify and fix WO-S3 (console, Sync Data, Site Scene, Play with screenshots at 25 s and 60 s, tests), then WO-S4 (start panel, Android settings check), dispatching Astra through bash Tools/astra.sh for any fix larger than one line; accept, commit and push each. Then dispatch WO-S5, verify it, and with the headset connected execute LOB Over/Build/Build and Run Quest through the MCP. Stop only when the app is running on the headset and ask me for the VR Site and MR Diorama check in four lines. Done when READY_FOR_HEADSET is printed or a stop condition is reported to me.
+```
+
+ succeeded in 141ms:
+# WO-S2 — The simulation in C#: a plain .NET library with parity tests against the JavaScript transcripts
+
+## Goal
+
+`Assets/LOBOver/Sim/` holds a C# port of `Monitor/src/sim/` that Unity compiles through an asmdef with no engine references, and that `dotnet test Sim/LOBOver.Sim.Tests` proves equal to the JavaScript simulation on the goldens and on six recorded transcripts. The headset runs this; the browser runs the JavaScript; both are the same game.
+
+## Read
+
+- `AGENTS.md`, `Docs/ORCHESTRATOR_SHOWCASE.md`
+- `Docs/PROTOCOL.md`, `Docs/SCENARIO_SCHEMA.md`, `Docs/WORK_ORDERS/WO-02.md` (the rules; sections 2 and 3) and `WO-05a.md` (the fixes already in the JavaScript)
+- Every file in `Monitor/src/sim/` and `Monitor/src/common/rng.js` (the port is line-for-line where possible; same module split, same names)
+- `Data/transcripts/*.json` (generated by the orchestrator; the snapshot shape is `sim.view('facilitator')` per day plus every message plus `result`)
+
+## You may change
+
+- `Assets/LOBOver/Sim/**` (source and `LOBOver.Sim.asmdef` with `"noEngineReferences": true`, references `Newtonsoft.Json`), `Sim/**` (`LOBOver.Sim.csproj`, `LOBOver.Sim.Tests/`), `Packages/manifest.json` only to add `"com.unity.nuget.newtonsoft-json": "3.2.1"` if missing, `.gitignore` (`Sim/**/bin/`, `Sim/**/obj/`)
+
+## Build
+
+1. `Sim/LOBOver.Sim.csproj`: `netstandard2.1`, `LangVersion 9`, `Nullable disable`, PackageReference `Newtonsoft.Json 13.0.3`, `<Compile Include="..\Assets\LOBOver\Sim\**\*.cs" LinkBase="Sim" />`, `EnableDefaultCompileItems false`. Unity compiles the same files through the asmdef; nothing in them may reference UnityEngine, System.Text.Json, or C# 10 features.
+2. Namespace `LOBOver.Sim`. Public surface: `Scenario.Load(string json, Catalog catalog)`, `Catalog.Load(string json)`, `Sim.Create(Scenario, Catalog, bool pure = false)`, `Tick(double dt)`, `ApplyResult Apply(string seat, JObject cmd)` (commands are the wire JSON, as in the host), `JObject View(string seat)`, `List<JObject> Drain()`, `JObject Serialize()`, `double T`, `string Speed`, `bool Done`, `JObject Result`. Typed read models for Unity on top: `SiteView.From(JObject)` and `PlanView.From(JObject)` with the field names of `views.js`.
+3. `Autoplan` (script application, same semantics as `Monitor/src/host/autoplan.js`) and `Pacer` (elapsed-time pacing with fixed 0.01 steps and the catch-up cap, same as `pacing.js`), both engine-free, so WO-S3's director is thin.
+4. RNG: the same algorithm and seeding as `rng.js`, bit-exact (test it against 100 values from the JS, recorded in `Sim/LOBOver.Sim.Tests/fixtures/rng_seed_20261020.json`; generate that file with a 5-line Node script and keep it).
+5. Numbers: double everywhere, the same operation order as the JavaScript in the crew step, money accrual and conflict check (read the JS literally; do not "simplify" arithmetic).
+6. Tests (`xunit`, `net8.0`), run from the repo root:
+   - `GoldensTests`: the five cases of `Data/goldens/no_events.json` in pure mode, within the file's tolerances.
+   - `ParityTests`, one per transcript in `Data/transcripts/`: replay the script (`Monitor/test/scripts/<name>.json`) through the C# sim with the same dt and command timing as `headless.js`; per day compare the facilitator view's crews (station ±1 ft, status equal, mood equal), trench cells (state equal), boards, truck, money (`spentUsd` ±$100), speed; compare events (ids, `t` ±0.02, card titles), nacks (ids and reasons equal), result (`finishDay` ±0.05, `idleCrewDays` ±0.1, `peakOpenTrenchFt` ±5, `finesUsd`, `deviationsCaught/Missed`, `lost`).
+   - `DeterminismTests`: two runs of `slice_play` serialize identically.
+   - `ViewFilterTests`: the Plan view has no live positions, the Site view no money, no forbidden words in any message.
+7. `Sim/README.md`: 12 lines: build, test, how Unity picks the files up, how to regenerate transcripts after a JS change.
+
+## Acceptance checks
+
+```
+dotnet build Sim/LOBOver.Sim.csproj -c Release                       # 0 errors
+dotnet test Sim/LOBOver.Sim.Tests -c Release                         # all pass: goldens 5, parity 6 transcripts, determinism, view filters
+grep -rn "UnityEngine\|System.Text.Json" Assets/LOBOver/Sim/ ; echo grep-exit=$?   # 1
+test -f Assets/LOBOver/Sim/LOBOver.Sim.asmdef && grep -c noEngineReferences Assets/LOBOver/Sim/LOBOver.Sim.asmdef   # 1
+git status --short     # only Assets/LOBOver/Sim, Sim/, Packages/manifest.json (+lock), .gitignore
+```
+
+## Out of scope
+
+No Unity code, no networking, no scene. If a JavaScript behaviour looks like a bug, port it faithfully and list it in NOTES; the orchestrator decides whether both sides change.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 112ms:
+# ORCHESTRATOR_SHOWCASE.md — addendum for the showcase track (WO-05a, WO-S1 to WO-S4)
+
+`Docs/ORCHESTRATOR.md` applies unchanged: dispatch with `bash Tools/astra.sh`, verify, accept or reject in at most two rounds, commit, worklog, stop conditions, token discipline. This addendum says how to verify each kind of work in this track. `Docs/ORCHESTRATOR_PHASE1.md` (Unity MCP, batch builds, adb) is retired; do not follow it.
+
+## Step 0 additions
+
+- `dotnet --version` must print 8.x or newer; if not, stop and tell Bryan (step 2 of `Docs/SHOWCASE.md`).
+- After WO-05a is accepted, generate the JavaScript transcripts the C# port is measured against: for each of `slice_play`, `slice_pull_play`, `slice_autoplan`, `stage1_pm_play`, `stage2_pull_play`, `stage1_noaction` run `node Monitor/src/sim/headless.js Data/Scenarios/<stage>.json --script Monitor/test/scripts/<name>.json --out Data/transcripts/<name>.json` (no `--script` for `stage1_noaction`; the stage is the one the script name starts with). Commit `Data/transcripts/`. Regenerate and recommit whenever the JavaScript simulation changes.
+- For the second goal only: run `Tools/import_lobgame_assets.ps1` (PowerShell) yourself before dispatching WO-S3; it copies about 1.7 GB from `..\LOB-Game\Assets` into `Assets\LOBGame\` with the `.meta` files, read-only on the source. Astra never touches LOB-Game. `Assets/LOBGame/` is gitignored; the script is the source of truth.
+
+## Verifying web work (WO-S1)
+
+Playwright against the static server the WO adds (`npm --prefix Monitor run showcase:serve`), never against `file://` (ES modules do not load from files). Open the landing page, start a showcase with the slice and autoplan on, open the Plan and Site tabs in the same browser context, press Start on the host tab, and check the WO's list. Screenshots at 1280×800 and at 390×844 (phone) into `Monitor/out/showcase/`; look at them. After Bryan publishes (his step 4), `curl -s -o /dev/null -w "%{http_code}" https://tamu-game-lab.github.io/lob-over/` is the last check of the first goal; if it is not 200 yet, say so and still print `READY_FOR_PAGES` once WO-S2 is accepted, because publishing is his step.
+
+## Verifying the C# simulation (WO-S2)
+
+`dotnet test Sim/LOBOver.Sim.Tests` from the repo root is the acceptance; read its summary, not its full output. A parity failure is a reject whose note quotes the first failing assertion (which transcript, which day, which field, expected versus actual). Never loosen a tolerance; if a rule is ambiguous in the JavaScript, the JavaScript is the specification.
+
+## Unity through the MCP (preferred when the Unity MCP is connected)
+
+When Claude Code has the LOB-OVER Editor's MCP server (CoPlay "MCP for Unity", HTTP on 127.0.0.1:8081, registered as `unity-lobover`), you drive the Editor yourself and stop for Bryan only where a headset is on someone's head. Confirm the connection at step 0 with one console read; if the tools are not there, fall back to the section above. Exactly one Editor is open, on LOB-OVER; if the console read shows another project's path, stop and say so.
+
+Loop for WO-S3 (repeat after every fix until it passes):
+
+1. Read the console with errors only. Any `error CS` line: fix a one-liner yourself, otherwise dispatch Astra with the lines quoted (a rejection round).
+2. If `Assets/TextMesh Pro` is missing, import the TMP essentials (menu `Window/TextMeshPro/Import TMP Essential Resources`, or have Astra call `TMP_PackageResourceImporter.ImportResources(true, false, false)` at the top of the scene builder so it never depends on a click again).
+3. Execute `LOB Over/Build/Sync Data`, then `LOB Over/Build/Site Scene`. Read the console. If the item threw or `Assets/LOBOver/Scenes/Site.unity` does not exist afterwards, that console text is the rejection note.
+4. Open `Site.unity`, enter Play, wait 25 s, read the console, take `LOB Over/Debug/Screenshot`, wait to 60 s, screenshot again, exit Play. Look at both PNGs: the first must show the slumped wall and standing water at 5+20 with the crane stopped and two foremen face to face; the second the rain. No exceptions in the console during Play. Desktop mode is the default in the Editor when no headset is present; if the start panel blocks, select Desktop and Start through the MCP's UI or send the start command the panel exposes.
+5. Run the EditMode and PlayMode suites under `Assets/LOBOver/Tests` through the MCP test runner. All pass, or reject with the first failing test's message.
+6. Accept, commit, push.
+
+Loop for WO-S4: steps 1, 3 (the builder now adds the rig, truck, start panel and diorama root), 4 with the start panel visible in Play (screenshot it), 5, then `LOB Over/Build/Check Android Settings` (every reported failure that a setting fixes, Astra fixes in the checker's own suggestions or you set through the MCP; if a module is missing from the Hub, stop and tell Bryan). Accept the machine-checkable part, commit, push.
+
+Then WO-S5 (the Build and Run menu item): dispatch, verify the item exists, and with the headset plugged in execute `LOB Over/Build/Build and Run Quest` through the MCP. When the app starts on the headset, stop with a four-line message: put the headset on, try VR Site (ride, dismount, look, stop work, listen, confirm) and MR Diorama (room, table model, point at a crew, chart), reply `OK` or one line of what was wrong. His reply closes WO-S4; print `READY_FOR_HEADSET`.
+
+Rules that stay: never edit scene or prefab YAML; every scene change goes through the builder; Astra never runs Unity; one Editor; commit and push after each acceptance.
+
+## Verifying Unity work (WO-S3, WO-S4) without the Unity MCP
+
+1. Compile check, only when the Editor is closed (no `Temp/UnityLockfile` in the project): `"C:\Program Files\Unity\Hub\Editor\6000.3.8f1\Editor\Unity.exe" -batchmode -nographics -quit -projectPath . -logFile Monitor/out/unity-compile.log`, wait for it to exit (up to 15 minutes on the first import of the copied assets), then `grep -c "error CS" Monitor/out/unity-compile.log` must be 0. Any `error CS` line is a reject with that line quoted. If the lockfile exists, skip this and go to 2.
+2. Then stop for Bryan with a message of at most six lines: what to open, which menu item to run, what to press, what he should see in the first 60 seconds, and what to reply. His one-line reply is the check's result; record it in the worklog. If he reports something wrong, that is the rejection note's content, in his words plus the WO section it belongs to.
+3. Never open, edit or review scene or prefab YAML; Astra builds scenes from editor scripts, and the only acceptable scene is one the menu item regenerates.
+
+## Publishing (second goal, before any Unity work)
+
+One public repository holds everything: `https://github.com/tamu-game-lab/lob-over` (Bryan created it with a blank README). Source lives on `main`, the built site on `gh-pages`, Pages serves `https://tamu-game-lab.github.io/lob-over/`. Steps, in order, all run by you (ops, not feature code; `.claude/settings.json` allows `git push`, `powershell`, `gh`, `dotnet`):
+
+1. `git remote get-url origin || git remote add origin https://github.com/tamu-game-lab/lob-over.git`, then `git fetch origin`.
+2. If `git log --oneline origin/main` shows exactly one commit and `git show --stat origin/main` touches only `README.md`, the remote holds nothing of value: `git push --force -u origin main`. Otherwise `git merge --allow-unrelated-histories -X ours origin/main -m "Merge GitHub initial commit"` and `git push -u origin main`. Bryan may have to complete a GitHub sign-in window the first time; wait for it.
+3. Local path fix: the showcase test server and e2e assume the old subpath. In `Monitor/src/showcase/serve.js` change `/lob-over-showcase` to `/lob-over`; in `Monitor/e2e/showcase.e2e.js` change the base to `http://localhost:7340/lob-over/`; grep `Monitor/` for any other `lob-over-showcase`; run `npm --prefix Monitor run e2e`; commit "Showcase: one repository, /lob-over path".
+4. `Sim/NuGet.Config` now points at nuget.org again (it was cleared for Astra's offline sandbox): run `dotnet restore Sim/LOBOver.Sim.Tests` and `dotnet test Sim/LOBOver.Sim.Tests -c Release` once with network; commit if the lock files changed.
+5. Publish: `powershell -ExecutionPolicy Bypass -File Tools/publish_showcase.ps1` (it builds `Showcase/dist`, pushes it to `gh-pages` through a worktree in `Showcase/.publish`, and prints the URL).
+6. Pages: `gh auth status`; if signed in, `gh api --method POST -H "Accept: application/vnd.github+json" /repos/tamu-game-lab/lob-over/pages -f "source[branch]=gh-pages" -f "source[path]=/"`; a 409 means Pages already exists, then `gh api --method PUT ... /repos/tamu-game-lab/lob-over/pages -f "source[branch]=gh-pages" -f "source[path]=/"`. If `gh` is missing or not signed in, print for Bryan: "GitHub → lob-over → Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: gh-pages, / (root) → Save" and continue; re-check at the end of the run.
+7. `README.md`: add one line under the title, "Play it in the browser: https://tamu-game-lab.github.io/lob-over/ (the field manual PDF is linked on the landing page)"; commit and push.
+8. Verify: poll `curl -s -o /dev/null -w "%{http_code}" https://tamu-game-lab.github.io/lob-over/` every 30 s for up to 10 minutes after Pages is enabled; 200 is the check. Then open the live landing page, host, Plan and Site with Playwright once (same checks as WO-S1, against the live URL) and keep the screenshots in `Monitor/out/showcase-live/`. Record the URL and the gh-pages commit in the worklog.
+
+After every accepted Unity work order in this goal, `git push` as well, so the public repository stays current.
+
+## Finish lines
+
+- First goal: `READY_FOR_PAGES` when WO-05a, WO-S1 and WO-S2 are ACCEPTED.
+- Second goal: `READY_FOR_HEADSET` when the site answers 200 at its Pages URL, WO-S3 and WO-S4 are ACCEPTED with Bryan's Play-mode check recorded, and `main` is pushed. Build and Run is his step.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 887ms:
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:1
++ rg -n '^#{1,4} ' Docs/WORK_ORDERS/WO-08.md Docs/PROTOCOL.md; rg --fil ...
++ ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:62
++ ...  -n '^#{1,4} ' Docs/WORK_ORDERS/WO-08.md Docs/PROTOCOL.md; rg --files ...
++                                                                ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+using System;
+using System.IO;
+using System.Linq;
+using LOBOver.World;
+using Newtonsoft.Json.Linq;
+using TMPro;
+using UnityEditor;
+using UnityEditor.Animations;
+using UnityEngine;
+using UnityEngine.Rendering;
+using Object = UnityEngine.Object;
+
+namespace LOBOver.Editor
+{
+    public static class SiteAssetBuilder
+    {
+        public const string Imported = "Assets/LOBGame/";
+        public const string Art = "Assets/LOBOver/Art/";
+        public const string Prefabs = "Assets/LOBOver/Prefabs/";
+        public const string Equipment = Imported + "_Project/Art/Prefabs/Equipment/";
+        public const string Worker = Imported + "_Project/Art/Prefabs/Workers/ProjectWorker.prefab";
+        public const string Pipe = Imported + "_Project/Art/ProjectSite/ProjectPipeSegment.prefab";
+        public static readonly string[] MachineNames = { "Excavator_Small", "Excavator_Standard", "Excavator_Large", "Crane_Standard", "Crane_Heavy", "Backfill_Small", "Backfill_Standard", "Backfill_Large" };
+        public static T Required<T>(string path) where T : Object => AssetDatabase.LoadAssetAtPath<T>(path) ?? throw new FileNotFoundException("Required imported asset: " + path);
+        public static Material Material(string name) => Required<Material>(Imported + "_Project/Art/ProjectSite/Materials/" + name + ".mat");
+        private static AudioClip Audio(string name, string extension = ".ogg") => Required<AudioClip>(Imported + "Audio/Construction/" + name + extension);
+        public static WorldAssets Build()
+        {
+            Directory.CreateDirectory(Art); Directory.CreateDirectory(Prefabs); Directory.CreateDirectory(Prefabs + "Imported"); AssetDatabase.Refresh();
+            var assets = AssetDatabase.LoadAssetAtPath<WorldAssets>(Art + "WorldAssets.asset");
+            if (assets == null) { assets = ScriptableObject.CreateInstance<WorldAssets>(); AssetDatabase.CreateAsset(assets, Art + "WorldAssets.asset"); }
+            assets.font = Font(); assets.soil = Material("Soil"); assets.timber = Material("Timber"); assets.steel = Material("StorageSteel"); assets.orange = Material("SafetyOrange");
+            assets.ink = OwnMaterial("Ink", Color.white, false, "Universal Render Pipeline/Particles/Unlit");
+            assets.cloud = OwnMaterial("Cloud", new Color(0.26f, 0.28f, 0.31f));
+            assets.rain = OwnMaterial("Rain", new Color(0.65f, 0.72f, 0.8f, 0.5f), true);
+            assets.wind = Audio("bed_open_wind"); assets.rainfall = Audio("bed_rain_open"); assets.excavation = Audio("exc_work_loop");
+            assets.dozer = Audio("dozer_engine_loop"); assets.idle = Audio("machine_idle_loop"); assets.conflict = Audio("conflict_murmur_loop");
+            assets.collapse = Audio("collapse_rumble_01", ".wav"); assets.pipeSetdown = Audio("pipe_setdown_01", ".wav");
+            assets.worker = CopyModel(Worker, "ProjectWorker", Vector3.zero, 0, true);
+            assets.particles = CopyModel(Imported + "_Project/Art/Prefabs/Effects/WorkParticles.prefab", "WorkParticles", Vector3.zero);
+            assets.spoil = CopyModel(Imported + "3D_Models/a-pile-of-sand/source/hromada_pisek_01_30k_uw/hromada_pisek_01_30k_uw.FBX", "Spoil", new Vector3(9, 1.5f, 3));
+            assets.barrier = CopyModel(Imported + "3D_Models/water-barriers/source/WaterBarriers_RED-WHITE.fbx", "WaterBarrier", new Vector3(2, 1, 0.5f));
+            assets.cone = CopyModel(Imported + "3D_Models/trafic-cone/source/vlc.prefab", "Cone", new Vector3(0.45f, 0.7f, 0.45f));
+            var catalog = JObject.Parse(File.ReadAllText("Data/catalog.json"));
+            assets.machines = MachineNames.Select(name =>
+            {
+                var key = name.ToLowerInvariant(); var data = catalog["machines"][key];
+                return new MachineAsset { crew = (string)data["crew"], plate = (string)data["sizeClass"], label = (string)data["label"],
+                    prefab = CopyModel(Equipment + name + ".prefab", name, Vector3.zero, 90, false, true) };
+            }).ToArray();
+            assets.cellPrefab = BuildCell(assets); assets.crewPrefab = BuildCrew();
+            EditorUtility.SetDirty(assets); AssetDatabase.SaveAssets(); return assets;
+        }
+        public static Material OwnMaterial(string name, Color colour, bool transparent = false, string shaderName = "Universal Render Pipeline/Unlit")
+        {
+            var path = Art + name + ".mat"; var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                var shader = Shader.Find(shaderName) ?? throw new InvalidOperationException("Missing shader " + shaderName);
+                material = new Material(shader); AssetDatabase.CreateAsset(material, path);
+            }
+            material.SetColor("_BaseColor", colour);
+            if (transparent)
+            {
+                material.SetFloat("_Surface", 1); material.SetFloat("_Blend", 0); material.SetFloat("_ZWrite", 0);
+                material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha); material.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+                material.SetOverrideTag("RenderType", "Transparent"); material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT"); material.renderQueue = (int)RenderQueue.Transparent;
+            }
+            EditorUtility.SetDirty(material); return material;
+        }
+        private static TMP_FontAsset Font()
+        {
+            // TMP is installed but its optional Resources package need not have been imported.
+            // Keep settings and the generated font inside the work order's Art scope.
+            var settings = Resources.Load<TMP_Settings>("TMP Settings");
+            if (settings == null)
+            {
+                Directory.CreateDirectory(Art + "Resources"); AssetDatabase.Refresh();
+                settings = ScriptableObject.CreateInstance<TMP_Settings>();
+                AssetDatabase.CreateAsset(settings, Art + "Resources/TMP Settings.asset");
+                // Installed com.unity.ugui 2.0 TMP_Settings schema, avoiding the optional importer dialog.
+                var serialized = new SerializedObject(settings);
+                serialized.FindProperty("assetVersion").stringValue = "2";
+                serialized.FindProperty("m_ClearDynamicDataOnBuild").boolValue = false;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
+            TMP_Settings.LoadDefaultSettings();
+            var path = Art + "SiteFont.asset"; var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
+            if (font != null) return font;
+            font = TMP_FontAsset.CreateFontAsset(Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
+            font.name = "SiteFont"; font.TryAddCharacters(string.Concat(Enumerable.Range(32, 95).Select(value => (char)value)) + "—–·×");
+            AssetDatabase.CreateAsset(font, path);
+            foreach (var atlas in font.atlasTextures) AssetDatabase.AddObjectToAsset(atlas, font);
+            AssetDatabase.AddObjectToAsset(font.material, font); EditorUtility.SetDirty(font);
+            if (AssetDatabase.GetAssetPath(settings).StartsWith(Art, StringComparison.Ordinal))
+            { TMP_Settings.defaultFontAsset = font; EditorUtility.SetDirty(settings); }
+            return font;
+        }
+        public static void StripMissing(GameObject instance)
+        {
+            foreach (var child in instance.GetComponentsInChildren<Transform>(true)) GameObjectUtility.RemoveMonoBehavioursWithMissingScript(child.gameObject);
+        }
+        private static Bounds BoundsOf(GameObject obj)
+        {
+            var renderers = obj.GetComponentsInChildren<Renderer>().Where(renderer => !(renderer is ParticleSystemRenderer)).ToArray();
+            if (renderers.Length == 0) return new Bounds(obj.transform.position, Vector3.one);
+            var bounds = renderers[0].bounds; foreach (var renderer in renderers.Skip(1)) bounds.Encapsulate(renderer.bounds); return bounds;
+        }
+        private static GameObject CopyModel(string path, string name, Vector3 fit, float yaw = 0, bool worker = false, bool workingEdge = false)
+        {
+            var root = new GameObject(name);
+            try
+            {
+                var model = (GameObject)PrefabUtility.InstantiatePrefab(Required<GameObject>(path));
+                model.transform.SetParent(root.transform, false);
+                if (PrefabUtility.IsPartOfPrefabInstance(model)) PrefabUtility.UnpackPrefabInstance(model, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+                StripMissing(model); model.transform.SetParent(root.transform, false); model.transform.localRotation = Quaternion.Euler(0, yaw, 0);
+                if (worker)
+                {
+                    var animator = model.GetComponentInChildren<Animator>();
+                    if (animator != null) { animator.runtimeAnimatorController = Required<RuntimeAnimatorController>(Imported + "_Project/Art/ProjectSite/Animation/ProjectWorker.controller"); animator.applyRootMotion = false; }
+                }
+                else if (workingEdge)
+                {
+                    var controllerName = name.StartsWith("Excavator", StringComparison.Ordinal) ? "Excavator" : name.StartsWith("Crane", StringComparison.Ordinal) ? "Crane" : null;
+                    foreach (var animator in model.GetComponentsInChildren<Animator>())
+                    {
+                        animator.applyRootMotion = false;
+                        if (animator.runtimeAnimatorController == null && controllerName != null)
+                            animator.runtimeAnimatorController = Required<RuntimeAnimatorController>(Imported + "_Project/Animation/" + controllerName + ".controller");
+                    }
+                    if (!model.GetComponentsInChildren<Animator>().Any(animator => animator.runtimeAnimatorController != null))
+                    {
+                        // Static imported machines still need a working/still animation. The small
+                        // chassis vibration is presentation only; station movement stays on CrewRig.
+                        var motion = WorldDrawing.Group("WorkMotion", root.transform);
+                        model.transform.SetParent(motion.transform, false);
+                        motion.AddComponent<Animator>().runtimeAnimatorController = WorkController();
+                    }
+                }
+                var bounds = BoundsOf(model);
+                if (fit != Vector3.zero)
+                {
+                    model.transform.localScale = Vector3.Scale(model.transform.localScale, new Vector3(fit.x / bounds.size.x, fit.y / bounds.size.y, fit.z / bounds.size.z));
+                    bounds = BoundsOf(model);
+                }
+                model.transform.position -= new Vector3(workingEdge ? bounds.max.x : bounds.center.x, bounds.min.y, bounds.center.z);
+                if (model.GetComponentsInChildren<Collider>().Length == 0 && name != "WorkParticles")
+                {
+                    bounds = BoundsOf(model); var collider = root.AddComponent<BoxCollider>(); collider.center = bounds.center; collider.size = bounds.size;
+                }
+                return PrefabUtility.SaveAsPrefabAsset(root, Prefabs + "Imported/" + name + ".prefab");
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+        private static CrewRig BuildCrew()
+        {
+            var root = new GameObject("CrewRig"); root.AddComponent<CrewRig>();
+            try { return PrefabUtility.SaveAsPrefabAsset(root, Prefabs + "CrewRig.prefab").GetComponent<CrewRig>(); }
+            finally { Object.DestroyImmediate(root); }
+        }
+        private static RuntimeAnimatorController WorkController()
+        {
+            var path = Art + "MachineWork.controller"; var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(path);
+            if (controller != null) return controller;
+            const float cycleSeconds = 1, vibrationMetres = 0.015f; // Static-machine presentation tuning.
+            var clip = new AnimationClip { name = "Cycle" };
+            clip.SetCurve("", typeof(Transform), "m_LocalPosition.y", new AnimationCurve(new Keyframe(0, 0), new Keyframe(cycleSeconds / 2, vibrationMetres), new Keyframe(cycleSeconds, 0)));
+            var settings = AnimationUtility.GetAnimationClipSettings(clip); settings.loopTime = true; AnimationUtility.SetAnimationClipSettings(clip, settings);
+            AssetDatabase.CreateAsset(clip, Art + "MachineWork.anim");
+            controller = AnimatorController.CreateAnimatorControllerAtPath(path);
+            var state = controller.AddMotion(clip); controller.layers[0].stateMachine.defaultState = state;
+            EditorUtility.SetDirty(controller); return controller;
+        }
+        private static StationCell BuildCell(WorldAssets assets)
+        {
+            var root = new GameObject("StationCell"); var cell = root.AddComponent<StationCell>();
+            const float length = WorldUnits.CellLength, depth = WorldUnits.TrenchDepth, width = WorldUnits.TrenchWidth;
+            try
+            {
+                cell.surfaceMaterial = Material("Repair_Surface"); cell.openMaterial = Material("Repair_OpenTrench"); cell.pipeMaterial = Material("Repair_PipeBed"); cell.backfillMaterial = Material("Repair_Backfill");
+                cell.surface = WorldDrawing.Box("Surface", root.transform, new Vector3(length / 2, -0.05f, 0), new Vector3(length, 0.1f, width), cell.surfaceMaterial);
+                cell.floor = WorldDrawing.Box("Floor", root.transform, new Vector3(length / 2, -depth - 0.05f, 0), new Vector3(length, 0.1f, width), cell.openMaterial);
+                InspectTarget.Attach(cell.floor, "water");
+                cell.walls = WorldDrawing.Group("Walls", root.transform);
+                cell.nearWall = WorldDrawing.Box("NearWall", cell.walls.transform, new Vector3(length / 2, -depth / 2, width / 2), new Vector3(length, depth, 0.08f), assets.soil).transform;
+                cell.farWall = WorldDrawing.Box("FarWall", cell.walls.transform, new Vector3(length / 2, -depth / 2, -width / 2), new Vector3(length, depth, 0.08f), assets.soil).transform;
+                InspectTarget.Attach(cell.walls, "wall");
+                cell.pipes = WorldDrawing.Group("Pipes", root.transform);
+                var pipePrefab = CopyModel(Pipe, "ProjectPipeSegment", Vector3.zero);
+                for (var i = 0; i < 3; i++)
+                {
+                    var segment = (GameObject)PrefabUtility.InstantiatePrefab(pipePrefab); segment.transform.SetParent(cell.pipes.transform, false);
+                    var bounds = BoundsOf(segment); var size = bounds.size;
+                    if (size.z > size.x) segment.transform.localRotation = Quaternion.Euler(0, 90, 0);
+                    else if (size.y > size.x) segment.transform.localRotation = Quaternion.Euler(0, 0, 90);
+                    bounds = BoundsOf(segment);
+                    // Three equal segments span each 100 ft cell, retaining the prefab's pipe diameter.
+                    var stretch = WorldDrawing.Group("PipeLength", cell.pipes.transform); segment.transform.SetParent(stretch.transform, false);
+                    stretch.transform.localScale = new Vector3((length / 3) / bounds.size.x, 1, 1);
+                    bounds = BoundsOf(segment);
+                    stretch.transform.position += new Vector3(length * (i + 0.5f) / 3 - bounds.center.x, -depth - bounds.min.y, -bounds.center.z);
+                    InspectTarget.Attach(stretch, "pipe");
+                }
+                cell.wetBand = WorldDrawing.Box("SeepBand", root.transform, new Vector3(length / 2, -depth + 0.2f, -width / 2 + 0.05f), new Vector3(length, 0.4f, 0.01f), OwnMaterial("WetSoil", new Color(0.13f, 0.12f, 0.1f)));
+                InspectTarget.Attach(cell.wetBand, "water");
+                cell.water = WorldDrawing.Box("StandingWater", root.transform, new Vector3(length / 2, -depth + 0.2f, 0), new Vector3(length, 0.008f, width), OwnMaterial("Water", new Color(0.25f, 0.32f, 0.34f, 0.65f), true));
+                InspectTarget.Attach(cell.water, "water");
+                cell.slump = WorldDrawing.Group("SlumpedWall", root.transform); cell.slump.AddComponent<MeshFilter>().sharedMesh = SlumpMesh();
+                cell.slump.AddComponent<MeshRenderer>().sharedMaterial = assets.soil; cell.slump.AddComponent<MeshCollider>().sharedMesh = cell.slump.GetComponent<MeshFilter>().sharedMesh;
+                InspectTarget.Attach(cell.slump, "wall");
+                cell.box = Protection(root.transform, "TrenchBox", assets.steel, true); cell.shoring = Protection(root.transform, "Shoring", assets.timber, false);
+                var post = WorldDrawing.Box("Stake", root.transform, new Vector3(0, 0.55f, 1.2f), new Vector3(0.08f, 1.1f, 0.08f), assets.timber);
+                cell.stake = post.transform;
+                cell.stationText = WorldDrawing.Text("Station", root.transform, new Vector3(0, 1.3f, 1.25f), new Vector2(1.4f, 0.4f), 0.3f, assets.font);
+                cell.stationText.transform.localRotation = Quaternion.Euler(0, 180, 0);
+                foreach (var obj in new[] { cell.floor, cell.walls, cell.pipes, cell.wetBand, cell.water, cell.slump, cell.box, cell.shoring }) obj.SetActive(false);
+                return PrefabUtility.SaveAsPrefabAsset(root, Prefabs + "StationCell.prefab").GetComponent<StationCell>();
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+        private static GameObject Protection(Transform parent, string name, Material material, bool steel)
+        {
+            var root = WorldDrawing.Group(name, parent);
+            for (var side = -1; side <= 1; side += 2)
+                WorldDrawing.Box("Panel", root.transform, new Vector3(WorldUnits.CellLength / 2, -0.9f, side * 0.5f), new Vector3(WorldUnits.CellLength, 1.7f, steel ? 0.06f : 0.1f), material);
+            for (var i = 0; i < 3; i++) WorldDrawing.Box("Strut", root.transform, new Vector3((i + 0.5f) * WorldUnits.CellLength / 3, -0.3f, 0), new Vector3(0.1f, 0.1f, 1), material);
+            InspectTarget.Attach(root, "protection"); return root;
+        }
+        private static Mesh SlumpMesh()
+        {
+            var path = Art + "Slump.asset"; var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if (mesh != null) return mesh;
+            var end = WorldUnits.CellLength;
+            mesh = new Mesh { name = "Slump" };
+            mesh.vertices = new[] { new Vector3(0, -1.8f, -0.6f), new Vector3(0, -0.25f, -0.6f), new Vector3(0, -1.8f, 0.25f),
+                new Vector3(end, -1.8f, -0.6f), new Vector3(end, -0.25f, -0.6f), new Vector3(end, -1.8f, 0.25f) };
+            mesh.triangles = new[] { 0, 2, 1, 3, 4, 5, 0, 1, 4, 0, 4, 3, 1, 2, 5, 1, 5, 4, 2, 0, 3, 2, 3, 5 };
+            mesh.RecalculateNormals(); mesh.RecalculateBounds(); AssetDatabase.CreateAsset(mesh, path); return mesh;
+        }
+    }
+}
+param([string]$UnityData = 'C:/Program Files/Unity/Hub/Editor/6000.3.8f1/Editor/Data')
+$ErrorActionPreference = 'Stop'
+$projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '../../..')).Path
+Set-Location -LiteralPath $projectRoot
+$scratch = Join-Path $PSScriptRoot '.offline'
+New-Item -ItemType Directory -Path $scratch -Force | Out-Null
+$generated = [System.Collections.Generic.List[string]]::new()
+$script:compiledCount = 0
+function Compile-Assembly([string]$name, [string]$folder, [string[]]$references, [string]$defines = 'UNITY_EDITOR;UNITY_6000_3_OR_NEWER;UNITY_INCLUDE_TESTS') {
+    # Match Unity's declared assembly graph; a broad compiler reference set can hide missing asmdef references.
+    $definition = Get-ChildItem -LiteralPath $folder -Filter '*.asmdef' | Select-Object -First 1
+    if ($definition) {
+        $asm = Get-Content -LiteralPath $definition.FullName -Raw | ConvertFrom-Json
+        $references = @($baseReferences)
+        if (!$asm.noEngineReferences) { $references += $engineReferences }
+        foreach ($dependency in $asm.references) {
+            $compiled = Join-Path $scratch ($dependency + '.dll')
+            $references += $(if (Test-Path -LiteralPath $compiled) { $compiled } else { 'Library/ScriptAssemblies/' + $dependency + '.dll' })
+        }
+        if ($asm.optionalUnityReferences -contains 'TestAssemblies') {
+            $references += 'Library/ScriptAssemblies/UnityEngine.TestRunner.dll', 'Library/ScriptAssemblies/UnityEditor.TestRunner.dll'
+        }
+        if ($asm.precompiledReferences -contains 'nunit.framework.dll') {
+            $references += (Get-ChildItem 'Library/PackageCache/com.unity.ext.nunit*/net40/unity-custom/nunit.framework.dll').FullName
+        }
+    }
+    $output = Join-Path $scratch ($name + '.dll')
+    $response = Join-Path $scratch ($name + '.rsp')
+    $generated.Add($output)
+    $generated.Add($response)
+    $argsForCompiler = @('-nologo', '-target:library', '-langversion:9', '-nostdlib+', ('-define:' + $defines), ('-out:"' + $output + '"'))
+    foreach ($reference in $references) { $argsForCompiler += '-r:"' + $reference + '"' }
+    foreach ($source in (Get-ChildItem -LiteralPath $folder -Recurse -Filter '*.cs' | Where-Object { $folder -notmatch 'Runtime/(VR|MR|Start)$' -or $_.FullName -notmatch '[\\/]Editor[\\/]' })) { $argsForCompiler += '"' + $source.FullName + '"' }
+    $argsForCompiler | Set-Content -LiteralPath $response -Encoding UTF8
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') (Join-Path $UnityData 'DotNetSdkRoslyn/csc.dll') ('@' + $response)
+    if ($LASTEXITCODE -ne 0) { throw "Offline compilation failed: $name" }
+    $script:compiledCount++
+    Write-Output "$name`: 0 errors"
+}
+try {
+    $baseReferences = @((Join-Path $UnityData 'NetStandard/ref/2.1.0/netstandard.dll'))
+    $baseReferences += (Get-ChildItem (Join-Path $UnityData 'NetStandard/compat/2.1.0/shims/netfx') -Filter '*.dll').FullName
+    $jsonDll = (Get-ChildItem 'Library/PackageCache/com.unity.nuget.newtonsoft-json*/Runtime/Newtonsoft.Json.dll').FullName
+    $baseReferences += $jsonDll
+    $engineReferences = (Get-ChildItem (Join-Path $UnityData 'Managed/UnityEngine') -Filter '*.dll').FullName
+    Compile-Assembly 'LOBOver.Sim' 'Assets/LOBOver/Sim' $baseReferences
+    $runtimeReferences = $baseReferences + $engineReferences + @((Join-Path $scratch 'LOBOver.Sim.dll'))
+    Compile-Assembly 'LOBOver.Director' 'Assets/LOBOver/Runtime/Director' $runtimeReferences
+    $worldReferences = $runtimeReferences + @((Join-Path $scratch 'LOBOver.Director.dll'), 'Library/ScriptAssemblies/Unity.TextMeshPro.dll', 'Library/ScriptAssemblies/Unity.InputSystem.dll', 'Library/ScriptAssemblies/UnityEngine.UI.dll')
+    Compile-Assembly 'LOBOver.World' 'Assets/LOBOver/Runtime/World' $worldReferences
+    # Compile the conditional Android reader too, without opening the Editor or changing build settings.
+    Compile-Assembly 'LOBOver.Director.Android' 'Assets/LOBOver/Runtime/Director' $runtimeReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    Compile-Assembly 'LOBOver.World.Android' 'Assets/LOBOver/Runtime/World' $worldReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    # SDK assemblies are already installed/imported; this check never restores packages.
+    $xrReferences = $worldReferences + @((Join-Path $scratch 'LOBOver.World.dll'),
+        'Library/ScriptAssemblies/Oculus.VR.dll', 'Library/ScriptAssemblies/Unity.XR.OpenXR.dll',
+        'Library/ScriptAssemblies/Unity.XR.Management.dll')
+    foreach ($assembly in @('VR', 'MR', 'Start')) {
+        $folder = 'Assets/LOBOver/Runtime/' + $assembly
+        if (!(Test-Path -LiteralPath $folder)) { continue }
+        Compile-Assembly ('LOBOver.' + $assembly) $folder $xrReferences
+        Compile-Assembly ('LOBOver.' + $assembly + '.Android') $folder $xrReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+        $xrReferences += (Join-Path $scratch ('LOBOver.' + $assembly + '.dll'))
+    }
+    $editorReferences = $worldReferences + @((Join-Path $scratch 'LOBOver.World.dll'), 'Library/ScriptAssemblies/Unity.RenderPipelines.Core.Runtime.dll')
+    Compile-Assembly 'LOBOver.Editor' 'Assets/LOBOver/Editor' $editorReferences
+    $xrEditorReferences = $xrReferences + $editorReferences + @((Join-Path $scratch 'LOBOver.Editor.dll'),
+        'Library/ScriptAssemblies/Unity.XR.Management.Editor.dll', 'Library/ScriptAssemblies/Unity.XR.OpenXR.Editor.dll',
+        'Library/ScriptAssemblies/Unity.XR.OpenXR.Features.MetaQuestSupport.dll')
+    Compile-Assembly 'LOBOver.XR.Editor' 'Assets/LOBOver/Runtime/Start/Editor' $xrEditorReferences
+    $testReferences = $xrEditorReferences + @((Join-Path $scratch 'LOBOver.Editor.dll'), 'Library/ScriptAssemblies/UnityEngine.TestRunner.dll', 'Library/ScriptAssemblies/UnityEditor.TestRunner.dll')
+    $testReferences += (Get-ChildItem 'Library/PackageCache/com.unity.ext.nunit*/net40/unity-custom/nunit.framework.dll').FullName
+    Compile-Assembly 'LOBOver.EditModeTests' 'Assets/LOBOver/Tests/EditMode' $testReferences
+    Compile-Assembly 'LOBOver.PlayModeTests' 'Assets/LOBOver/Tests/PlayMode' $testReferences
+    Write-Output "PASS: $script:compiledCount offline assembly compilations; Unity import, tests and rendering still require the Editor."
+    $fixtureProgram = Join-Path $scratch 'VerifyFixtures.dll'
+    $fixtureResponse = Join-Path $scratch 'VerifyFixtures.rsp'
+    $fixtureConfig = Join-Path $scratch 'VerifyFixtures.runtimeconfig.json'
+    $fixtureJson = Join-Path $scratch 'Newtonsoft.Json.dll'
+    foreach ($file in @($fixtureProgram, $fixtureResponse, $fixtureConfig, $fixtureJson)) { $generated.Add($file) }
+    $fixtureArgs = @('-nologo', '-target:exe', '-langversion:9', '-nostdlib+', ('-out:"' + $fixtureProgram + '"'), ('-r:"' + (Join-Path $scratch 'LOBOver.Sim.dll') + '"'))
+    foreach ($reference in $baseReferences) { $fixtureArgs += '-r:"' + $reference + '"' }
+    $fixtureArgs += '-r:"' + (Join-Path $scratch 'LOBOver.VR.dll') + '"'
+    $fixtureArgs += '"' + (Join-Path $PSScriptRoot 'VerifyFixtures.cs.txt') + '"'
+    $fixtureArgs += '"' + (Join-Path $PSScriptRoot 'VerifyPresenter.cs.txt') + '"'
+    $fixtureArgs | Set-Content -LiteralPath $fixtureResponse -Encoding UTF8
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') (Join-Path $UnityData 'DotNetSdkRoslyn/csc.dll') ('@' + $fixtureResponse)
+    if ($LASTEXITCODE -ne 0) { throw 'Fixture verifier did not compile' }
+    Copy-Item -LiteralPath (Join-Path $UnityData 'DotNetSdkRoslyn/csc.runtimeconfig.json') -Destination $fixtureConfig
+    Copy-Item -LiteralPath $jsonDll -Destination $fixtureJson
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') $fixtureProgram
+    if ($LASTEXITCODE -ne 0) { throw 'Fixture replay failed' }
+}
+finally {
+    # Only exact outputs from this invocation are removed; never traverse another workspace.
+    foreach ($file in $generated) { if (Test-Path -LiteralPath $file) { Remove-Item -LiteralPath $file -Force } }
+    if ((Get-ChildItem -LiteralPath $scratch -Force | Measure-Object).Count -eq 0) { Remove-Item -LiteralPath $scratch }
+}
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-ChildItem -LiteralPath 'Assets/LOBOver/Art' -Force; Get-ChildItem -LiteralPath 'Assets/LOBOver/Art/Text','Assets/LOBOver/Art/Resources' -Recurse -Force; Get-Content -LiteralPath 'Assets/LOBOver/Editor/LOBOver.Editor.asmdef' -Encoding UTF8; rg -n 'class TMP_PackageResourceImporter|ImportResources\\(|class TMP_Settings|defaultFontAsset' Library/PackageCache/com.unity.ugui* -g '*.cs'" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -LiteralPath 'Docs/WORK_ORDERS/WO-S2.md' -Encoding UTF8; rg -n '"'^#{1,4} '"' Docs/WORK_ORDERS/WO-08.md Docs/PROTOCOL.md; rg --files -g AGENTS.md -g '*SiteAssetBuilder*' -g '*CompileOffline*'; Get-Content -LiteralPath 'Assets/LOBOver/Editor/SiteAssetBuilder.cs' -Encoding UTF8 -TotalCount 110" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ exited 1 in 376ms:
+
+
+    Directory: C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----        10/20/2026   8:20 PM                Resources                                                            
+d-----        10/20/2026   4:51 PM                Text                                                                 
+-a----        10/20/2026   8:19 PM            172 Resources.meta                                                       
+-a----        10/20/2026   4:51 PM            172 Text.meta                                                            
+-a----        10/20/2026   8:19 PM            969 WorldAssets.asset                                                    
+-a----        10/20/2026   8:19 PM            189 WorldAssets.asset.meta                                               
+
+
+    Directory: C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----        10/20/2026   4:42 PM            457 LICENSE.md                                                           
+-a----        10/20/2026   7:19 PM            158 LICENSE.md.meta                                                      
+-a----        10/20/2026   4:42 PM            422 SOURCE.md                                                            
+-a----        10/20/2026   7:19 PM            158 SOURCE.md.meta                                                       
+-a----        10/20/2026   4:40 PM           2707 TMPro_Properties.cginc                                               
+-a----        10/20/2026   4:40 PM            204 TMPro_Properties.cginc.meta                                          
+-a----        10/20/2026   4:40 PM           8074 TMP_SDF-Mobile.shader                                                
+-a----        10/20/2026   4:40 PM            204 TMP_SDF-Mobile.shader.meta                                           
+
+
+    Directory: C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Resources
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----        10/20/2026   8:28 PM           1537 TMP Settings.asset                                                   
+-a----        10/20/2026   8:19 PM            189 TMP Settings.asset.meta                                              
+{
+  "name": "LOBOver.Editor",
+  "rootNamespace": "LOBOver.Editor",
+  "references": ["LOBOver.Sim", "LOBOver.Director", "LOBOver.World", "Unity.TextMeshPro", "UnityEngine.UI", "Unity.RenderPipelines.Core.Runtime"],
+  "includePlatforms": ["Editor"],
+  "overrideReferences": true,
+  "precompiledReferences": ["Newtonsoft.Json.dll"]
+}
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:245
++ ... sets/LOBOver/Editor/LOBOver.Editor.asmdef' -Encoding UTF8; rg -n 'cla ...
++                                                                ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 373ms:
+# WO-S2 — The simulation in C#: a plain .NET library with parity tests against the JavaScript transcripts
+
+## Goal
+
+`Assets/LOBOver/Sim/` holds a C# port of `Monitor/src/sim/` that Unity compiles through an asmdef with no engine references, and that `dotnet test Sim/LOBOver.Sim.Tests` proves equal to the JavaScript simulation on the goldens and on six recorded transcripts. The headset runs this; the browser runs the JavaScript; both are the same game.
+
+## Read
+
+- `AGENTS.md`, `Docs/ORCHESTRATOR_SHOWCASE.md`
+- `Docs/PROTOCOL.md`, `Docs/SCENARIO_SCHEMA.md`, `Docs/WORK_ORDERS/WO-02.md` (the rules; sections 2 and 3) and `WO-05a.md` (the fixes already in the JavaScript)
+- Every file in `Monitor/src/sim/` and `Monitor/src/common/rng.js` (the port is line-for-line where possible; same module split, same names)
+- `Data/transcripts/*.json` (generated by the orchestrator; the snapshot shape is `sim.view('facilitator')` per day plus every message plus `result`)
+
+## You may change
+
+- `Assets/LOBOver/Sim/**` (source and `LOBOver.Sim.asmdef` with `"noEngineReferences": true`, references `Newtonsoft.Json`), `Sim/**` (`LOBOver.Sim.csproj`, `LOBOver.Sim.Tests/`), `Packages/manifest.json` only to add `"com.unity.nuget.newtonsoft-json": "3.2.1"` if missing, `.gitignore` (`Sim/**/bin/`, `Sim/**/obj/`)
+
+## Build
+
+1. `Sim/LOBOver.Sim.csproj`: `netstandard2.1`, `LangVersion 9`, `Nullable disable`, PackageReference `Newtonsoft.Json 13.0.3`, `<Compile Include="..\Assets\LOBOver\Sim\**\*.cs" LinkBase="Sim" />`, `EnableDefaultCompileItems false`. Unity compiles the same files through the asmdef; nothing in them may reference UnityEngine, System.Text.Json, or C# 10 features.
+2. Namespace `LOBOver.Sim`. Public surface: `Scenario.Load(string json, Catalog catalog)`, `Catalog.Load(string json)`, `Sim.Create(Scenario, Catalog, bool pure = false)`, `Tick(double dt)`, `ApplyResult Apply(string seat, JObject cmd)` (commands are the wire JSON, as in the host), `JObject View(string seat)`, `List<JObject> Drain()`, `JObject Serialize()`, `double T`, `string Speed`, `bool Done`, `JObject Result`. Typed read models for Unity on top: `SiteView.From(JObject)` and `PlanView.From(JObject)` with the field names of `views.js`.
+3. `Autoplan` (script application, same semantics as `Monitor/src/host/autoplan.js`) and `Pacer` (elapsed-time pacing with fixed 0.01 steps and the catch-up cap, same as `pacing.js`), both engine-free, so WO-S3's director is thin.
+4. RNG: the same algorithm and seeding as `rng.js`, bit-exact (test it against 100 values from the JS, recorded in `Sim/LOBOver.Sim.Tests/fixtures/rng_seed_20261020.json`; generate that file with a 5-line Node script and keep it).
+5. Numbers: double everywhere, the same operation order as the JavaScript in the crew step, money accrual and conflict check (read the JS literally; do not "simplify" arithmetic).
+6. Tests (`xunit`, `net8.0`), run from the repo root:
+   - `GoldensTests`: the five cases of `Data/goldens/no_events.json` in pure mode, within the file's tolerances.
+   - `ParityTests`, one per transcript in `Data/transcripts/`: replay the script (`Monitor/test/scripts/<name>.json`) through the C# sim with the same dt and command timing as `headless.js`; per day compare the facilitator view's crews (station ±1 ft, status equal, mood equal), trench cells (state equal), boards, truck, money (`spentUsd` ±$100), speed; compare events (ids, `t` ±0.02, card titles), nacks (ids and reasons equal), result (`finishDay` ±0.05, `idleCrewDays` ±0.1, `peakOpenTrenchFt` ±5, `finesUsd`, `deviationsCaught/Missed`, `lost`).
+   - `DeterminismTests`: two runs of `slice_play` serialize identically.
+   - `ViewFilterTests`: the Plan view has no live positions, the Site view no money, no forbidden words in any message.
+7. `Sim/README.md`: 12 lines: build, test, how Unity picks the files up, how to regenerate transcripts after a JS change.
+
+## Acceptance checks
+
+```
+dotnet build Sim/LOBOver.Sim.csproj -c Release                       # 0 errors
+dotnet test Sim/LOBOver.Sim.Tests -c Release                         # all pass: goldens 5, parity 6 transcripts, determinism, view filters
+grep -rn "UnityEngine\|System.Text.Json" Assets/LOBOver/Sim/ ; echo grep-exit=$?   # 1
+test -f Assets/LOBOver/Sim/LOBOver.Sim.asmdef && grep -c noEngineReferences Assets/LOBOver/Sim/LOBOver.Sim.asmdef   # 1
+git status --short     # only Assets/LOBOver/Sim, Sim/, Packages/manifest.json (+lock), .gitignore
+```
+
+## Out of scope
+
+No Unity code, no networking, no scene. If a JavaScript behaviour looks like a bug, port it faithfully and list it in NOTES; the orchestrator decides whether both sides change.
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:70
++ ... t -LiteralPath 'Docs/WORK_ORDERS/WO-S2.md' -Encoding UTF8; rg -n '^#{ ...
++                                                                ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:131
++ ...  -n '^#{1,4} ' Docs/WORK_ORDERS/WO-08.md Docs/PROTOCOL.md; rg --files ...
++                                                                ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+using System;
+using System.IO;
+using System.Linq;
+using LOBOver.World;
+using Newtonsoft.Json.Linq;
+using TMPro;
+using UnityEditor;
+using UnityEditor.Animations;
+using UnityEngine;
+using UnityEngine.Rendering;
+using Object = UnityEngine.Object;
+
+namespace LOBOver.Editor
+{
+    public static class SiteAssetBuilder
+    {
+        public const string Imported = "Assets/LOBGame/";
+        public const string Art = "Assets/LOBOver/Art/";
+        public const string Prefabs = "Assets/LOBOver/Prefabs/";
+        public const string Equipment = Imported + "_Project/Art/Prefabs/Equipment/";
+        public const string Worker = Imported + "_Project/Art/Prefabs/Workers/ProjectWorker.prefab";
+        public const string Pipe = Imported + "_Project/Art/ProjectSite/ProjectPipeSegment.prefab";
+        public static readonly string[] MachineNames = { "Excavator_Small", "Excavator_Standard", "Excavator_Large", "Crane_Standard", "Crane_Heavy", "Backfill_Small", "Backfill_Standard", "Backfill_Large" };
+        public static T Required<T>(string path) where T : Object => AssetDatabase.LoadAssetAtPath<T>(path) ?? throw new FileNotFoundException("Required imported asset: " + path);
+        public static Material Material(string name) => Required<Material>(Imported + "_Project/Art/ProjectSite/Materials/" + name + ".mat");
+        private static AudioClip Audio(string name, string extension = ".ogg") => Required<AudioClip>(Imported + "Audio/Construction/" + name + extension);
+        public static WorldAssets Build()
+        {
+            Directory.CreateDirectory(Art); Directory.CreateDirectory(Prefabs); Directory.CreateDirectory(Prefabs + "Imported"); AssetDatabase.Refresh();
+            var assets = AssetDatabase.LoadAssetAtPath<WorldAssets>(Art + "WorldAssets.asset");
+            if (assets == null) { assets = ScriptableObject.CreateInstance<WorldAssets>(); AssetDatabase.CreateAsset(assets, Art + "WorldAssets.asset"); }
+            assets.font = Font(); assets.soil = Material("Soil"); assets.timber = Material("Timber"); assets.steel = Material("StorageSteel"); assets.orange = Material("SafetyOrange");
+            assets.ink = OwnMaterial("Ink", Color.white, false, "Universal Render Pipeline/Particles/Unlit");
+            assets.cloud = OwnMaterial("Cloud", new Color(0.26f, 0.28f, 0.31f));
+            assets.rain = OwnMaterial("Rain", new Color(0.65f, 0.72f, 0.8f, 0.5f), true);
+            assets.wind = Audio("bed_open_wind"); assets.rainfall = Audio("bed_rain_open"); assets.excavation = Audio("exc_work_loop");
+            assets.dozer = Audio("dozer_engine_loop"); assets.idle = Audio("machine_idle_loop"); assets.conflict = Audio("conflict_murmur_loop");
+            assets.collapse = Audio("collapse_rumble_01", ".wav"); assets.pipeSetdown = Audio("pipe_setdown_01", ".wav");
+            assets.worker = CopyModel(Worker, "ProjectWorker", Vector3.zero, 0, true);
+            assets.particles = CopyModel(Imported + "_Project/Art/Prefabs/Effects/WorkParticles.prefab", "WorkParticles", Vector3.zero);
+            assets.spoil = CopyModel(Imported + "3D_Models/a-pile-of-sand/source/hromada_pisek_01_30k_uw/hromada_pisek_01_30k_uw.FBX", "Spoil", new Vector3(9, 1.5f, 3));
+            assets.barrier = CopyModel(Imported + "3D_Models/water-barriers/source/WaterBarriers_RED-WHITE.fbx", "WaterBarrier", new Vector3(2, 1, 0.5f));
+            assets.cone = CopyModel(Imported + "3D_Models/trafic-cone/source/vlc.prefab", "Cone", new Vector3(0.45f, 0.7f, 0.45f));
+            var catalog = JObject.Parse(File.ReadAllText("Data/catalog.json"));
+            assets.machines = MachineNames.Select(name =>
+            {
+                var key = name.ToLowerInvariant(); var data = catalog["machines"][key];
+                return new MachineAsset { crew = (string)data["crew"], plate = (string)data["sizeClass"], label = (string)data["label"],
+                    prefab = CopyModel(Equipment + name + ".prefab", name, Vector3.zero, 90, false, true) };
+            }).ToArray();
+            assets.cellPrefab = BuildCell(assets); assets.crewPrefab = BuildCrew();
+            EditorUtility.SetDirty(assets); AssetDatabase.SaveAssets(); return assets;
+        }
+        public static Material OwnMaterial(string name, Color colour, bool transparent = false, string shaderName = "Universal Render Pipeline/Unlit")
+        {
+            var path = Art + name + ".mat"; var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                var shader = Shader.Find(shaderName) ?? throw new InvalidOperationException("Missing shader " + shaderName);
+                material = new Material(shader); AssetDatabase.CreateAsset(material, path);
+            }
+            material.SetColor("_BaseColor", colour);
+            if (transparent)
+            {
+                material.SetFloat("_Surface", 1); material.SetFloat("_Blend", 0); material.SetFloat("_ZWrite", 0);
+                material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha); material.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+                material.SetOverrideTag("RenderType", "Transparent"); material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT"); material.renderQueue = (int)RenderQueue.Transparent;
+            }
+            EditorUtility.SetDirty(material); return material;
+        }
+        private static TMP_FontAsset Font()
+        {
+            // TMP is installed but its optional Resources package need not have been imported.
+            // Keep settings and the generated font inside the work order's Art scope.
+            var settings = Resources.Load<TMP_Settings>("TMP Settings");
+            if (settings == null)
+            {
+                Directory.CreateDirectory(Art + "Resources"); AssetDatabase.Refresh();
+                settings = ScriptableObject.CreateInstance<TMP_Settings>();
+                AssetDatabase.CreateAsset(settings, Art + "Resources/TMP Settings.asset");
+                // Installed com.unity.ugui 2.0 TMP_Settings schema, avoiding the optional importer dialog.
+                var serialized = new SerializedObject(settings);
+                serialized.FindProperty("assetVersion").stringValue = "2";
+                serialized.FindProperty("m_ClearDynamicDataOnBuild").boolValue = false;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
+            TMP_Settings.LoadDefaultSettings();
+            var path = Art + "SiteFont.asset"; var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
+            if (font != null) return font;
+            font = TMP_FontAsset.CreateFontAsset(Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
+            font.name = "SiteFont"; font.TryAddCharacters(string.Concat(Enumerable.Range(32, 95).Select(value => (char)value)) + "—–·×");
+            AssetDatabase.CreateAsset(font, path);
+            foreach (var atlas in font.atlasTextures) AssetDatabase.AddObjectToAsset(atlas, font);
+            AssetDatabase.AddObjectToAsset(font.material, font); EditorUtility.SetDirty(font);
+            if (AssetDatabase.GetAssetPath(settings).StartsWith(Art, StringComparison.Ordinal))
+            { TMP_Settings.defaultFontAsset = font; EditorUtility.SetDirty(settings); }
+            return font;
+        }
+        public static void StripMissing(GameObject instance)
+        {
+            foreach (var child in instance.GetComponentsInChildren<Transform>(true)) GameObjectUtility.RemoveMonoBehavioursWithMissingScript(child.gameObject);
+        }
+        private static Bounds BoundsOf(GameObject obj)
+        {
+            var renderers = obj.GetComponentsInChildren<Renderer>().Where(renderer => !(renderer is ParticleSystemRenderer)).ToArray();
+            if (renderers.Length == 0) return new Bounds(obj.transform.position, Vector3.one);
+            var bounds = renderers[0].bounds; foreach (var renderer in renderers.Skip(1)) bounds.Encapsulate(renderer.bounds); return bounds;
+        }
+        private static GameObject CopyModel(string path, string name, Vector3 fit, float yaw = 0, bool worker = false, bool workingEdge = false)
+        {
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+The builder creates TMP settings and a font from `LegacyRuntime.ttf`, matching the reported failure. I’ll replace that setup with TMP Essentials and remove the two specified Art folders.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Select-String -LiteralPath 'Docs/WORK_ORDERS/WO-08.md','Docs/PROTOCOL.md' -Pattern '"'^#{1,4} '"'; Get-ChildItem -LiteralPath 'Assets/LOBOver' -Recurse -Filter AGENTS.md | Select-Object -ExpandProperty FullName; Get-Item -LiteralPath 'Assets/AGENTS.md' -ErrorAction SilentlyContinue; Get-ChildItem -Path 'Library/PackageCache/com.unity.ugui*' -Recurse -Filter '*.cs' | Select-String -Pattern 'class TMP_PackageResourceImporter','static void ImportResources','static TMP_FontAsset defaultFontAsset','static TMP_Settings LoadDefaultSettings'" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Select-String -Path 'Assets/LOBOver/Runtime/World/*.cs','Assets/LOBOver/Editor/*.cs' -Pattern 'assets.font','LegacyRuntime','SiteFont','Art/Text','TMP_Settings','TMP_PackageResourceImporter'; Get-Item -LiteralPath 'Assets/TextMesh Pro/Resources/TMP Settings.asset','Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset' | Select-Object FullName,Length" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 180ms:
+
+Assets\LOBOver\Runtime\World\CrewRig.cs:53:            plate = WorldDrawing.Text("MachinePlate", transform, new 
+Vector3(-1, 2.5f, 1), new Vector2(4, 0.5f), 0.25f, assets.font);
+Assets\LOBOver\Runtime\World\SiteWorld.cs:92:            var label = WorldDrawing.Text("Station", endpoint.transform, 
+new Vector3(0, 0.6f, 0), new Vector2(1.5f, 0.4f), 0.3f, assets.font);
+Assets\LOBOver\Runtime\World\SiteWorld.cs:104:                board.label = WorldDrawing.Text("Permit", 
+root.transform, new Vector3(0, 1.8f, -0.05f), new Vector2(0.9f, 1.3f), 0.12f, assets.font);
+Assets\LOBOver\Runtime\World\TrailerBoard.cs:66:            var text = WorldDrawing.Text(name, root, new 
+Vector3(position.x, position.y, -0.07f), size, height, assets.font);
+Assets\LOBOver\Editor\SiteAssetBuilder.cs:32:            assets.font = Font(); assets.soil = Material("Soil"); 
+assets.timber = Material("Timber"); assets.steel = Material("StorageSteel"); assets.orange = Material("SafetyOrange");
+Assets\LOBOver\Editor\SiteAssetBuilder.cs:75:            var settings = Resources.Load<TMP_Settings>("TMP Settings");
+Assets\LOBOver\Editor\SiteAssetBuilder.cs:79:                settings = 
+ScriptableObject.CreateInstance<TMP_Settings>();
+Assets\LOBOver\Editor\SiteAssetBuilder.cs:81:                // Installed com.unity.ugui 2.0 TMP_Settings schema, 
+avoiding the optional importer dialog.
+Assets\LOBOver\Editor\SiteAssetBuilder.cs:87:            TMP_Settings.LoadDefaultSettings();
+Assets\LOBOver\Editor\SiteAssetBuilder.cs:88:            var path = Art + "SiteFont.asset"; var font = 
+AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
+Assets\LOBOver\Editor\SiteAssetBuilder.cs:90:            font = 
+TMP_FontAsset.CreateFontAsset(Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
+Assets\LOBOver\Editor\SiteAssetBuilder.cs:91:            font.name = "SiteFont"; 
+font.TryAddCharacters(string.Concat(Enumerable.Range(32, 95).Select(value => (char)value)) + "—–·×");
+Assets\LOBOver\Editor\SiteAssetBuilder.cs:96:            { TMP_Settings.defaultFontAsset = font; 
+EditorUtility.SetDirty(settings); }
+Assets\LOBOver\Editor\SiteAssetBuilder.cs:215:                cell.stationText = WorldDrawing.Text("Station", 
+root.transform, new Vector3(0, 1.3f, 1.25f), new Vector2(1.4f, 0.4f), 0.3f, assets.font);
+Assets\LOBOver\Editor\SiteSceneBuilder.cs:48:            var gateText = WorldDrawing.Text("GateText", gate.transform, 
+new Vector3(0, 1.5f, 2.96f), new Vector2(0.65f, 0.45f), 0.08f, assets.font);
+Assets\LOBOver\Editor\SiteSceneBuilder.cs:58:            var jobSign = sign.AddComponent<JobSign>(); jobSign.label = 
+WorldDrawing.Text("Job", sign.transform, new Vector3(0, 1.6f, -0.04f), new Vector2(1.1f, 0.7f), 0.1f, assets.font);
+
+FullName : C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\TextMesh Pro\Resources\TMP 
+           Settings.asset
+Length   : 1840
+
+
+FullName : C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\TextMesh Pro\Resources\Fonts 
+           & Materials\LiberationSans SDF.asset
+Length   : 2256862
+
+
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+ succeeded in 3818ms:
+
+Docs\WORK_ORDERS\WO-08.md:3:# WO-08 — The site in VR: scene built by script, world kept in step with `state`
+Docs\WORK_ORDERS\WO-08.md:5:## Goal
+Docs\WORK_ORDERS\WO-08.md:9:## Read
+Docs\WORK_ORDERS\WO-08.md:16:## You may change
+Docs\WORK_ORDERS\WO-08.md:20:## Build
+Docs\WORK_ORDERS\WO-08.md:30:## Acceptance checks
+Docs\WORK_ORDERS\WO-08.md:33:# Unity: EditMode + PlayMode tests in Assets/LOBOver/Tests pass
+Docs\WORK_ORDERS\WO-08.md:34:# Unity: Site.unity open, host running with the slice and --autoplan, enter Play, 
+Connect, facilitator Start; at Day 5 take LOB Over/Debug/Screenshot from the fly camera at 5+20 looking along the 
+trench -> the orchestrator sees: slumped wall and water at 5+20, the crane stopped, two foremen face to face, the 
+excavator ahead, the station stakes legible
+Docs\WORK_ORDERS\WO-08.md:35:# Console: no errors; SiteWorld logs the collapse cell change and the arguing status
+Docs\WORK_ORDERS\WO-08.md:36:# Frame time in the Editor at that view < 8 ms on the PC (Stats window or Profiler), draw 
+calls < 400 with the slice's 30 cells spawned
+Docs\WORK_ORDERS\WO-08.md:40:## Out of scope
+Docs\PROTOCOL.md:1:# PROTOCOL.md — one host, one JSON-over-WebSocket protocol, three seats
+Docs\PROTOCOL.md:5:## Transport
+Docs\PROTOCOL.md:13:## Client -> host
+Docs\PROTOCOL.md:27:### Plan ops (sent together in one `commit`; the host applies all or none)
+Docs\PROTOCOL.md:46:### Site actions
+Docs\PROTOCOL.md:58:## Host -> client
+Docs\PROTOCOL.md:72:## Per-seat views (what `state.view` contains)
+Docs\PROTOCOL.md:80:## Daily report timing
+Docs\PROTOCOL.md:84:## Phase 1 note
+Library\PackageCache\com.unity.ugui@bb329a87fcdc\Runtime\TMP\TMP_PackageResourceImporter.cs:12:    public class 
+TMP_PackageResourceImporter
+Library\PackageCache\com.unity.ugui@bb329a87fcdc\Runtime\TMP\TMP_PackageResourceImporter.cs:220:        public static 
+void ImportResources(bool importEssentials, bool importExamples, bool interactive)
+Library\PackageCache\com.unity.ugui@bb329a87fcdc\Runtime\TMP\TMP_PackageResourceImporter.cs:232:    public class 
+TMP_PackageResourceImporterWindow : EditorWindow
+Library\PackageCache\com.unity.ugui@bb329a87fcdc\Runtime\TMP\TMP_Settings.cs:167:        public static TMP_FontAsset 
+defaultFontAsset
+Library\PackageCache\com.unity.ugui@bb329a87fcdc\Runtime\TMP\TMP_Settings.cs:498:        public static TMP_Settings 
+LoadDefaultSettings()
+
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -LiteralPath 'Library/PackageCache/com.unity.ugui@bb329a87fcdc/Runtime/TMP/TMP_PackageResourceImporter.cs' -TotalCount 30; Get-Content -LiteralPath 'Library/PackageCache/com.unity.ugui@bb329a87fcdc/Runtime/TMP/TMP_PackageResourceImporter.cs' | Select-Object -Skip 200 -First 31; Get-Content -LiteralPath 'Library/PackageCache/com.unity.ugui@bb329a87fcdc/Runtime/TMP/TMP_Settings.cs' | Select-Object -Skip 155 -First 26; Get-Content -LiteralPath 'Library/PackageCache/com.unity.ugui@bb329a87fcdc/Runtime/TMP/TMP_Settings.cs' | Select-Object -Skip 455 -First 70" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -LiteralPath 'Docs/WORK_ORDERS/WO-08.md' -Encoding UTF8 | Select-Object -Skip 19 -First 9; Get-Content -LiteralPath 'Docs/PROTOCOL.md' -Encoding UTF8 | Select-Object -Skip 71 -First 8" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 129ms:
+## Build
+
+1. **Builder** (`LOB Over/Build/Site Scene`): a new scene with URP settings as the project has them; directional light with a warm late-morning angle; a 1,200 m × 200 m ground plane with `Soil`; the haul road (`AccessRoad`, 8 m wide) parallel to the trench at 6 m offset, from −30 m to +950 m; the trench corridor placeholder (the cells are spawned at runtime); a gate at −20 m with two water barriers and a cone; the site trailer (a 6 × 3 × 3 m box with `Repair_SiteCabin`) at −15 m beside the road with a 2 × 1 m board on its wall; the job sign (a 1.2 × 0.8 m board on two timber posts) at the gate reading the `job.sign` values once known (the `state` carries `stage`; the builder leaves a `JobSign` component that `SiteWorld` fills from a `welcome`); a spoil pile instance every 100 ft on the far side of the trench; a `SiteWorld` object with the `SiteClient` from WO-07 and the `HostAddressPanel`; a `DesktopFlyCamera` (WASD + mouse, Editor only, disabled on Android).
+2. **Stations** (`StationCell` prefab, your own): per 100 ft station a 30.48 m long cell: a trench 1.2 m wide, 1.8 m deep with vertical walls; state materials: `undug` = surface only (`Repair_Surface`), `open` = walls `Soil` and floor `Repair_OpenTrench`, `piped` = floor `Repair_PipeBed` plus three `ProjectPipeSegment` instances laid end to end, `backfilled` = `Repair_Backfill` level with the surface. `water: seep` = a dark wet band on the lower wall (a second material slot or a thin quad), `standing` = a flat water quad 0.2 m above the floor (your `Water.mat`, translucent). `wall: slumped` = a wedge mesh of soil leaning into the trench on the far wall and the water quad. `protection: box|shoring|slope` = a steel frame (two `StorageSteel` panels and three struts) / timber panels (`Timber`) / the walls tilted outward. A station stake at every 100 ft with the station text (TextMeshPro, 0.3 m, `5+20` form) facing the road. Zone boards at each zone's start: a 1 × 1.5 m board on a post with two text lines, "ZONE n" and the permit number or "no permit posted", and a third line with the inspection number when signed.
+3. **Crews** (`CrewRig` prefab, your own): one machine prefab by `machinePlate` and crew id (plate "Standard" with crew `exc` → `Excavator_Standard`, etc.), placed with its working edge at `stationFt`, facing +X along the line; two `ProjectWorker` instances 2 m behind it on the road side; a plate (`TextMeshPro`, 0.25 m) on the machine reading the catalog label. Status → animation and posture: `working` = machine animator playing, workers Walk/Inspect alternating, `WorkParticles` on; `idle` = machine still, workers Idle, particles off; `held` = workers IdleAlternate facing the road; `stopped` = SignalHalt once then Idle; `arguing` = the two crews' foremen (first worker of each) walk to the midpoint and play ConflictTalk/TalkAlternate facing each other; `demobilized` = the rig is 60 m back toward the gate on the road with workers Shelter. Mood 0..3 = the workers' idle clip speed and a posture (0 Idle, 1 IdleAlternate, 2 Drink, 3 EquipmentCheck with SignalPoint every 10 s); no text, no colour. Movement between states eases over 0.5 s; a crew that moves more than 100 ft in one state update teleports.
+4. **Sky and sound**: `clear` = default sky; `towersSouth` = a dark cumulus billboard bank 2 km to the south (−Z) and `bed_open_wind`; `rain` = a particle rain volume following the player, grey fog, `bed_rain_open`. Machine loops (`exc_work_loop`, `dozer_engine_loop`, `machine_idle_loop`) on each rig by status, attenuated 3D; `collapse_rumble_0x` once when a cell turns `slumped`; `conflict_murmur_loop` at an argument; `pipe_setdown` when a cell turns `piped`. Reuse `Assets/Resources/SiteAudioBank.asset` only if it is a plain data asset; otherwise reference clips directly.
+5. **Trailer board**: a 2 × 1 m board texture drawn with a `RenderTexture` or a `LineRenderer` set: x = stations, y = days 1..deadline, the three crews' actual lines (from the `state`'s crews over time, accumulated client-side at each displayDay change) and vertical rules at the permit boundaries that are not yet posted. No planned lines, no money.
+6. **SiteWorld**: subscribes to `SiteClient.OnState`; first state builds cells, boards, crews; later states diff and apply. Exposes `StationCell CellAt(int ft)`, `CrewRig Crew(string id)`, `Transform StakeAt(int ft)` for WO-09. Logs one line per changed cell or crew status at `Debug.Log` level Info (the orchestrator reads the console).
+7. **Tests**: EditMode `SiteSceneBuilderTests` (the builder creates the scene with the expected object names and counts); PlayMode `SiteWorldTests` that feed `SiteWorld` three recorded `state` JSON fixtures (Day 1, Day 4 after the collapse at 5+20, Day 9 rain; take them from `Monitor/out/slice_play.json` snapshots' `site` view or ask the orchestrator for the file) and assert: cell 5+20 is `slumped` with standing water on Day 4, the pipe crew's status `stopped`, the backfill crew `arguing` on the Day-5 fixture, rain particles active on Day 9, board 2 reads "no permit posted" until the fixture with the permit. Plus a Play-mode screenshot method `LOB Over/Debug/Screenshot` that saves `Monitor/out/unity/<name>.png` (the orchestrator looks at it).
+## Per-seat views (what `state.view` contains)
+
+**Plan** (`seat: "plan"`): `plannedLines` (per crew: start day, segments with slope from the machine rate, holds), `responses[]` (the `pay` options available right now: `key`, `label`, `cost`, `eventTitle`; empty when no event is active or forecast), `reportedLines` (actual feet per crew as of the last daily report; never today's), `budget` (`budgetUsd`, `spentUsd`, `committedUsd`, `deadlineDay`, `promisedDay`), `inbox[]` (dated items from the scenario plus daily reports), `radioLog[]` (orders with status), `catalog` (machines, protection, prices, lead days incl. the city delay), `permits` (per zone: `entered: true|false`, `number` if entered; never whether entering was wise), `inspections` (per zone: cleared or not), `flags[]` (station, day; no text unless Site typed a note), `draft` (ops not yet committed), `uncertainty` (ranges per crew from SR11-style bands; narrows when a report lands), `pmLines[]` (text of PM voice lines played so far).
+
+**Site** (`seat: "site"`): `truck` (`stationFt`, `moving`, `dismounted`), `crews[]` (`id`, `stationFt` live, `working|idle|held|stopped|arguing|demobilized`, `machinePlate` ("Standard"), `moodLevel` 0-3), `trench[]` per 100 ft station (`state`: `undug|open|piped|backfilled`, `water: none|seep|standing`, `wall: sound|slumped`, `protection: none|box|shoring|slope`, `pipeDamage: none|cracked`), `boards[]` per zone (`permitNumber|null`, `inspectionNumber|null`), `sky` (`clear|towersSouth|rain`), `gate` (`trucksWaiting`), `activeEvent` (facts only, if Site is within the zone or has inspected it), `orders[]` landed at Site's current station awaiting confirmation. No plan, no money, no forecast percentages.
+
+**Facilitator** (`seat: "facilitator"`): everything, including hidden variants, pending events and deviations, the two other views side by side. Never shown to players; used by Bryan during table tests and by Playwright during verification.
+
+
+ succeeded in 164ms:
+#if UNITY_EDITOR
+
+using System;
+using System.IO;
+using UnityEngine;
+using UnityEditor;
+
+
+namespace TMPro
+{
+    [Serializable]
+    public class TMP_PackageResourceImporter
+    {
+        bool m_EssentialResourcesImported;
+        bool m_ExamplesAndExtrasResourcesImported;
+        bool m_EssentialResourcesNeedUpdate;
+        bool m_ExamplesAndExtrasNeedUpdate;
+        bool m_LogErrors;
+        internal bool m_IsImportingExamples;
+
+        public TMP_PackageResourceImporter(bool logErrors = true)
+        {
+            m_LogErrors = logErrors;
+            m_EssentialResourcesNeedUpdate = m_ExamplesAndExtrasNeedUpdate = !TMP_Settings.isTMPSettingsNull && TMP_Settings.instance.assetVersion != TMP_Settings.s_CurrentAssetVersion;
+        }
+
+        public void OnDestroy()
+        {
+            if (m_LogErrors && (TMP_Settings.isTMPSettingsNull || TMP_Settings.instance?.assetVersion != TMP_Settings.s_CurrentAssetVersion))
+                Debug.LogError("TextMesh Pro Essential Resources are missing, which are crucial for proper functionality. To import them, go to 'Window > Text Mesh Pro > Import TMP Essential Resources' in the menu.");
+            {
+                // Check if the Editor Resources folder exists.
+                if (Directory.Exists(paths[i] + "/Editor Resources"))
+                {
+                    string folderPath = paths[i].Replace(projectPath, "");
+                    folderPath = folderPath.TrimStart('\\', '/');
+                    return folderPath;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Imports the specified TMP resources.
+        /// </summary>
+        /// <param name="importEssentials">Should import the TMP Essential Resources.</param>
+        /// <param name="importExamples">Should import the TMP Examples & Extras.</param>
+        /// <param name="interactive">If interactive is true, an import package dialog will be opened, else all assets in the package will be imported into the current project silently.</param>
+        public static void ImportResources(bool importEssentials, bool importExamples, bool interactive)
+        {
+            string packageFullPath = GetPackageFullPath();
+
+            if (importEssentials)
+                AssetDatabase.ImportPackage(packageFullPath + "/Package Resources/TMP Essential Resources.unitypackage", interactive);
+
+            if (importExamples)
+                AssetDatabase.ImportPackage(packageFullPath + "/Package Resources/TMP Examples & Extras.unitypackage", interactive);
+        }
+    }
+
+        /// </summary>
+        public static bool warningsDisabled
+        {
+            get { return instance.m_warningsDisabled; }
+        }
+        [SerializeField]
+        private bool m_warningsDisabled;
+
+        /// <summary>
+        /// Returns the Default Font Asset to be used by newly created text objects.
+        /// </summary>
+        public static TMP_FontAsset defaultFontAsset
+        {
+            get { return instance.m_defaultFontAsset; }
+            set { instance.m_defaultFontAsset = value; }
+        }
+        [SerializeField]
+        private TMP_FontAsset m_defaultFontAsset;
+
+        /// <summary>
+        /// The relative path to a Resources folder in the project.
+        /// </summary>
+        public static string defaultFontAssetPath
+        {
+            get { return instance.m_defaultFontAssetPath; }
+        }
+
+                    #if UNITY_EDITOR
+                    // Make sure TextMesh Pro UPM packages resources have been added to the user project
+                    if (isTMPSettingsNull && Time.frameCount != 0 || (!isTMPSettingsNull && s_Instance.assetVersion != s_CurrentAssetVersion))
+                    {
+						// It needs to open after loading the default Editor layout
+                        DelayShowPackageImporterWindow();
+                    }
+                    #endif
+
+                    // Convert use of the "enableKerning" property to the new "fontFeature" property.
+                    if (!isTMPSettingsNull && s_Instance.m_ActiveFontFeatures.Count == 1 && s_Instance.m_ActiveFontFeatures[0] == 0)
+                    {
+                        s_Instance.m_ActiveFontFeatures.Clear();
+
+                        if (s_Instance.m_enableKerning)
+                            s_Instance.m_ActiveFontFeatures.Add(OTL_FeatureTag.kern);
+                    }
+                }
+
+                return s_Instance;
+            }
+        }
+
+        internal static bool isTMPSettingsNull
+        {
+            get { return s_Instance == null; }
+        }
+
+#if UNITY_EDITOR
+        public static async void DelayShowPackageImporterWindow()
+        {
+            await Task.Delay(TimeSpan.FromSeconds(1f));
+            TMP_PackageResourceImporterWindow.ShowPackageImporterWindow();
+        }
+#endif
+
+
+        /// <summary>
+        /// Static Function to load the TMP Settings file.
+        /// </summary>
+        /// <returns></returns>
+        public static TMP_Settings LoadDefaultSettings()
+        {
+            if (s_Instance == null)
+            {
+                // Load settings from TMP_Settings file
+                TMP_Settings settings = Resources.Load<TMP_Settings>("TMP Settings");
+                if (settings != null)
+                    s_Instance = settings;
+            }
+
+            return s_Instance;
+        }
+
+
+        /// <summary>
+        /// Returns the Sprite Asset defined in the TMP Settings file.
+        /// </summary>
+        /// <returns></returns>
+        public static TMP_Settings GetSettings()
+        {
+            if (TMP_Settings.instance == null) return null;
+
+            return TMP_Settings.instance;
+        }
+
+
+        /// <summary>
+        /// Returns the Font Asset defined in the TMP Settings file.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+apply patch
+patch: completed
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Editor\SiteAssetBuilder.cs
+diff --git a/Assets/LOBOver/Editor/SiteAssetBuilder.cs b/Assets/LOBOver/Editor/SiteAssetBuilder.cs
+index ab4fece647d959bc7d9cb503935b66196fd78841..2135b74f38fa4836dcd1b4fcf7acc0d94d9f7e43
+--- a/Assets/LOBOver/Editor/SiteAssetBuilder.cs
++++ b/Assets/LOBOver/Editor/SiteAssetBuilder.cs
+@@ -26,10 +26,15 @@
+         private static AudioClip Audio(string name, string extension = ".ogg") => Required<AudioClip>(Imported + "Audio/Construction/" + name + extension);
+         public static WorldAssets Build()
+         {
++            if (!File.Exists("Assets/TextMesh Pro/Resources/TMP Settings.asset"))
++            {
++                TMP_PackageResourceImporter.ImportResources(true, false, false);
++                AssetDatabase.Refresh();
++            }
+             Directory.CreateDirectory(Art); Directory.CreateDirectory(Prefabs); Directory.CreateDirectory(Prefabs + "Imported"); AssetDatabase.Refresh();
+             var assets = AssetDatabase.LoadAssetAtPath<WorldAssets>(Art + "WorldAssets.asset");
+             if (assets == null) { assets = ScriptableObject.CreateInstance<WorldAssets>(); AssetDatabase.CreateAsset(assets, Art + "WorldAssets.asset"); }
+-            assets.font = Font(); assets.soil = Material("Soil"); assets.timber = Material("Timber"); assets.steel = Material("StorageSteel"); assets.orange = Material("SafetyOrange");
++            assets.font = TMP_Settings.defaultFontAsset; assets.soil = Material("Soil"); assets.timber = Material("Timber"); assets.steel = Material("StorageSteel"); assets.orange = Material("SafetyOrange");
+             assets.ink = OwnMaterial("Ink", Color.white, false, "Universal Render Pipeline/Particles/Unlit");
+             assets.cloud = OwnMaterial("Cloud", new Color(0.26f, 0.28f, 0.31f));
+             assets.rain = OwnMaterial("Rain", new Color(0.65f, 0.72f, 0.8f, 0.5f), true);
+@@ -67,34 +72,6 @@
+                 material.SetOverrideTag("RenderType", "Transparent"); material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT"); material.renderQueue = (int)RenderQueue.Transparent;
+             }
+             EditorUtility.SetDirty(material); return material;
+-        }
+-        private static TMP_FontAsset Font()
+-        {
+-            // TMP is installed but its optional Resources package need not have been imported.
+-            // Keep settings and the generated font inside the work order's Art scope.
+-            var settings = Resources.Load<TMP_Settings>("TMP Settings");
+-            if (settings == null)
+-            {
+-                Directory.CreateDirectory(Art + "Resources"); AssetDatabase.Refresh();
+-                settings = ScriptableObject.CreateInstance<TMP_Settings>();
+-                AssetDatabase.CreateAsset(settings, Art + "Resources/TMP Settings.asset");
+-                // Installed com.unity.ugui 2.0 TMP_Settings schema, avoiding the optional importer dialog.
+-                var serialized = new SerializedObject(settings);
+-                serialized.FindProperty("assetVersion").stringValue = "2";
+-                serialized.FindProperty("m_ClearDynamicDataOnBuild").boolValue = false;
+-                serialized.ApplyModifiedPropertiesWithoutUndo();
+-            }
+-            TMP_Settings.LoadDefaultSettings();
+-            var path = Art + "SiteFont.asset"; var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
+-            if (font != null) return font;
+-            font = TMP_FontAsset.CreateFontAsset(Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
+-            font.name = "SiteFont"; font.TryAddCharacters(string.Concat(Enumerable.Range(32, 95).Select(value => (char)value)) + "—–·×");
+-            AssetDatabase.CreateAsset(font, path);
+-            foreach (var atlas in font.atlasTextures) AssetDatabase.AddObjectToAsset(atlas, font);
+-            AssetDatabase.AddObjectToAsset(font.material, font); EditorUtility.SetDirty(font);
+-            if (AssetDatabase.GetAssetPath(settings).StartsWith(Art, StringComparison.Ordinal))
+-            { TMP_Settings.defaultFontAsset = font; EditorUtility.SetDirty(settings); }
+-            return font;
+         }
+         public static void StripMissing(GameObject instance)
+         {
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+2026-10-21T01:38:29.560291Z ERROR codex_core::tools::router: error=exec_command failed: CreateProcess { message: "Rejected(\"`\\\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\WindowsPowerShell\\\\\\\\v1.0\\\\\\\\powershell.exe\\\" -Command '$ErrorActionPreference = '\\\"'Stop'\\n\\\"'$artRoot = (Resolve-Path -LiteralPath '\\\"'Assets/LOBOver/Art').Path\\n\\\"'$workspaceRoot = (Resolve-Path -LiteralPath '\\\"'.').Path\\nif (\\\"'!$artRoot.Equals((Join-Path $workspaceRoot '\\\"'Assets\\\\\\\\LOBOver\\\\\\\\Art'), [Str…1007 chars truncated…-Path $artRoot $relative\\n    if (Test-Path -LiteralPath $target) {\\n        if ((Get-Item -LiteralPath $target -Force).PSIsContainer) { Remove-Item -LiteralPath $target -Recurse -Force }\\n        else { Remove-Item -LiteralPath $target -Force }\\n    }\\n    if (Test-Path -LiteralPath $target) { throw \\\"Deletion incomplete: $target\\\" }\\n    Write-Output \\\"Removed: Assets/LOBOver/Art/$relative\\\"\\n}'` rejected: blocked by policy\")" }
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$ErrorActionPreference = '"'Stop'
+"'$workspaceRoot = (Resolve-Path -LiteralPath '"'.').Path
+"'$artRoot = (Resolve-Path -LiteralPath '"'Assets/LOBOver/Art').Path
+if ("'!$artRoot.Equals((Join-Path $workspaceRoot '"'Assets\\LOBOver\\Art'), [StringComparison]::OrdinalIgnoreCase)) { throw 'Art root is outside the intended workspace.' }
+foreach ("'$relative in @('"'Text', 'Resources')) {
+    "'$target = Join-Path $artRoot $relative
+    $resolved = (Resolve-Path -LiteralPath $target).Path
+    if (!$resolved.Equals($target, [StringComparison]::OrdinalIgnoreCase) -or !$resolved.StartsWith($artRoot + '"'\\', [StringComparison]::OrdinalIgnoreCase)) { throw \"Unexpected deletion target: "'$resolved" }
+    $entries = @((Get-Item -LiteralPath $resolved -Force)) + @(Get-ChildItem -LiteralPath $resolved -Recurse -Force)
+    if ($entries | Where-Object { ($_.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0 }) { throw "Reparse point under $resolved" }
+    Write-Output "Validated: $resolved"
+    $entries | Select-Object -ExpandProperty FullName
+}' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 186ms:
+Validated: C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text\LICENSE.md
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text\LICENSE.md.meta
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text\SOURCE.md
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text\SOURCE.md.meta
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text\TMPro_Properties.cginc
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text\TMPro_Properties.cginc.meta
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text\TMP_SDF-Mobile.shader
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text\TMP_SDF-Mobile.shader.meta
+Validated: C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Resources
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Resources
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Resources\TMP Settings.asset
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Resources\TMP Settings.asset.meta
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+Step 2 of 3: The builder now uses `TMP_Settings.defaultFontAsset` and imports Essentials if its settings asset is missing. I’m finishing the folder cleanup, then running the offline compiler. Unity checks remain with the orchestrator, as instructed.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+apply patch
+patch: completed
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Resources.meta
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Resources\TMP Settings.asset
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Resources\TMP Settings.asset.meta
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text.meta
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text\LICENSE.md
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text\LICENSE.md.meta
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text\SOURCE.md
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text\SOURCE.md.meta
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text\TMP_SDF-Mobile.shader
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text\TMP_SDF-Mobile.shader.meta
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text\TMPro_Properties.cginc
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Art\Text\TMPro_Properties.cginc.meta
+diff --git a/Assets/LOBOver/Art/Resources.meta b/Assets/LOBOver/Art/Resources.meta
+deleted file mode 100644
+index 8ab39789c2f872a42ae5d5543e7711414f5b90d8..0000000000000000000000000000000000000000
+--- a/Assets/LOBOver/Art/Resources.meta
++++ /dev/null
+@@ -1,8 +0,0 @@
+-fileFormatVersion: 2
+-guid: bd3ab680645d7bb40943ee82e7423196
+-folderAsset: yes
+-DefaultImporter:
+-  externalObjects: {}
+-  userData: 
+-  assetBundleName: 
+-  assetBundleVariant: 
+diff --git a/Assets/LOBOver/Art/Resources/TMP Settings.asset b/Assets/LOBOver/Art/Resources/TMP Settings.asset
+deleted file mode 100644
+index 1240f7ddc33681a717a630a79bf0efce2b42bfff..0000000000000000000000000000000000000000
+--- a/Assets/LOBOver/Art/Resources/TMP Settings.asset
++++ /dev/null
+@@ -1,49 +0,0 @@
+-%YAML 1.1
+-%TAG !u! tag:unity3d.com,2011:
+---- !u!114 &11400000
+-MonoBehaviour:
+-  m_ObjectHideFlags: 0
+-  m_CorrespondingSourceObject: {fileID: 0}
+-  m_PrefabInstance: {fileID: 0}
+-  m_PrefabAsset: {fileID: 0}
+-  m_GameObject: {fileID: 0}
+-  m_Enabled: 1
+-  m_EditorHideFlags: 0
+-  m_Script: {fileID: 11500000, guid: 2705215ac5b84b70bacc50632be6e391, type: 3}
+-  m_Name: TMP Settings
+-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TMP_Settings
+-  assetVersion: 2
+-  m_TextWrappingMode: 0
+-  m_enableKerning: 0
+-  m_ActiveFontFeatures: 00000000
+-  m_enableExtraPadding: 0
+-  m_enableTintAllSprites: 0
+-  m_enableParseEscapeCharacters: 0
+-  m_EnableRaycastTarget: 1
+-  m_GetFontFeaturesAtRuntime: 1
+-  m_missingGlyphCharacter: 0
+-  m_ClearDynamicDataOnBuild: 0
+-  m_warningsDisabled: 0
+-  m_defaultFontAsset: {fileID: 0}
+-  m_defaultFontAssetPath: 
+-  m_defaultFontSize: 0
+-  m_defaultAutoSizeMinRatio: 0
+-  m_defaultAutoSizeMaxRatio: 0
+-  m_defaultTextMeshProTextContainerSize: {x: 0, y: 0}
+-  m_defaultTextMeshProUITextContainerSize: {x: 0, y: 0}
+-  m_autoSizeTextContainer: 0
+-  m_IsTextObjectScaleStatic: 0
+-  m_fallbackFontAssets: []
+-  m_matchMaterialPreset: 0
+-  m_HideSubTextObjects: 1
+-  m_defaultSpriteAsset: {fileID: 0}
+-  m_defaultSpriteAssetPath: 
+-  m_enableEmojiSupport: 0
+-  m_MissingCharacterSpriteUnicode: 0
+-  m_EmojiFallbackTextAssets: []
+-  m_defaultColorGradientPresetsPath: 
+-  m_defaultStyleSheet: {fileID: 0}
+-  m_StyleSheetsResourcePath: 
+-  m_leadingCharacters: {fileID: 0}
+-  m_followingCharacters: {fileID: 0}
+-  m_UseModernHangulLineBreakingRules: 0
+diff --git a/Assets/LOBOver/Art/Resources/TMP Settings.asset.meta b/Assets/LOBOver/Art/Resources/TMP Settings.asset.meta
+deleted file mode 100644
+index 0fe418e7a2fccb761c899e9a5954561dacc5fc39..0000000000000000000000000000000000000000
+--- a/Assets/LOBOver/Art/Resources/TMP Settings.asset.meta
++++ /dev/null
+@@ -1,8 +0,0 @@
+-fileFormatVersion: 2
+-guid: fc823f103a0eba545ac2cafa7dff1a48
+-NativeFormatImporter:
+-  externalObjects: {}
+-  mainObjectFileID: 11400000
+-  userData: 
+-  assetBundleName: 
+-  assetBundleVariant: 
+diff --git a/Assets/LOBOver/Art/Text.meta b/Assets/LOBOver/Art/Text.meta
+deleted file mode 100644
+index 9b5be45faa477c7256a151c94d377643521c19c8..0000000000000000000000000000000000000000
+--- a/Assets/LOBOver/Art/Text.meta
++++ /dev/null
+@@ -1,8 +0,0 @@
+-fileFormatVersion: 2
+-guid: 2c7fba537ce282445bb65eacf7550179
+-folderAsset: yes
+-DefaultImporter:
+-  externalObjects: {}
+-  userData: 
+-  assetBundleName: 
+-  assetBundleVariant: 
+diff --git a/Assets/LOBOver/Art/Text/LICENSE.md b/Assets/LOBOver/Art/Text/LICENSE.md
+deleted file mode 100644
+index 208a9f4cbfb1fe6a059cb13ff20ce16e2ba43c33..0000000000000000000000000000000000000000
+--- a/Assets/LOBOver/Art/Text/LICENSE.md
++++ /dev/null
+@@ -1,5 +0,0 @@
+-uGUI Copyright © 2015-2020 Unity Technologies ApS ("**_Unity_**")
+-
+-Licensed under the Unity Companion License for Unity-dependent projects (see https://unity3d.com/legal/licenses/unity_companion_license).
+-
+-_Unless expressly provided otherwise, the Software under this license is made available strictly on an “AS IS” BASIS WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. Please review the license for details on these and other terms and conditions.
+diff --git a/Assets/LOBOver/Art/Text/LICENSE.md.meta b/Assets/LOBOver/Art/Text/LICENSE.md.meta
+deleted file mode 100644
+index 6410ccb4060d3e076c2df5ad2157e01fe7b0a674..0000000000000000000000000000000000000000
+--- a/Assets/LOBOver/Art/Text/LICENSE.md.meta
++++ /dev/null
+@@ -1,7 +0,0 @@
+-fileFormatVersion: 2
+-guid: b47713051e21c1146a1e15bbace8ef61
+-TextScriptImporter:
+-  externalObjects: {}
+-  userData: 
+-  assetBundleName: 
+-  assetBundleVariant: 
+diff --git a/Assets/LOBOver/Art/Text/SOURCE.md b/Assets/LOBOver/Art/Text/SOURCE.md
+deleted file mode 100644
+index 3b09c080e8e894cb7991e0f81f14c97a7588d01c..0000000000000000000000000000000000000000
+--- a/Assets/LOBOver/Art/Text/SOURCE.md
++++ /dev/null
+@@ -1,8 +0,0 @@
+-These two unchanged TextMeshPro shader files and their metadata come from the
+-already installed Unity UI package's `Package Resources/TMP Essential Resources.unitypackage`:
+-
+-- `Assets/TextMesh Pro/Shaders/TMP_SDF-Mobile.shader`
+-- `Assets/TextMesh Pro/Shaders/TMPro_Properties.cginc`
+-
+-They support the generated `SiteFont.asset` without importing assets outside
+-WO-S3's allowed folders. No package or dependency was added.
+diff --git a/Assets/LOBOver/Art/Text/SOURCE.md.meta b/Assets/LOBOver/Art/Text/SOURCE.md.meta
+deleted file mode 100644
+index 7921c5e2b1a0e62dc3cc6ffdf7cfaf2af2df4977..0000000000000000000000000000000000000000
+--- a/Assets/LOBOver/Art/Text/SOURCE.md.meta
++++ /dev/null
+@@ -1,7 +0,0 @@
+-fileFormatVersion: 2
+-guid: fa65396a1a196dc4a9999d246ded5e41
+-TextScriptImporter:
+-  externalObjects: {}
+-  userData: 
+-  assetBundleName: 
+-  assetBundleVariant: 
+diff --git a/Assets/LOBOver/Art/Text/TMP_SDF-Mobile.shader b/Assets/LOBOver/Art/Text/TMP_SDF-Mobile.shader
+deleted file mode 100644
+index b899d6e9d78c7885a8c90e39574fdc6252d11fe0..0000000000000000000000000000000000000000
+--- a/Assets/LOBOver/Art/Text/TMP_SDF-Mobile.shader
++++ /dev/null
+@@ -1,250 +0,0 @@
+-﻿// Simplified SDF shader:
+-// - No Shading Option (bevel / bump / env map)
+-// - No Glow Option
+-// - Softness is applied on both side of the outline
+-
+-Shader "TextMeshPro/Mobile/Distance Field" {
+-
+-Properties {
+-	_FaceColor          ("Face Color", Color) = (1,1,1,1)
+-	_FaceDilate			("Face Dilate", Range(-1,1)) = 0
+-
+-	_OutlineColor	    ("Outline Color", Color) = (0,0,0,1)
+-	_OutlineWidth		("Outline Thickness", Range(0,1)) = 0
+-	_OutlineSoftness	("Outline Softness", Range(0,1)) = 0
+-
+-	_UnderlayColor	    ("Border Color", Color) = (0,0,0,.5)
+-	_UnderlayOffsetX 	("Border OffsetX", Range(-1,1)) = 0
+-	_UnderlayOffsetY 	("Border OffsetY", Range(-1,1)) = 0
+-	_UnderlayDilate		("Border Dilate", Range(-1,1)) = 0
+-	_UnderlaySoftness 	("Border Softness", Range(0,1)) = 0
+-
+-	_WeightNormal		("Weight Normal", float) = 0
+-	_WeightBold			("Weight Bold", float) = .5
+-
+-	_ShaderFlags		("Flags", float) = 0
+-	_ScaleRatioA		("Scale RatioA", float) = 1
+-	_ScaleRatioB		("Scale RatioB", float) = 1
+-	_ScaleRatioC		("Scale RatioC", float) = 1
+-
+-	_MainTex			("Font Atlas", 2D) = "white" {}
+-	_TextureWidth		("Texture Width", float) = 512
+-	_TextureHeight		("Texture Height", float) = 512
+-	_GradientScale		("Gradient Scale", float) = 5
+-	_ScaleX				("Scale X", float) = 1
+-	_ScaleY				("Scale Y", float) = 1
+-	_PerspectiveFilter	("Perspective Correction", Range(0, 1)) = 0.875
+-	_Sharpness			("Sharpness", Range(-1,1)) = 0
+-
+-	_VertexOffsetX		("Vertex OffsetX", float) = 0
+-	_VertexOffsetY		("Vertex OffsetY", float) = 0
+-
+-	_ClipRect			("Clip Rect", vector) = (-32767, -32767, 32767, 32767)
+-	_MaskSoftnessX		("Mask SoftnessX", float) = 0
+-	_MaskSoftnessY		("Mask SoftnessY", float) = 0
+-
+-	_StencilComp		("Stencil Comparison", Float) = 8
+-	_Stencil			("Stencil ID", Float) = 0
+-	_StencilOp			("Stencil Operation", Float) = 0
+-	_StencilWriteMask	("Stencil Write Mask", Float) = 255
+-	_StencilReadMask	("Stencil Read Mask", Float) = 255
+-
+-	_CullMode			("Cull Mode", Float) = 0
+-	_ColorMask			("Color Mask", Float) = 15
+-}
+-
+-SubShader {
+-	Tags
+-	{
+-		"Queue"="Transparent"
+-		"IgnoreProjector"="True"
+-		"RenderType"="Transparent"
+-	}
+-
+-
+-	Stencil
+-	{
+-		Ref [_Stencil]
+-		Comp [_StencilComp]
+-		Pass [_StencilOp]
+-		ReadMask [_StencilReadMask]
+-		WriteMask [_StencilWriteMask]
+-	}
+-
+-	Cull [_CullMode]
+-	ZWrite Off
+-	Lighting Off
+-	Fog { Mode Off }
+-	ZTest [unity_GUIZTestMode]
+-	Blend One OneMinusSrcAlpha
+-	ColorMask [_ColorMask]
+-
+-	Pass {
+-		CGPROGRAM
+-		#pragma enable_d3d11_debug_symbols
+-		#pragma vertex VertShader
+-		#pragma fragment PixShader
+-		#pragma shader_feature __ OUTLINE_ON
+-		#pragma shader_feature __ UNDERLAY_ON UNDERLAY_INNER
+-
+-		#pragma multi_compile __ UNITY_UI_CLIP_RECT
+-		#pragma multi_compile __ UNITY_UI_ALPHACLIP
+-
+-		#include "UnityCG.cginc"
+-		#include "UnityUI.cginc"
+-		#include "TMPro_Properties.cginc"
+-
+-		struct vertex_t {
+-			UNITY_VERTEX_INPUT_INSTANCE_ID
+-			float4	vertex			: POSITION;
+-			float3	normal			: NORMAL;
+-			fixed4	color			: COLOR;
+-			float4	texcoord0		: TEXCOORD0;
+-			float2	texcoord1		: TEXCOORD1;
+-		};
+-
+-		struct pixel_t {
+-			UNITY_VERTEX_INPUT_INSTANCE_ID
+-			UNITY_VERTEX_OUTPUT_STEREO
+-			float4	vertex			: SV_POSITION;
+-			fixed4	faceColor		: COLOR;
+-			fixed4	outlineColor	: COLOR1;
+-			float4	texcoord0		: TEXCOORD0;			// Texture UV, Mask UV
+-			half4	param			: TEXCOORD1;			// Scale(x), BiasIn(y), BiasOut(z), Bias(w)
+-			half4	mask			: TEXCOORD2;			// Position in clip space(xy), Softness(zw)
+-			#if (UNDERLAY_ON | UNDERLAY_INNER)
+-			float4	texcoord1		: TEXCOORD3;			// Texture UV, alpha, reserved
+-			half2	underlayParam	: TEXCOORD4;			// Scale(x), Bias(y)
+-			#endif
+-		};
+-
+-		float _UIMaskSoftnessX;
+-        float _UIMaskSoftnessY;
+-        int _UIVertexColorAlwaysGammaSpace;
+-
+-		pixel_t VertShader(vertex_t input)
+-		{
+-			pixel_t output;
+-
+-			UNITY_INITIALIZE_OUTPUT(pixel_t, output);
+-			UNITY_SETUP_INSTANCE_ID(input);
+-			UNITY_TRANSFER_INSTANCE_ID(input, output);
+-			UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+-
+-			float bold = step(input.texcoord0.w, 0);
+-
+-			float4 vert = input.vertex;
+-			vert.x += _VertexOffsetX;
+-			vert.y += _VertexOffsetY;
+-			float4 vPosition = UnityObjectToClipPos(vert);
+-
+-			float2 pixelSize = vPosition.w;
+-			pixelSize /= float2(_ScaleX, _ScaleY) * abs(mul((float2x2)UNITY_MATRIX_P, _ScreenParams.xy));
+-
+-			float scale = rsqrt(dot(pixelSize, pixelSize));
+-			scale *= abs(input.texcoord0.w) * _GradientScale * (_Sharpness + 1);
+-			if(UNITY_MATRIX_P[3][3] == 0) scale = lerp(abs(scale) * (1 - _PerspectiveFilter), scale, abs(dot(UnityObjectToWorldNormal(input.normal.xyz), normalize(WorldSpaceViewDir(vert)))));
+-
+-			float weight = lerp(_WeightNormal, _WeightBold, bold) / 4.0;
+-			weight = (weight + _FaceDilate) * _ScaleRatioA * 0.5;
+-
+-			float layerScale = scale;
+-
+-			scale /= 1 + (_OutlineSoftness * _ScaleRatioA * scale);
+-			float bias = (0.5 - weight) * scale - 0.5;
+-			float outline = _OutlineWidth * _ScaleRatioA * 0.5 * scale;
+-
+-            if (_UIVertexColorAlwaysGammaSpace && !IsGammaSpace())
+-            {
+-                input.color.rgb = UIGammaToLinear(input.color.rgb);
+-            }
+-            float opacity = input.color.a;
+-			#if (UNDERLAY_ON | UNDERLAY_INNER)
+-			opacity = 1.0;
+-			#endif
+-
+-			fixed4 faceColor = fixed4(input.color.rgb, opacity) * _FaceColor;
+-			faceColor.rgb *= faceColor.a;
+-
+-			fixed4 outlineColor = _OutlineColor;
+-			outlineColor.a *= opacity;
+-			outlineColor.rgb *= outlineColor.a;
+-			outlineColor = lerp(faceColor, outlineColor, sqrt(min(1.0, (outline * 2))));
+-
+-			#if (UNDERLAY_ON | UNDERLAY_INNER)
+-			layerScale /= 1 + ((_UnderlaySoftness * _ScaleRatioC) * layerScale);
+-			float layerBias = (.5 - weight) * layerScale - .5 - ((_UnderlayDilate * _ScaleRatioC) * .5 * layerScale);
+-
+-			float x = -(_UnderlayOffsetX * _ScaleRatioC) * _GradientScale / _TextureWidth;
+-			float y = -(_UnderlayOffsetY * _ScaleRatioC) * _GradientScale / _TextureHeight;
+-			float2 layerOffset = float2(x, y);
+-			#endif
+-
+-			// Generate UV for the Masking Texture
+-			float4 clampedRect = clamp(_ClipRect, -2e10, 2e10);
+-			float2 maskUV = (vert.xy - clampedRect.xy) / (clampedRect.zw - clampedRect.xy);
+-
+-			// Populate structure for pixel shader
+-			output.vertex = vPosition;
+-			output.faceColor = faceColor;
+-			output.outlineColor = outlineColor;
+-			output.texcoord0 = float4(input.texcoord0.x, input.texcoord0.y, maskUV.x, maskUV.y);
+-			output.param = half4(scale, bias - outline, bias + outline, bias);
+-
+-			const half2 maskSoftness = half2(max(_UIMaskSoftnessX, _MaskSoftnessX), max(_UIMaskSoftnessY, _MaskSoftnessY));
+-			output.mask = half4(vert.xy * 2 - clampedRect.xy - clampedRect.zw, 0.25 / (0.25 * maskSoftness + pixelSize.xy));
+-			#if (UNDERLAY_ON || UNDERLAY_INNER)
+-			output.texcoord1 = float4(input.texcoord0 + layerOffset, input.color.a, 0);
+-			output.underlayParam = half2(layerScale, layerBias);
+-			#endif
+-
+-			return output;
+-		}
+-
+-
+-		// PIXEL SHADER
+-		fixed4 PixShader(pixel_t input) : SV_Target
+-		{
+-			UNITY_SETUP_INSTANCE_ID(input);
+-
+-			half d = tex2D(_MainTex, input.texcoord0.xy).a * input.param.x;
+-			half4 c = input.faceColor * saturate(d - input.param.w);
+-
+-			#ifdef OUTLINE_ON
+-			c = lerp(input.outlineColor, input.faceColor, saturate(d - input.param.z));
+-			c *= saturate(d - input.param.y);
+-			#endif
+-
+-			#if UNDERLAY_ON
+-			d = tex2D(_MainTex, input.texcoord1.xy).a * input.underlayParam.x;
+-			c += float4(_UnderlayColor.rgb * _UnderlayColor.a, _UnderlayColor.a) * saturate(d - input.underlayParam.y) * (1 - c.a);
+-			#endif
+-
+-			#if UNDERLAY_INNER
+-			half sd = saturate(d - input.param.z);
+-			d = tex2D(_MainTex, input.texcoord1.xy).a * input.underlayParam.x;
+-			c += float4(_UnderlayColor.rgb * _UnderlayColor.a, _UnderlayColor.a) * (1 - saturate(d - input.underlayParam.y)) * sd * (1 - c.a);
+-			#endif
+-
+-			// Alternative implementation to UnityGet2DClipping with support for softness.
+-			#if UNITY_UI_CLIP_RECT
+-			half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(input.mask.xy)) * input.mask.zw);
+-			c *= m.x * m.y;
+-			#endif
+-
+-			#if (UNDERLAY_ON | UNDERLAY_INNER)
+-			c *= input.texcoord1.z;
+-			#endif
+-
+-			#if UNITY_UI_ALPHACLIP
+-			clip(c.a - 0.001);
+-			#endif
+-
+-			return c;
+-		}
+-		ENDCG
+-	}
+-}
+-
+-CustomEditor "TMPro.EditorUtilities.TMP_SDFShaderGUI"
+-}
+diff --git a/Assets/LOBOver/Art/Text/TMP_SDF-Mobile.shader.meta b/Assets/LOBOver/Art/Text/TMP_SDF-Mobile.shader.meta
+deleted file mode 100644
+index 2ac6e76cd0c04a8ebf440262c2d6117809f09aba..0000000000000000000000000000000000000000
+--- a/Assets/LOBOver/Art/Text/TMP_SDF-Mobile.shader.meta
++++ /dev/null
+@@ -1,9 +0,0 @@
+-fileFormatVersion: 2
+-guid: fe393ace9b354375a9cb14cdbbc28be4
+-ShaderImporter:
+-  externalObjects: {}
+-  defaultTextures: []
+-  nonModifiableTextures: []
+-  userData: 
+-  assetBundleName: 
+-  assetBundleVariant: 
+diff --git a/Assets/LOBOver/Art/Text/TMPro_Properties.cginc b/Assets/LOBOver/Art/Text/TMPro_Properties.cginc
+deleted file mode 100644
+index b806b4f9560942cbe39941a2641f7e898c5279e1..0000000000000000000000000000000000000000
+--- a/Assets/LOBOver/Art/Text/TMPro_Properties.cginc
++++ /dev/null
+@@ -1,80 +0,0 @@
+-// UI Editable properties
+-uniform sampler2D	_FaceTex;					// Alpha : Signed Distance
+-uniform float		_FaceUVSpeedX;
+-uniform float		_FaceUVSpeedY;
+-uniform fixed4		_FaceColor;					// RGBA : Color + Opacity
+-uniform float		_FaceDilate;				// v[ 0, 1]
+-uniform float		_OutlineSoftness;			// v[ 0, 1]
+-
+-uniform sampler2D	_OutlineTex;				// RGBA : Color + Opacity
+-uniform float		_OutlineUVSpeedX;
+-uniform float		_OutlineUVSpeedY;
+-uniform fixed4		_OutlineColor;				// RGBA : Color + Opacity
+-uniform float		_OutlineWidth;				// v[ 0, 1]
+-
+-uniform float		_Bevel;						// v[ 0, 1]
+-uniform float		_BevelOffset;				// v[-1, 1]
+-uniform float		_BevelWidth;				// v[-1, 1]
+-uniform float		_BevelClamp;				// v[ 0, 1]
+-uniform float		_BevelRoundness;			// v[ 0, 1]
+-
+-uniform sampler2D	_BumpMap;					// Normal map
+-uniform float		_BumpOutline;				// v[ 0, 1]
+-uniform float		_BumpFace;					// v[ 0, 1]
+-
+-uniform samplerCUBE	_Cube;						// Cube / sphere map
+-uniform fixed4 		_ReflectFaceColor;			// RGB intensity
+-uniform fixed4		_ReflectOutlineColor;
+-//uniform float		_EnvTiltX;					// v[-1, 1]
+-//uniform float		_EnvTiltY;					// v[-1, 1]
+-uniform float3      _EnvMatrixRotation;
+-uniform float4x4	_EnvMatrix;
+-
+-uniform fixed4		_SpecularColor;				// RGB intensity
+-uniform float		_LightAngle;				// v[ 0,Tau]
+-uniform float		_SpecularPower;				// v[ 0, 1]
+-uniform float		_Reflectivity;				// v[ 5, 15]
+-uniform float		_Diffuse;					// v[ 0, 1]
+-uniform float		_Ambient;					// v[ 0, 1]
+-
+-uniform fixed4		_UnderlayColor;				// RGBA : Color + Opacity
+-uniform float		_UnderlayOffsetX;			// v[-1, 1]
+-uniform float		_UnderlayOffsetY;			// v[-1, 1]
+-uniform float		_UnderlayDilate;			// v[-1, 1]
+-uniform float		_UnderlaySoftness;			// v[ 0, 1]
+-
+-uniform fixed4 		_GlowColor;					// RGBA : Color + Intesity
+-uniform float 		_GlowOffset;				// v[-1, 1]
+-uniform float 		_GlowOuter;					// v[ 0, 1]
+-uniform float 		_GlowInner;					// v[ 0, 1]
+-uniform float 		_GlowPower;					// v[ 1, 1/(1+4*4)]
+-
+-// API Editable properties
+-uniform float 		_ShaderFlags;
+-uniform float		_WeightNormal;
+-uniform float		_WeightBold;
+-
+-uniform float		_ScaleRatioA;
+-uniform float		_ScaleRatioB;
+-uniform float		_ScaleRatioC;
+-
+-uniform float		_VertexOffsetX;
+-uniform float		_VertexOffsetY;
+-
+-//uniform float		_UseClipRect;
+-uniform float		_MaskID;
+-uniform sampler2D	_MaskTex;
+-uniform float4		_MaskCoord;
+-uniform float4		_ClipRect;	// bottom left(x,y) : top right(z,w)
+-uniform float		_MaskSoftnessX;
+-uniform float		_MaskSoftnessY;
+-
+-// Font Atlas properties
+-uniform sampler2D	_MainTex;
+-uniform float		_TextureWidth;
+-uniform float		_TextureHeight;
+-uniform float 		_GradientScale;
+-uniform float		_ScaleX;
+-uniform float		_ScaleY;
+-uniform float		_PerspectiveFilter;
+-uniform float		_Sharpness;
+diff --git a/Assets/LOBOver/Art/Text/TMPro_Properties.cginc.meta b/Assets/LOBOver/Art/Text/TMPro_Properties.cginc.meta
+deleted file mode 100644
+index 7b37f2f1d08e95d3414310fe4799001453c48521..0000000000000000000000000000000000000000
+--- a/Assets/LOBOver/Art/Text/TMPro_Properties.cginc.meta
++++ /dev/null
+@@ -1,9 +0,0 @@
+-fileFormatVersion: 2
+-guid: 3997e2241185407d80309a82f9148466
+-ShaderImporter:
+-  externalObjects: {}
+-  defaultTextures: []
+-  nonModifiableTextures: []
+-  userData: 
+-  assetBundleName: 
+-  assetBundleVariant: 
+diff --git a/Assets/LOBOver/Editor/SiteAssetBuilder.cs b/Assets/LOBOver/Editor/SiteAssetBuilder.cs
+index ab4fece647d959bc7d9cb503935b66196fd78841..2135b74f38fa4836dcd1b4fcf7acc0d94d9f7e43
+--- a/Assets/LOBOver/Editor/SiteAssetBuilder.cs
++++ b/Assets/LOBOver/Editor/SiteAssetBuilder.cs
+@@ -26,10 +26,15 @@
+         private static AudioClip Audio(string name, string extension = ".ogg") => Required<AudioClip>(Imported + "Audio/Construction/" + name + extension);
+         public static WorldAssets Build()
+         {
++            if (!File.Exists("Assets/TextMesh Pro/Resources/TMP Settings.asset"))
++            {
++                TMP_PackageResourceImporter.ImportResources(true, false, false);
++                AssetDatabase.Refresh();
++            }
+             Directory.CreateDirectory(Art); Directory.CreateDirectory(Prefabs); Directory.CreateDirectory(Prefabs + "Imported"); AssetDatabase.Refresh();
+             var assets = AssetDatabase.LoadAssetAtPath<WorldAssets>(Art + "WorldAssets.asset");
+             if (assets == null) { assets = ScriptableObject.CreateInstance<WorldAssets>(); AssetDatabase.CreateAsset(assets, Art + "WorldAssets.asset"); }
+-            assets.font = Font(); assets.soil = Material("Soil"); assets.timber = Material("Timber"); assets.steel = Material("StorageSteel"); assets.orange = Material("SafetyOrange");
++            assets.font = TMP_Settings.defaultFontAsset; assets.soil = Material("Soil"); assets.timber = Material("Timber"); assets.steel = Material("StorageSteel"); assets.orange = Material("SafetyOrange");
+             assets.ink = OwnMaterial("Ink", Color.white, false, "Universal Render Pipeline/Particles/Unlit");
+             assets.cloud = OwnMaterial("Cloud", new Color(0.26f, 0.28f, 0.31f));
+             assets.rain = OwnMaterial("Rain", new Color(0.65f, 0.72f, 0.8f, 0.5f), true);
+@@ -67,34 +72,6 @@
+                 material.SetOverrideTag("RenderType", "Transparent"); material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT"); material.renderQueue = (int)RenderQueue.Transparent;
+             }
+             EditorUtility.SetDirty(material); return material;
+-        }
+-        private static TMP_FontAsset Font()
+-        {
+-            // TMP is installed but its optional Resources package need not have been imported.
+-            // Keep settings and the generated font inside the work order's Art scope.
+-            var settings = Resources.Load<TMP_Settings>("TMP Settings");
+-            if (settings == null)
+-            {
+-                Directory.CreateDirectory(Art + "Resources"); AssetDatabase.Refresh();
+-                settings = ScriptableObject.CreateInstance<TMP_Settings>();
+-                AssetDatabase.CreateAsset(settings, Art + "Resources/TMP Settings.asset");
+-                // Installed com.unity.ugui 2.0 TMP_Settings schema, avoiding the optional importer dialog.
+-                var serialized = new SerializedObject(settings);
+-                serialized.FindProperty("assetVersion").stringValue = "2";
+-                serialized.FindProperty("m_ClearDynamicDataOnBuild").boolValue = false;
+-                serialized.ApplyModifiedPropertiesWithoutUndo();
+-            }
+-            TMP_Settings.LoadDefaultSettings();
+-            var path = Art + "SiteFont.asset"; var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
+-            if (font != null) return font;
+-            font = TMP_FontAsset.CreateFontAsset(Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
+-            font.name = "SiteFont"; font.TryAddCharacters(string.Concat(Enumerable.Range(32, 95).Select(value => (char)value)) + "—–·×");
+-            AssetDatabase.CreateAsset(font, path);
+-            foreach (var atlas in font.atlasTextures) AssetDatabase.AddObjectToAsset(atlas, font);
+-            AssetDatabase.AddObjectToAsset(font.material, font); EditorUtility.SetDirty(font);
+-            if (AssetDatabase.GetAssetPath(settings).StartsWith(Art, StringComparison.Ordinal))
+-            { TMP_Settings.defaultFontAsset = font; EditorUtility.SetDirty(settings); }
+-            return font;
+         }
+         public static void StripMissing(GameObject instance)
+         {
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+2026-10-21T01:39:19.558125Z ERROR codex_core::tools::router: error=exec_command failed: CreateProcess { message: "Rejected(\"`\\\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\WindowsPowerShell\\\\\\\\v1.0\\\\\\\\powershell.exe\\\" -Command '$ErrorActionPreference = '\\\"'Stop'\\n\\\"'$artRoot = (Resolve-Path -LiteralPath '\\\"'Assets/LOBOver/Art').Path\\nforeach (\\\"'$name in @('\\\"'Text', 'Resources')) {\\n    \\\"'$target = Join-Path $artRoot $name\\n    if (!(Test-Path -LiteralPath $target)) { continue }\\n    …99 chars truncated…mparison]::OrdinalIgnoreCase)) { throw \\\"Unexpected target: $resolved\\\" }\\n    if (@(Get-ChildItem -LiteralPath $resolved -Force).Count -ne 0) { throw \\\"Directory is not empty: $resolved\\\" }\\n    Remove-Item -LiteralPath $resolved\\n    if (Test-Path -LiteralPath $resolved) { throw \\\"Directory still exists: $resolved\\\" }\\n    Write-Output \\\"Removed empty folder: Assets/LOBOver/Art/$name\\\"\\n}'` rejected: blocked by policy\")" }
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-ChildItem -LiteralPath 'Assets/LOBOver/Art' -Force | Select-Object Name,Mode
+Test-Path -LiteralPath 'Assets/LOBOver/Art/Text','Assets/LOBOver/Art/Resources','Assets/LOBOver/Art/Text.meta','Assets/LOBOver/Art/Resources.meta'" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 119ms:
+
+Name                   Mode  
+----                   ----  
+Resources              d-----
+Text                   d-----
+WorldAssets.asset      -a----
+WorldAssets.asset.meta -a----
+True
+True
+False
+False
+
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Remove-Item -LiteralPath 'C:\\Users\\bryan\\Documents\\TAMU\\02-Research\\Creative Care\\Unity\\LOB-OVER\\Assets\\LOBOver\\Art\\Text','C:\\Users\\bryan\\Documents\\TAMU\\02-Research\\Creative Care\\Unity\\LOB-OVER\\Assets\\LOBOver\\Art\\Resources'" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 73ms:
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "powershell -NoProfile -ExecutionPolicy Bypass -File 'Assets/LOBOver/Tests/CompileOffline.ps1'" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 13174ms:
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Sim: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Director: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.World: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Director.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.World.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.VR: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.VR.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.MR: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.MR.Android: 0 errors
+LOBOver.Start: 0 errors
+LOBOver.Start.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Editor: 0 errors
+LOBOver.XR.Editor: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.EditModeTests: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.PlayModeTests: 0 errors
+PASS: 15 offline assembly compilations; Unity import, tests and rendering still require the Editor.
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+PASS: wrong-stretch F3 stays uninspected by presenter; genuine Site inspect marks it.
+PASS: 20835 presenter queries preserve complete state and Drain across all three stages; all 9 targets match inspect replies; 4 fake-input checks pass.
+Argument at t=4.20: pipe 520.2 arguing; back 272.5 arguing; exc 869 stopped; ev_p1.
+PASS: all Site fields at days 1, 4, 5, 9, 16 match recorded JSON; t=4.20 argument matches Amendment 1 (positions within 1 ft).
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+Step 3 of 3: Offline compilation passed for all 15 assemblies, and the fixture replay passed. Both Art folders and their `.meta` files are removed. I’m checking the final diff and scope before handing the Unity verification back to the orchestrator.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'git diff --check
+git diff -- Assets/LOBOver/Editor/SiteAssetBuilder.cs
+git status --short' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$ErrorActionPreference = '"'Stop'
+"'$removed = @('"'Assets/LOBOver/Art/Text', 'Assets/LOBOver/Art/Resources', 'Assets/LOBOver/Art/Text.meta', 'Assets/LOBOver/Art/Resources.meta')
+foreach ("'$path in $removed) { if (Test-Path -LiteralPath $path) { throw "Still exists: $path" } }
+Write-Output '"'PASS: Art/Text, Art/Resources and both folder .meta files are absent.'
+if (Select-String -LiteralPath 'Assets/LOBOver/Editor/SiteAssetBuilder.cs' -Pattern 'LegacyRuntime|SiteFont|CreateInstance<TMP_Settings>|CreateFontAsset') { throw 'Hand-made TMP setup remains.' }
+Write-Output 'PASS: SiteAssetBuilder contains no LegacyRuntime, SiteFont or hand-made TMP creation.'" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 132ms:
+PASS: Art/Text, Art/Resources and both folder .meta files are absent.
+PASS: SiteAssetBuilder contains no LegacyRuntime, SiteFont or hand-made TMP creation.
+
+ succeeded in 154ms:
+Assets/LOBOver/Tests/VerifyFixtures.cs.txt.meta:5: trailing whitespace.
++  userData: 
+Assets/LOBOver/Tests/VerifyFixtures.cs.txt.meta:6: trailing whitespace.
++  assetBundleName: 
+Assets/LOBOver/Tests/VerifyFixtures.cs.txt.meta:7: trailing whitespace.
++  assetBundleVariant: 
+diff --git a/Assets/LOBOver/Editor/SiteAssetBuilder.cs b/Assets/LOBOver/Editor/SiteAssetBuilder.cs
+index ab4fece..2135b74 100644
+--- a/Assets/LOBOver/Editor/SiteAssetBuilder.cs
++++ b/Assets/LOBOver/Editor/SiteAssetBuilder.cs
+@@ -26,10 +26,15 @@ namespace LOBOver.Editor
+         private static AudioClip Audio(string name, string extension = ".ogg") => Required<AudioClip>(Imported + "Audio/Construction/" + name + extension);
+         public static WorldAssets Build()
+         {
++            if (!File.Exists("Assets/TextMesh Pro/Resources/TMP Settings.asset"))
++            {
++                TMP_PackageResourceImporter.ImportResources(true, false, false);
++                AssetDatabase.Refresh();
++            }
+             Directory.CreateDirectory(Art); Directory.CreateDirectory(Prefabs); Directory.CreateDirectory(Prefabs + "Imported"); AssetDatabase.Refresh();
+             var assets = AssetDatabase.LoadAssetAtPath<WorldAssets>(Art + "WorldAssets.asset");
+             if (assets == null) { assets = ScriptableObject.CreateInstance<WorldAssets>(); AssetDatabase.CreateAsset(assets, Art + "WorldAssets.asset"); }
+-            assets.font = Font(); assets.soil = Material("Soil"); assets.timber = Material("Timber"); assets.steel = Material("StorageSteel"); assets.orange = Material("SafetyOrange");
++            assets.font = TMP_Settings.defaultFontAsset; assets.soil = Material("Soil"); assets.timber = Material("Timber"); assets.steel = Material("StorageSteel"); assets.orange = Material("SafetyOrange");
+             assets.ink = OwnMaterial("Ink", Color.white, false, "Universal Render Pipeline/Particles/Unlit");
+             assets.cloud = OwnMaterial("Cloud", new Color(0.26f, 0.28f, 0.31f));
+             assets.rain = OwnMaterial("Rain", new Color(0.65f, 0.72f, 0.8f, 0.5f), true);
+@@ -68,34 +73,6 @@ namespace LOBOver.Editor
+             }
+             EditorUtility.SetDirty(material); return material;
+         }
+-        private static TMP_FontAsset Font()
+-        {
+-            // TMP is installed but its optional Resources package need not have been imported.
+-            // Keep settings and the generated font inside the work order's Art scope.
+-            var settings = Resources.Load<TMP_Settings>("TMP Settings");
+-            if (settings == null)
+-            {
+-                Directory.CreateDirectory(Art + "Resources"); AssetDatabase.Refresh();
+-                settings = ScriptableObject.CreateInstance<TMP_Settings>();
+-                AssetDatabase.CreateAsset(settings, Art + "Resources/TMP Settings.asset");
+-                // Installed com.unity.ugui 2.0 TMP_Settings schema, avoiding the optional importer dialog.
+-                var serialized = new SerializedObject(settings);
+-                serialized.FindProperty("assetVersion").stringValue = "2";
+-                serialized.FindProperty("m_ClearDynamicDataOnBuild").boolValue = false;
+-                serialized.ApplyModifiedPropertiesWithoutUndo();
+-            }
+-            TMP_Settings.LoadDefaultSettings();
+-            var path = Art + "SiteFont.asset"; var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
+-            if (font != null) return font;
+-            font = TMP_FontAsset.CreateFontAsset(Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
+-            font.name = "SiteFont"; font.TryAddCharacters(string.Concat(Enumerable.Range(32, 95).Select(value => (char)value)) + "—–·×");
+-            AssetDatabase.CreateAsset(font, path);
+-            foreach (var atlas in font.atlasTextures) AssetDatabase.AddObjectToAsset(atlas, font);
+-            AssetDatabase.AddObjectToAsset(font.material, font); EditorUtility.SetDirty(font);
+-            if (AssetDatabase.GetAssetPath(settings).StartsWith(Art, StringComparison.Ordinal))
+-            { TMP_Settings.defaultFontAsset = font; EditorUtility.SetDirty(settings); }
+-            return font;
+-        }
+         public static void StripMissing(GameObject instance)
+         {
+             foreach (var child in instance.GetComponentsInChildren<Transform>(true)) GameObjectUtility.RemoveMonoBehavioursWithMissingScript(child.gameObject);
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+ D Assets/LOBOver/Art/Text.meta
+ D Assets/LOBOver/Art/Text/LICENSE.md
+ D Assets/LOBOver/Art/Text/LICENSE.md.meta
+ D Assets/LOBOver/Art/Text/SOURCE.md
+ D Assets/LOBOver/Art/Text/SOURCE.md.meta
+ D Assets/LOBOver/Art/Text/TMP_SDF-Mobile.shader
+ D Assets/LOBOver/Art/Text/TMP_SDF-Mobile.shader.meta
+ D Assets/LOBOver/Art/Text/TMPro_Properties.cginc
+ D Assets/LOBOver/Art/Text/TMPro_Properties.cginc.meta
+ M Assets/LOBOver/Editor/SiteAssetBuilder.cs
+ M Assets/LOBOver/Tests/VerifyFixtures.cs.txt.meta
+?? Assets/LOBOver/Art/WorldAssets.asset
+?? Assets/LOBOver/Art/WorldAssets.asset.meta
+?? Assets/LOBOver/Prefabs.meta
+?? Assets/LOBOver/Prefabs/
+?? Docs/WORK_ORDERS/logs/WO-S3.20261020-203629.log
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'git diff --check -- Assets/LOBOver/Editor/SiteAssetBuilder.cs Assets/LOBOver/Art
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+Write-Output '"'PASS: no whitespace errors in rejection-fix changes.'" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 89ms:
+PASS: no whitespace errors in rejection-fix changes.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+```text
+STATUS: PARTIAL
+WO: WO-S3
+CHANGED:
+  - Assets/LOBOver/Editor/SiteAssetBuilder.cs (modified): imports missing TMP Essentials and uses TMP_Settings.defaultFontAsset; removed custom settings/font creation.
+  - Assets/LOBOver/Art/Text/ and Text.meta (deleted): removed conflicting TMP assets.
+  - Assets/LOBOver/Art/Resources/ and Resources.meta (deleted): removed duplicate TMP settings.
+TESTS:
+  - powershell -NoProfile -ExecutionPolicy Bypass -File Assets/LOBOver/Tests/CompileOffline.ps1 -> exit 0:
+    PASS: 15 offline assembly compilations; Unity import, tests and rendering still require the Editor.
+    PASS: wrong-stretch F3 stays uninspected by presenter; genuine Site inspect marks it.
+    PASS: 20835 presenter queries preserve complete state and Drain across all three stages; all 9 targets match inspect replies; 4 fake-input checks pass.
+    PASS: all Site fields at days 1, 4, 5, 9, 16 match recorded JSON; t=4.20 argument matches Amendment 1 (positions within 1 ft).
+  - Folder checks -> both deleted folders and their .meta files are absent.
+  - git diff --check -- Assets/LOBOver/Editor/SiteAssetBuilder.cs Assets/LOBOver/Art -> PASS.
+  - git status --short -> own changes confined to rejection scope; pre-existing changes left untouched.
+  - Unity build, rendering and test suites -> NOT RUN; reserved for the orchestrator by this dispatch.
+NOTES:
+  - Step 3 of 3 complete locally; Unity acceptance remains pending.
+  - Repository-wide whitespace check flags pre-existing VerifyFixtures.cs.txt.meta lines 5–7; untouched.
+  - Next action (1 minute): orchestrator triggers TMP Essential Resources re-import in Unity before rebuilding Site Scene.
+```
+hook: Stop
+hook: Stop
+hook: Stop Completed
+hook: Stop Completed
+tokens used
+47,489
+```text
+STATUS: PARTIAL
+WO: WO-S3
+CHANGED:
+  - Assets/LOBOver/Editor/SiteAssetBuilder.cs (modified): imports missing TMP Essentials and uses TMP_Settings.defaultFontAsset; removed custom settings/font creation.
+  - Assets/LOBOver/Art/Text/ and Text.meta (deleted): removed conflicting TMP assets.
+  - Assets/LOBOver/Art/Resources/ and Resources.meta (deleted): removed duplicate TMP settings.
+TESTS:
+  - powershell -NoProfile -ExecutionPolicy Bypass -File Assets/LOBOver/Tests/CompileOffline.ps1 -> exit 0:
+    PASS: 15 offline assembly compilations; Unity import, tests and rendering still require the Editor.
+    PASS: wrong-stretch F3 stays uninspected by presenter; genuine Site inspect marks it.
+    PASS: 20835 presenter queries preserve complete state and Drain across all three stages; all 9 targets match inspect replies; 4 fake-input checks pass.
+    PASS: all Site fields at days 1, 4, 5, 9, 16 match recorded JSON; t=4.20 argument matches Amendment 1 (positions within 1 ft).
+  - Folder checks -> both deleted folders and their .meta files are absent.
+  - git diff --check -- Assets/LOBOver/Editor/SiteAssetBuilder.cs Assets/LOBOver/Art -> PASS.
+  - git status --short -> own changes confined to rejection scope; pre-existing changes left untouched.
+  - Unity build, rendering and test suites -> NOT RUN; reserved for the orchestrator by this dispatch.
+NOTES:
+  - Step 3 of 3 complete locally; Unity acceptance remains pending.
+  - Repository-wide whitespace check flags pre-existing VerifyFixtures.cs.txt.meta lines 5–7; untouched.
+  - Next action (1 minute): orchestrator triggers TMP Essential Resources re-import in Unity before rebuilding Site Scene.
+```
+
+=== codex exit code: 0
+=== finished 20261020-204125
