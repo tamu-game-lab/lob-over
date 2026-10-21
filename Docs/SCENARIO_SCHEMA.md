@@ -82,3 +82,28 @@ Conventions: feet are integers from the job start (`720` prints as `7+20`); days
 ## Validation (WO-01)
 
 `node Monitor/src/scenario/validate.js Data/Scenarios/<file>.json` must check: every machine key exists in the catalog; zones tile `[0, lengthFt]` without gaps; `startDay` ≥ 1; permit and inspection cards cover every zone exactly once with distinct codes whose check digits are correct; every `trigger.crew` and `hits` is a crew id; every `options[].check.seat` is `site`, `plan` or `rules`; every `lines[].trigger` is a known trigger; no key anywhere named `whenRight`, `whenWrong`, `correct`, `verdict`; `_validate` keys allowed anywhere and listed in the output so they can be handed to the validators.
+
+## Guide files (WO-S7)
+
+Guides live separately in `Data/Guides/<id>.json`; they control host pauses and prompts, never simulation rules. `slice_guided.json` follows `Docs/PLAYTHROUGH.md`.
+
+| Field | Meaning |
+| --- | --- |
+| `schemaVersion` | `1` |
+| `id`, `scenario`, `title`, `source` | guide id, matching scenario id, guide title, source document |
+| `autoResumeWhenAllReady` | boolean; automatically resume after every connected primary player seat sends Ready |
+| `resumeDelaySeconds` | nonnegative real-time seconds between all-ready and resume; Continue bypasses it |
+| `beats[]` | ordered array of the objects below |
+
+Each beat has a unique `id`, `title`, `trigger`, `narration`, `prompts:{site,plan,rules}` and `rulesSection` (an anchor from the stage's `kit.manualPages`). Narration and the combined prompt map are facilitator-only. The host sends each player only that player's prompt.
+
+| Trigger | Fires when |
+| --- | --- |
+| `{"kind":"start"}` | facilitator starts the run |
+| `{"kind":"event","id":"ev_p1"}` | the simulation fires that event |
+| `{"kind":"conflict","pair":"back-pipe"}` | conflict event `conflict_back_pipe` fires; pair is trailing-leader |
+| `{"kind":"t","atLeast":7}` | simulation `t >= atLeast` (t 7 is Day 8) |
+| `{"kind":"holdPoint","zone":1}` | backfill is within 10 ft of that zone's end, or idle at its hold point |
+| `{"kind":"result"}` | the simulation emits its result |
+
+Triggers are latched. Beats remain ordered; an unfired earlier beat is marked skipped when a later beat becomes due. A trigger reached during a paused Site trip waits until the current beat ends. Reset clears readiness, completed/skipped beats and latched triggers. Loading a different scenario disables an incompatible guide. See `PROTOCOL.md` for the message and Ready/Continue behavior.

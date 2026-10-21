@@ -4,7 +4,7 @@ Protocol version 1. The host owns the only simulation. Clients are thin: they re
 
 ## Transport
 
-- WebSocket, text frames, one JSON object per frame, UTF-8. Path `/ws`. Default port `7331`. The host also serves static pages over HTTP on the same port: `/plan.html`, `/site.html`, `/facilitator.html`.
+- WebSocket, text frames, one JSON object per frame, UTF-8. Path `/ws`. Default port `7331`. The host also serves static pages over HTTP on the same port: `/plan.html`, `/site.html`, `/rules.html`, `/facilitator.html`.
 - Every message has `"t"` (type) and `"v": 1`. Unknown types are ignored and logged; unknown fields are ignored.
 - The host sends `state` to every client at 4 Hz while the clock runs, and at once after any command that changed state. Clients never compute game state; they render.
 - Times: `day` is a float in simulated days from the stage start (`0.0` = the morning of Day 1; the display day is `Math.floor(day) + 1`). `speed` is `"full"` (5 s per day), `"slow"` (20 s per day, during an unresolved event), or `"paused"`.
@@ -13,13 +13,14 @@ Protocol version 1. The host owns the only simulation. Clients are thin: they re
 ## Client -> host
 
 ```jsonc
-{"t":"hello","v":1,"seat":"plan"|"site"|"facilitator","client":"web"|"quest","name":"optional"}
+{"t":"hello","v":1,"seat":"plan"|"site"|"rules"|"facilitator","client":"web"|"quest","name":"optional"}
 // reply: {"t":"welcome","v":1,"seat":"...","stage":"stage1_texas","protocol":1,"state":{...}}
 // A second client for a seat that is already taken is accepted as a mirror (read-only) and told so: "mirror": true.
 
 {"t":"cmd","v":1,"id":"c-17","seat":"plan","action":"commit","ops":[ ...PlanOp ]}
 {"t":"cmd","v":1,"id":"c-18","seat":"site","action":"moveTo","stationFt":720}
-{"t":"ctrl","v":1,"id":"c-19","action":"start"|"pause"|"resume"|"reset"|"load","stage":"stage2_texas"}   // facilitator only
+{"t":"cmd","v":1,"id":"c-19","seat":"rules","action":"ready"} // any player seat during a guide beat
+{"t":"ctrl","v":1,"id":"c-20","action":"start"|"pause"|"resume"|"continue"|"reset"|"load","stage":"stage2_texas"}   // facilitator only
 ```
 
 Every `cmd`/`ctrl` gets exactly one `ack` or `nack` with the same `id`.
@@ -76,6 +77,26 @@ An order (hold, resume, lend, order, protect, demob, remob) becomes an `Order` o
 **Site** (`seat: "site"`): `truck` (`stationFt`, `moving`, `dismounted`), `crews[]` (`id`, `stationFt` live, `working|idle|held|stopped|arguing|demobilized`, `machinePlate` ("Standard"), `moodLevel` 0-3), `trench[]` per 100 ft station (`state`: `undug|open|piped|backfilled`, `water: none|seep|standing`, `wall: sound|slumped`, `protection: none|box|shoring|slope`, `pipeDamage: none|cracked`), `boards[]` per zone (`permitNumber|null`, `inspectionNumber|null`), `sky` (`clear|towersSouth|rain`), `gate` (`trucksWaiting`), `activeEvent` (facts only, if Site is within the zone or has inspected it), `orders[]` landed at Site's current station awaiting confirmation. No plan, no money, no forecast percentages.
 
 **Facilitator** (`seat: "facilitator"`): everything, including hidden variants, pending events and deviations, the two other views side by side. Never shown to players; used by Bryan during table tests and by Playwright during verification.
+
+**Rules** (`seat: "rules"`): exactly `{stage, displayDay, speed}` in `state.view`. No positions, plan, money, daily reports, field events or result overlay. On welcome and reset/load it also receives `kit`: `{t:"kit", v:1, stage, title, job:{sign:{cityCode,pipe,contractDays},lengthFt,zones}, permits:{cards}, inspections:{cards,checklist}, manualPages}`. These are authored job sign, card and ledger facts, not live simulation state. The page loads the filled manual from `manual/<stage>.html`; signatures, checkboxes and ledger notes remain in that page and reset with the run. Rules can send `ready`; simulation commands are unavailable to it.
+
+## Guided playthrough (WO-S7)
+
+The Node host accepts `--guide Data/Guides/slice_guided.json`. The browser host offers Guided and a guide picker. Enabling Guided resets the run and turns Autoplan off; it can be enabled again explicitly. The selected guide must match the selected scenario. Without a guide, the existing clock and commands are unchanged.
+
+On Start, and at each subsequent trigger, the host pauses and sends each player only their own prompt:
+
+```json
+{"t":"guide","v":1,"beat":{"id":"b0_brief","index":0,"count":9,"title":"Morning brief"},"prompt":"Find zone 1's permit card. Check the digits, then read the code to Plan.","rulesSection":"permits_holdpoints","ready":{"site":false,"plan":false,"rules":false}}
+```
+
+`index` is zero-based. Only the facilitator's message adds `narration`, `prompts:{site,plan,rules}`, and `beats:[{id,title,status}]`, where status is `upcoming`, `current`, `done` or `skipped`. No guide source or other seat's prompt is sent to a player. Between beats, `beat` and `rulesSection` are null and `prompt` is empty; player banners hide. The facilitator keeps the beat list. Joining a running guide receives its current message.
+
+Beats trigger in order on start, authored event id, conflict pair (`back-pipe` corresponds to event id `conflict_back_pipe`), simulation time, backfill within 10 ft of a zone end (including idle at the hold point), or result. The host observes the completed simulation tick: conflict events carry the beginning-of-tick time and pause at the end of that 0.01-day tick. If a later trigger fires before an earlier trigger, the earlier beat is skipped. Triggers reached during a paused trip are retained until the current beat ends.
+
+`cmd ready` marks the sending seat ready, broadcasts the updated ready map and acknowledges once. Once every connected primary player seat is ready, the host waits the guide's `resumeDelaySeconds` of real time, then resumes. Read-only mirrors and the facilitator do not count; no connected players means no automatic resume. A newly connected unready seat cancels a pending countdown. Readiness resets for every beat. `ctrl continue` ends the current beat immediately; any already-triggered next beat pauses immediately. Start/Resume cannot bypass a current guide beat. Reset/load cancel pending countdowns. With no active beat, Ready/Continue return `nack: "no guide beat"`.
+
+Commands remain available during guide pauses. A valid Site `moveTo` while paused advances only the simulation travel duration (`|Δft| / 1500 / 24` days), including the fractional final tick, then pauses again. Other commands do not advance the clock. Guided Site receives only `{t:"result",v:1,stage}` at the result; Plan and the facilitator receive the full overlay. Rules receives the result beat, with its own prompt.
 
 ## Daily report timing
 

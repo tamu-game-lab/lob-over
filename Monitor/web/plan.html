@@ -22,6 +22,7 @@ button.primary:hover{background:#365568}
 <section class="panel keypad"><h2>Permit / Inspection keypad</h2><label>Zone<select id="key-zone"></select></label><div class="row"><label>Permit code<input id="permit-code" autocomplete="off"></label><button id="enter-permit">Enter permit</button></div><div class="row"><label>Inspection number<input id="inspection-number" autocomplete="off"></label><button id="enter-inspection">Enter inspection</button></div><div id="posted"></div></section>
 </aside></div></main>
 <script src="lib/transport.js"></script>
+<script src="lib/guide.js"></script>
 <script>
 'use strict';
 const $=id=>document.getElementById(id), esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -35,6 +36,7 @@ const VOICE_MS=8000;
 let state, result, lastReport, draft=[], sequence=0, stage, lastDay=0, catalogStage, drag, pmTimer;
 const pending=new Map(), voiceFiles=new Map();
 const socket=LobTransport.connect();
+LobGuide.attach(socket,'plan');
 socket.onopen=()=>socket.send(JSON.stringify({t:'hello',v:1,seat:'plan',client:'web'}));
 socket.onclose=()=>{$('connection').textContent='Disconnected';};
 function sendOps(ops,onAck){

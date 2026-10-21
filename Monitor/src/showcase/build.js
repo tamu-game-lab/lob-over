@@ -10,7 +10,7 @@ export async function build() {
   if (relative(root, dist) !== ['Showcase', 'dist'].join(sep)) throw new Error('Unexpected build directory');
   await rm(dist, { recursive: true, force: true });
   await mkdir(dist, { recursive: true });
-  for (const name of ['index.html', 'host.html', 'plan.html', 'site.html', 'howto.html', 'lib']) {
+  for (const name of ['index.html', 'host.html', 'plan.html', 'site.html', 'rules.html', 'facilitator.html', 'howto.html', 'lib']) {
     await cp(resolve(root, 'Monitor/web', name), resolve(dist, name), { recursive: true });
   }
   for (const dir of ['sim', 'scenario', 'common', 'host']) {
@@ -32,11 +32,16 @@ export async function build() {
   await cp(resolve(root, 'Data/Scenarios'), resolve(dist, 'Data/Scenarios'), { recursive: true,
     filter: path => !extname(path) || extname(path) === '.json',
   });
+  await cp(resolve(root, 'Data/Guides'), resolve(dist, 'Data/Guides'), { recursive: true,
+    filter: path => !extname(path) || extname(path) === '.json',
+  });
   for (const name of scripts) await cp(resolve(root, 'Monitor/test/scripts', name + '.json'), resolve(dist, 'Data/scripts', name + '.json'));
   await mkdir(resolve(dist, 'manual'), { recursive: true });
   for (const stage of ['slice_texas', 'stage1_texas', 'stage2_texas']) {
     try { await cp(resolve(root, 'Paper/out', stage, 'manual.pdf'), resolve(dist, 'manual', stage + '.pdf')); }
     catch (error) { if (error.code !== 'ENOENT') throw error; console.log(`Manual absent: ${stage}`); }
+    try { await cp(resolve(root, 'Paper/out', stage, 'manual.html'), resolve(dist, 'manual', stage + '.html')); }
+    catch (error) { if (error.code !== 'ENOENT') throw error; console.log(`HTML manual absent: ${stage}; run Paper/make_kit.py with --html`); }
   }
   async function copyVoice(dir, target) {
     let entries;

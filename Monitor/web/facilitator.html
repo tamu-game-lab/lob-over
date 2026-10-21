@@ -6,11 +6,13 @@
 <div class="two"><section class="panel"><h2>Events</h2><table id="events"></table></section><section class="panel"><h2>Deviation states</h2><table id="deviations"></table></section></div>
 <div class="two"><section class="panel"><details open><summary>Plan view JSON</summary><pre id="plan-view"></pre></details></section><section class="panel"><details open><summary>Site view JSON</summary><pre id="site-view"></pre></details></section></div><section class="panel"><h2>Result</h2><div id="result">—</div></section></main>
 <script src="lib/transport.js"></script>
+<script src="lib/guide.js"></script>
 <script>
 'use strict';
 const $=id=>document.getElementById(id),esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let state,result,sequence=0,stage,lastDay=0;
 const socket=LobTransport.connect();
+LobGuide.attach(socket,'facilitator');
 socket.onopen=()=>socket.send(JSON.stringify({t:'hello',v:1,seat:'facilitator',client:'web'}));
 socket.onclose=()=>{$('connection').textContent='Disconnected';};
 function control(action){if(socket.readyState!==WebSocket.OPEN)return;$('feedback').textContent='';socket.send(JSON.stringify({t:'ctrl',v:1,id:'f-'+(++sequence),action,...(action==='load'?{stage:state.view.stage2}:{})}));}

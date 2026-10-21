@@ -12,18 +12,21 @@ const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const WEB = resolve(ROOT, 'Monitor/web');
 const VOICE = resolve(ROOT, 'Voice');
 const OUT = resolve(ROOT, 'Monitor/out');
+const MANUALS = resolve(ROOT, 'Paper/out');
 // Docs/PROTOCOL.md default HTTP and WebSocket port.
 const DEFAULT_PORT = 7331;
 const MIME = { '.html': 'text/html; charset=utf-8', '.wav': 'audio/wav', '.ico': 'image/x-icon', '.js': 'text/javascript', '.json': 'application/json' };
 
-export async function startHost({ scenarioPath, stage2Path, autoplanPath, port = DEFAULT_PORT, testMode = process.env.NODE_ENV === 'test' }) {
+export async function startHost({ scenarioPath, stage2Path, autoplanPath, guidePath, port = DEFAULT_PORT, testMode = process.env.NODE_ENV === 'test' }) {
   const catalog = loadCatalog();
   const base = process.env.INIT_CWD || process.cwd();
   const scenario = loadScenario(resolve(base, scenarioPath), { catalog });
   const stage2 = loadScenario(stage2Path ? resolve(base, stage2Path)
     : resolve(dirname(resolve(base, scenarioPath)), 'stage2_texas.json'), { catalog });
   const autoplan = autoplanPath ? JSON.parse(await readFile(resolve(base, autoplanPath), 'utf8')) : [];
-  const core = createHost({ scenario, catalog, stages: [stage2], autoplan, allowFast: testMode,
+  const guide = guidePath ? JSON.parse(await readFile(resolve(base, guidePath), 'utf8')) : null;
+  if (guide && guide.scenario !== scenario.id) throw new Error('Guide scenario does not match stage');
+  const core = createHost({ scenario, catalog, stages: [stage2], autoplan, guide, allowFast: testMode,
     onTranscript(transcript) {
       mkdirSync(OUT, { recursive: true });
       const stamp = new Date().toISOString().replaceAll(':', '-');
@@ -40,8 +43,10 @@ export async function startHost({ scenarioPath, stage2Path, autoplanPath, port =
         res.end(req.method === 'HEAD' ? undefined : roundedJSON(core.transcript)); return;
       }
       const voice = pathname.startsWith('/Voice/');
-      const root = voice ? VOICE : WEB;
-      const path = resolve(root, voice ? pathname.slice('/Voice/'.length) : `.${pathname === '/' ? '/plan.html' : pathname}`);
+      const manual = pathname.match(/^\/manual\/([a-z0-9_]+)\.(html|pdf)$/);
+      const root = manual ? MANUALS : voice ? VOICE : WEB;
+      const path = resolve(root, manual ? `${manual[1]}/manual.${manual[2]}`
+        : voice ? pathname.slice('/Voice/'.length) : `.${pathname === '/' ? '/plan.html' : pathname}`);
       const rel = relative(root, path);
       if (rel.startsWith(`..${sep}`) || rel === '..' || isAbsolute(rel) || !(await stat(path)).isFile()) {
         res.writeHead(404).end(); return;
@@ -76,12 +81,13 @@ export async function startHost({ scenarioPath, stage2Path, autoplanPath, port =
 
 async function main(args) {
   const [scenarioPath, ...options] = args;
-  if (!scenarioPath || scenarioPath.startsWith('--')) throw new Error('Usage: node server.js <scenario.json> [--port 7331] [--stage2 <scenario.json>] [--autoplan <script.json>]');
+  if (!scenarioPath || scenarioPath.startsWith('--')) throw new Error('Usage: node server.js <scenario.json> [--port 7331] [--stage2 <scenario.json>] [--autoplan <script.json>] [--guide <guide.json>]');
   const config = { scenarioPath };
   for (let i = 0; i < options.length; i++) {
     if (options[i] === '--port' && options[i + 1]) config.port = Number(options[++i]);
     else if (options[i] === '--stage2' && options[i + 1]) config.stage2Path = options[++i];
     else if (options[i] === '--autoplan' && options[i + 1]) config.autoplanPath = options[++i];
+    else if (options[i] === '--guide' && options[i + 1]) config.guidePath = options[++i];
     else throw new Error(`Unknown or incomplete option: ${options[i]}`);
   }
   const host = await startHost(config);

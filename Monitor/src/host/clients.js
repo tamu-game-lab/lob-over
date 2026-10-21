@@ -1,5 +1,5 @@
-const SEATS = new Set(['plan', 'site', 'facilitator']);
-export function createClients({ state, welcome, command }) {
+const SEATS = new Set(['plan', 'site', 'rules', 'facilitator']);
+export function createClients({ state, welcome, command, changed = () => {} }) {
   const clients = new Map(), connections = new Set();
   const send = (socket, message) => {
     socket.send(message);
@@ -13,7 +13,7 @@ export function createClients({ state, welcome, command }) {
   };
   function attach(socket) {
     connections.add(socket);
-    socket.onClose(() => { clients.delete(socket); connections.delete(socket); });
+    socket.onClose(() => { clients.delete(socket); connections.delete(socket); changed(); });
     socket.onMessage(message => {
       if (!message || message.v !== 1) return;
       if (message.t === 'hello') {
@@ -23,6 +23,7 @@ export function createClients({ state, welcome, command }) {
         send(socket, { t: 'welcome', v: 1, protocol: 1, seat: message.seat, mirror,
           stage: state(message.seat).stage, state: state(message.seat) });
         welcome(socket, message.seat, send);
+        changed();
         return;
       }
       if (message.t !== 'cmd' && message.t !== 'ctrl') {
@@ -43,13 +44,20 @@ export function createClients({ state, welcome, command }) {
   }
   return {
     attach, broadcast,
+    connected: () => [...new Set([...clients.values()].filter(c => !c.mirror).map(c => c.seat))],
+    sendEach(makeMessage) {
+      for (const [socket, client] of clients) {
+        const message = makeMessage(client.seat);
+        if (message) send(socket, message);
+      }
+    },
     deliver(message, requester) {
       for (const [socket, client] of clients) {
         if (message.t === 'inspection') {
           if (socket === requester) send(socket, message);
         } else {
           const seats = message.t === 'report' ? ['plan', 'facilitator']
-            : message.t === 'result' ? [...SEATS] : message.seats ?? [];
+            : message.t === 'result' ? message.seats ?? ['plan', 'site', 'facilitator'] : message.seats ?? [];
           if (seats.includes(client.seat)) send(socket, message);
         }
       }

@@ -105,6 +105,24 @@ test('Showcase: static Pages subpath, local seats, autoplan, result and phone ro
     }
     await host.locator('#autoplan').uncheck();
     await host.locator('#reset').click(); assert.equal(await host.locator('#autoplan-status').innerText(), 'autoplan: off');
+    // WO-S7 uses the same guide engine through the static browser host.
+    await host.locator('#guided').check();
+    const rulesOpened = context.waitForEvent('page'); await host.locator('#open-rules').click(); const rules = await rulesOpened;
+    await rules.waitForFunction(() => typeof state !== 'undefined' && !!state && document.querySelectorAll('#manual-content section').length === 8);
+    assert.match(await host.locator('#rules-room-link').getAttribute('href'), /rules\.html\?room=/);
+    await host.locator('#start').click();
+    for (const page of [plan, site, rules]) {
+      await page.waitForFunction(() => LobGuide.current?.beat?.id === 'b0_brief');
+      assert.equal(await page.locator('#guide-ready').isEnabled(), true);
+      assert.equal(await page.evaluate(() => LobGuide.current.narration), undefined);
+    }
+    assert.deepEqual(await rules.evaluate(() => Object.keys(state.view).sort()), ['displayDay', 'speed', 'stage']);
+    assert.ok((await host.locator('#guide-narration').innerText()).length > 0);
+    await host.locator('#guide-continue').click();
+    await host.waitForFunction(() => showcase.core.state('plan').speed !== 'paused');
+    await host.locator('#reset').click();
+    await rules.waitForFunction(() => state.day === 0 && state.speed === 'paused' && LobGuide.current?.beat === null);
+    await rules.close();
     for (const page of [landing, plan, site]) assert.doesNotMatch(await page.locator('body').innerText(), /well done|good job|should have|right choice|correct answer|behind schedule|ahead of schedule/i);
     assert.deepEqual(errors, []); assert.deepEqual(failedLocal, []); assert.equal(stderr, '');
   } finally {

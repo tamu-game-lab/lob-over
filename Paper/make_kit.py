@@ -320,6 +320,66 @@ def make_manual(out, scenario, catalog, source):
     return missing
 
 
+def html_blocks(markdown):
+    """Render the manual's small authored Markdown vocabulary without dependencies."""
+    lines = markdown.splitlines()
+    blocks = []
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        i += 1
+        if not line or line == "---":
+            continue
+        if line.startswith("|"):
+            rows = [line]
+            while i < len(lines) and lines[i].strip().startswith("|"):
+                rows.append(lines[i].strip())
+                i += 1
+            cells = [[cell.strip() for cell in row.strip("|").split("|")] for row in rows]
+            cells = [row for row in cells if not all(re.fullmatch(r":?-+:?", c) for c in row)]
+            blocks.append('<div class="table-scroll"><table>')
+            for index, row in enumerate(cells):
+                tag = "th" if index == 0 else "td"
+                blocks.append("<tr>" + "".join(f"<{tag}>{inline(cell)}</{tag}>" for cell in row) + "</tr>")
+            blocks.append("</table></div>")
+        elif match := re.match(r"^#{1,3} (.+)", line):
+            blocks.append(f"<h3>{inline(match[1])}</h3>")
+        elif line.startswith("- ") or re.match(r"^\d+\. ", line):
+            ordered = not line.startswith("- ")
+            pattern = r"^\d+\. " if ordered else r"^- "
+            items = [re.sub(pattern, "", line)]
+            while i < len(lines) and re.match(pattern, lines[i].strip()):
+                items.append(re.sub(pattern, "", lines[i].strip()))
+                i += 1
+            tag = "ol" if ordered else "ul"
+            start = f' start="{line.split(".")[0]}"' if ordered else ""
+            blocks.append(f"<{tag}{start}>" + "".join(f"<li>{inline(item)}</li>" for item in items) + f"</{tag}>")
+        else:
+            while i < len(lines) and lines[i].strip() and not re.match(r"^(?:\||#|- |\d+\.)", lines[i].strip()):
+                line += " " + lines[i].strip()
+                i += 1
+            blocks.append(f"<p>{inline(line)}</p>")
+    return "\n".join(blocks)
+
+
+def make_manual_html(out, scenario, catalog, source):
+    preface, sections, missing = manual_sections(source, scenario, catalog)
+    content = [f"<h1>{inline(scenario['title'])} — Field manual</h1>", html_blocks(preface)]
+    links = "".join(f'<a href="#{section_id}">{inline(title)}</a>' for section_id, title, _ in sections)
+    content.append(f'<nav aria-label="Manual sections">{links}</nav>')
+    for section_id, title, markdown in sections:
+        content.append(f'<section id="{section_id}"><h2>{inline(title)}</h2>{html_blocks(markdown)}</section>')
+    style = """body{font:16px/1.55 system-ui,sans-serif;color:#283942;background:#fffdf8;margin:24px auto;padding:0 20px;max-width:1000px}
+nav{display:flex;flex-wrap:wrap;gap:12px}a{color:inherit}section{padding:20px 0;border-top:1px solid #bac6ca;scroll-margin-top:15px}
+table{border-collapse:collapse;width:100%}th,td{text-align:left;vertical-align:top;border:1px solid #bac6ca;padding:8px}.table-scroll{overflow:auto}
+li{margin:8px 0}section:target{border-top:4px solid #324f60}@media print{nav{display:none}section{break-before:page}}"""
+    html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+    html += f"<title>{inline(scenario['title'])} — Field manual</title><style>{style}</style></head><body><main>"
+    html += "\n".join(content) + "</main></body></html>\n"
+    (out / "manual.html").write_text(html, encoding="utf-8")
+    return missing
+
+
 def cut_rectangle(pdf, x, y, width, height):
     pdf.saveState()
     pdf.setDash(3, 3)
@@ -460,13 +520,18 @@ def make_index(out, scenario):
     (out / "kit_index.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def make_kit(scenario_path, out=None):
-    register_fonts()
+def make_kit(scenario_path, out=None, html=False):
     scenario = read_json(scenario_path)
     catalog = read_json(ROOT / "Data" / "catalog.json")
     source = (PAPER / "manual_v0.md").read_text(encoding="utf-8-sig")
     out = Path(out) if out else PAPER / "out" / scenario["id"]
     out.mkdir(parents=True, exist_ok=True)
+    if html:
+        missing = make_manual_html(out, scenario, catalog, source)
+        print(f"{scenario['id']}: wrote manual.html to {out}")
+        print("Unresolved placeholders: " + (", ".join(sorted(missing)) if missing else "none"))
+        return out
+    register_fonts()
     missing = make_manual(out, scenario, catalog, source)
     make_cards(out, scenario)
     make_ledger(out, scenario)
@@ -482,8 +547,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("scenario", type=Path)
     parser.add_argument("--out", type=Path, help="Output directory (default: Paper/out/<scenario id>)")
+    parser.add_argument("--html", action="store_true", help="Write only manual.html, with section anchors")
     args = parser.parse_args()
-    make_kit(args.scenario, args.out)
+    make_kit(args.scenario, args.out, html=args.html)
 
 
 if __name__ == "__main__":

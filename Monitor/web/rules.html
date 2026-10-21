@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LOB · Rules</title><style>
+:root{font:15px/1.5 system-ui,sans-serif;color:#283942;background:#eeeae2}*{box-sizing:border-box}body{margin:0}header{padding:18px 26px;background:#303c48;color:white;display:flex;justify-content:space-between;gap:15px}h1{font-size:21px;margin:0}h2{font-size:19px}h3{font-size:17px}.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase}main{max-width:1500px;margin:auto;padding:20px}.panel{padding:18px;background:#fffdf8;border:1px solid #c7cec9;margin-bottom:18px}.layout>*{min-width:0}.layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:18px}button,input{font:inherit;padding:9px;border:1px solid #8b999f;background:#fffdf8;border-radius:3px;color:inherit}button{cursor:pointer}#sections{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}#sections [aria-pressed=true]{background:#324f60;color:white}#sections [data-highlight=true]{outline:3px solid #a78042;outline-offset:2px}#manual-content section[hidden]{display:none}#manual-content h2{margin-top:0}table{border-collapse:collapse;width:100%}th,td{border:1px solid #bac6ca;text-align:left;vertical-align:top;padding:8px}.table-scroll{overflow:auto}li{margin:7px 0}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.card{border:1px solid #98a9af;padding:14px;overflow-wrap:anywhere}.card h3{margin:0 0 6px}.code{font:700 25px ui-monospace,monospace;display:block;margin:10px 0}.card label{display:block;margin:8px 0;font-size:13px}.card input[type=text]{width:100%}.card small{display:block}#ledger input{width:100%;min-width:60px}#ledger .stations{display:flex;justify-content:space-between;min-width:500px;font:12px ui-monospace,monospace;padding:12px 0}#ledger table{min-width:500px}#job-sign{margin-bottom:18px}#manual-status{white-space:pre-line}@media(max-width:850px){.layout{grid-template-columns:minmax(0,1fr)}main{padding:12px}header{padding:14px}.cards{grid-template-columns:1fr 1fr}}
+</style></head><body><header><div><div class="eyebrow">LOB, Over / Spec keeper</div><h1 id="title">Rules</h1></div><div><div id="today"></div><small id="connection">Connecting</small></div></header>
+<main><div class="panel" id="job-sign"></div><div class="layout"><section class="panel"><h2>Field manual</h2><nav id="sections" aria-label="Manual sections"></nav><p id="manual-status" role="status"></p><div id="manual-content"></div></section><aside><section class="panel"><h2>Permit and inspection cards</h2><div id="cards" class="cards"></div></section><section class="panel" id="ledger"><h2>Zone ledger</h2><p>Notes stay on this page.</p><div class="table-scroll"><div class="stations" id="stations"></div><table id="day-boxes"></table></div></section></aside></div><p id="feedback" role="status"></p></main>
+<script src="lib/transport.js"></script><script src="lib/guide.js"></script><script>
+'use strict';
+const $=id=>document.getElementById(id),esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const labels={front_rule:'Front page rule',city_texas:'Texas',indicators:'Indicators',P1:'P1',A2:'A2',permits_holdpoints:'Permits and hold points',lookup:'Lookup',procedures:'Procedures'};
+let state,kit,selected,highlighted;
+const socket=LobTransport.connect();
+LobGuide.attach(socket,'rules',message=>{highlighted=message.rulesSection;if(highlighted)selectSection(highlighted);});
+socket.onopen=()=>socket.send(JSON.stringify({t:'hello',v:1,seat:'rules',client:'web'}));
+socket.onclose=()=>{$('connection').textContent='Disconnected';};
+function selectSection(id){
+  selected=id;
+  for(const button of $('sections').children){button.setAttribute('aria-pressed',String(button.dataset.section===id));button.dataset.highlight=String(button.dataset.section===highlighted);}
+  for(const section of $('manual-content').children)section.hidden=section.id!==id;
+}
+async function acceptKit(message){
+  kit=message;selected=highlighted??kit.manualPages[0];
+  $('title').textContent=kit.title+' / Rules';
+  $('job-sign').textContent=`${kit.job.sign.cityCode} · ${kit.job.sign.pipe} · ${kit.job.sign.contractDays} contract days · ${kit.job.lengthFt} ft`;
+  $('sections').innerHTML=kit.manualPages.map(id=>`<button data-section="${esc(id)}">${esc(labels[id]??id)}</button>`).join('');
+  $('sections').onclick=e=>{if(e.target.dataset.section)selectSection(e.target.dataset.section);};
+  $('cards').innerHTML=kit.permits.cards.map(card=>`<article class="card"><h3>Permit · Zone ${card.zone}</h3><div>${esc(card.number)}</div><b class="code">${esc(card.code)}</b><small>Check the digits before you read it.</small></article>`).join('')+
+    kit.inspections.cards.map(card=>`<article class="card"><h3>Inspection · Zone ${card.zone}</h3><b class="code">${esc(card.number)}</b><small>Check the digits before you read it.</small>${kit.inspections.checklist.map(item=>`<label><input type="checkbox"> ${esc(item)}</label>`).join('')}<label>Rules signature<input type="text" aria-label="Rules signature zone ${card.zone}"></label></article>`).join('');
+  // Paper/make_kit.py uses 500 ft station labels and these four authored day boxes.
+  const stationEveryFt=500,stations=[];
+  for(let ft=0;ft<=kit.job.lengthFt;ft+=stationEveryFt)stations.push(`<span>${Math.floor(ft/100)}+${String(ft%100).padStart(2,'0')}</span>`);
+  $('stations').innerHTML=stations.join('');
+  $('day-boxes').innerHTML='<thead><tr><th>Day</th>'+kit.job.zones.map(z=>`<th>Zone ${z.id}<br>${z.fromFt/100}+00 – ${z.toFt/100}+00</th>`).join('')+'</tr></thead><tbody>'+['Permit day','Pipe complete day','Inspection day','Backfill day'].map(label=>`<tr><th>${label}</th>${kit.job.zones.map(z=>`<td><input type="text" aria-label="${label} zone ${z.id}"></td>`).join('')}</tr>`).join('')+'</tbody>';
+  $('manual-content').replaceChildren();$('manual-status').textContent='Loading manual';selectSection(selected);
+  try{
+    const response=await fetch(`manual/${encodeURIComponent(kit.stage)}.html`);if(!response.ok)throw new Error('Field manual unavailable');
+    const documentSource=new DOMParser().parseFromString(await response.text(),'text/html');
+    if(kit!==message)return;
+    $('manual-content').replaceChildren(...[...documentSource.querySelectorAll('main > section')].map(section=>document.importNode(section,true)));
+    $('manual-status').textContent='';selectSection(selected);
+  }catch(error){if(kit===message)$('manual-status').textContent=error.message;}
+}
+socket.onmessage=event=>{
+  const message=JSON.parse(event.data);
+  if(message.t==='welcome'){$('connection').textContent=message.mirror?'Mirror · read only':'Connected';state=message.state;}
+  else if(message.t==='state')state=message;
+  else if(message.t==='kit')acceptKit(message);
+  else if(message.t==='nack')$('feedback').textContent=message.reason;
+  if(state)$('today').textContent=`Day ${state.view.displayDay} · ${state.view.speed}`;
+};
+</script></body></html>
