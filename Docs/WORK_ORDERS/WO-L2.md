@@ -37,3 +37,7 @@
 ## Out of scope
 
 The table model, the PM standee, stake markers, Stop work, flags, confirmations, the Real Hands block, the GitHub Pages showcase.
+
+## Amendment 1 (orchestrator, 2026-10-21): where Play.unity is
+
+Bryan saved the scene at `Assets/Scenes/Play.unity` (not `Assets/LOBOver/Scenes/Play.unity`). Use that path everywhere this work order says Play.unity: the Check and Configure Building Blocks menu items, the Quest build gate, `LOB Over > Build > Play Scene`, the build list (`ProjectSettings/EditorBuildSettings.asset`: Play.unity only), and the tests. Do not move or rename it. "You may change" therefore includes `Assets/Scenes/Play.unity`, only through the builder and the setup menu items, exactly as before. Orchestrator's MCP read of it on October 21: roots `Directional Light`, `[BuildingBlock] Camera Rig` (holding Controller Tracking left and right, Hand Tracking left and right and `[BuildingBlock] OVRComprehensiveInteractionRig`), `[BuildingBlock] Passthrough` (the only `OVRPassthroughLayer`, enabled); no Real Hands, no `EnableUnpremultipliedAlpha`, no demo block.
