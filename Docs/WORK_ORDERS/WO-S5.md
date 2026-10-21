@@ -31,3 +31,13 @@ git status --short     # only Assets/LOBOver/Editor/QuestBuild.cs (+ BuildChecks
 ## Out of scope
 
 No signing beyond the debug keystore, no settings changes other than the build target switch, no IL2CPP or SDK installation (if the check reports them missing, Bryan installs them through the Hub).
+
+## Amendment 1 (orchestrator, 2026-10-20): more than one Android device
+
+On this PC `adb devices -l` lists two devices: the Quest 3S (`model:Quest_3S`, serial `340YC10GBC0BRS`) and an Android phone (`model:SM_N986N`). `BuildOptions.AutoRunPlayer` leaves the choice of device to Unity, which could install the headset app on the phone. So, for `Build and Run Quest`:
+
+1. Find the device with `adb devices -l` (the SDK's `platform-tools/adb.exe` under `AndroidExternalToolsSettings.sdkRootPath`): use the first line in state `device` whose `model:` contains `Quest`. None: log "no Quest connected (developer mode on, cable in, allow USB debugging in the headset)" and build the APK without installing, as item 2 says. Unauthorized: log "Quest connected but not authorized: put the headset on and allow USB debugging" and build without installing.
+2. Build with `BuildOptions.None` (not `AutoRunPlayer`), then install and start on that serial only: `adb -s <serial> install -r <apk>`, then `adb -s <serial> shell monkey -p <PlayerSettings.applicationIdentifier> -c android.intent.category.LAUNCHER 1`. Log one line per step with the serial and the exit code. The one-line build summary from item 1 stays; append "installed and started on <serial>" or the failing step.
+3. Run the adb calls with `System.Diagnostics.Process` (no shell), a 120 s timeout for install and 30 s for the others, stdout and stderr captured into the log line on failure.
+
+The rest of the work order stands.
