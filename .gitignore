@@ -83,3 +83,6 @@ Assets/StreamingAssets/Data/
 Sim/**/bin/
 Sim/**/obj/
 Data/transcripts/*.tmp
+
+# Local build temp (Unity/IL2CPP tool cache written during the Quest build)
+.utmp/
