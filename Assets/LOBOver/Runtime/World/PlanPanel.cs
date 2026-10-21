@@ -34,7 +34,7 @@ namespace LOBOver.World
             keypad = chart.Label("Keypad", "", new Vector2(0, -0.61f), new Vector2(2.8f, 0.14f), 0.045f);
             result = chart.Label("Result", "", new Vector2(-0.55f, -0.2f), new Vector2(1.4f, 0.4f), 0.055f);
             foreach (var text in new[] { inbox, radio, responses, keypad })
-            { text.enableAutoSizing = true; text.fontSizeMin = 2; text.fontSizeMax = text.fontSize; text.overflowMode = TextOverflowModes.Truncate; }
+            { text.enableAutoSizing = true; text.fontSizeMin = 0.2f; text.fontSizeMax = text.fontSize; text.overflowMode = TextOverflowModes.Truncate; }
             promise = chart.Rule("Promise", 1, true, Color.gray); deadlineRule = chart.Rule("Deadline", deadline, true, Color.white);
             for (var i = 0; i < WorldUnits.CrewIds.Length; i++)
             {

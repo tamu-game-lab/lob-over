@@ -22,10 +22,22 @@ namespace LOBOver.Tests.Editor
         [Test]
         public void BuilderIsRepeatableAndWiresTheScene()
         {
+            var sourceSoil = SiteAssetBuilder.Required<Material>(SiteAssetBuilder.Imported + "_Project/Art/ProjectSite/Materials/Soil.mat");
+            var sourceBefore = EditorJsonUtility.ToJson(sourceSoil);
             SiteSceneBuilder.Build(false);
             var first = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().Select(o => o.name).OrderBy(n => n).ToArray();
+            var firstMaterials = AssetDatabase.FindAssets("t:Material", new[] { SiteAssetBuilder.Converted.TrimEnd('/') }).OrderBy(guid => guid).ToArray();
+            Assert.That(firstMaterials.Length, Is.GreaterThan(0));
+            AssertBuiltMaterials();
+            // Rebuilding must refresh stale generated properties without replacing the copy's GUID.
+            SiteAssetBuilder.Material("Soil").SetColor("_BaseColor", Color.magenta);
             SiteSceneBuilder.Build(false);
             var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            CollectionAssert.AreEqual(firstMaterials, AssetDatabase.FindAssets("t:Material", new[] { SiteAssetBuilder.Converted.TrimEnd('/') }).OrderBy(guid => guid).ToArray());
+            Assert.That(EditorJsonUtility.ToJson(sourceSoil), Is.EqualTo(sourceBefore), "LOB-Game's source material changed");
+            AssertBuiltMaterials();
+            foreach (var name in new[] { "Soil", "AccessRoad", "Repair_SiteCabin", "Timber", "StorageSteel", "Repair_Surface", "Repair_OpenTrench", "Repair_PipeBed", "Repair_Backfill" })
+                AssertSurfaceCopy(name);
             CollectionAssert.AreEqual(first, scene.GetRootGameObjects().Select(o => o.name).OrderBy(n => n).ToArray());
             foreach (var name in new[] { "Sun", "Ground", "Road", "Gate", "Trailer", "JobSign", "Director", "SiteWorld", "DesktopPreview", "SiteSky", "Global Volume" })
                 Assert.That(GameObject.Find(name), Is.Not.Null, name);
@@ -46,6 +58,57 @@ namespace LOBOver.Tests.Editor
             Assert.That(world.StakeAt(3000), Is.Not.Null);
             Assert.That(world.transform.GetComponentsInChildren<Transform>().Count(t => t.name.StartsWith("Spoil_")), Is.EqualTo(30));
             foreach (var rig in world.GetComponentsInChildren<CrewRig>()) Assert.That(rig.GetComponentsInChildren<Animator>().Length, Is.GreaterThanOrEqualTo(2));
+            AssertBuiltMaterials();
+        }
+
+        private static void AssertBuiltMaterials()
+        {
+            AssertMaterialReferences(SiteAssetBuilder.Required<WorldAssets>(SiteAssetBuilder.Art + "WorldAssets.asset"));
+            foreach (var guid in AssetDatabase.FindAssets("t:Prefab", new[] { SiteAssetBuilder.Prefabs.TrimEnd('/') }))
+                AssertHierarchyMaterials(SiteAssetBuilder.Required<GameObject>(AssetDatabase.GUIDToAssetPath(guid)));
+            foreach (var root in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
+                AssertHierarchyMaterials(root);
+        }
+        private static void AssertHierarchyMaterials(GameObject root)
+        {
+            // Include disabled cells, crew renderers, particle trails and material fields used at runtime.
+            foreach (var component in root.GetComponentsInChildren<Component>(true))
+                if (component != null) AssertMaterialReferences(component);
+        }
+        private static void AssertMaterialReferences(Object owner)
+        {
+            using var serialized = new SerializedObject(owner);
+            var property = serialized.GetIterator();
+            while (property.Next(true))
+            {
+                if (property.propertyType != SerializedPropertyType.ObjectReference || !(property.objectReferenceValue is Material material)) continue;
+                var context = owner.name + "/" + property.propertyPath + ": " + material.name;
+                Assert.That(material.shader, Is.Not.Null, context);
+                var shader = material.shader.name;
+                Assert.That(shader == "Standard" || shader == "Standard (Specular setup)"
+                    || shader.StartsWith("Legacy Shaders/", System.StringComparison.Ordinal) || shader == "Hidden/InternalErrorShader", Is.False, context + " uses " + shader);
+                Assert.That(AssetDatabase.GetAssetPath(material).StartsWith(SiteAssetBuilder.Imported, System.StringComparison.Ordinal), Is.False, context + " still references LOB-Game");
+            }
+        }
+        private static void AssertSurfaceCopy(string name)
+        {
+            var source = SiteAssetBuilder.Required<Material>(SiteAssetBuilder.Imported + "_Project/Art/ProjectSite/Materials/" + name + ".mat");
+            var copy = SiteAssetBuilder.Material(name);
+            Assert.That(copy, Is.Not.SameAs(source), name);
+            Assert.That(AssetDatabase.GetAssetPath(copy), Is.EqualTo(SiteAssetBuilder.Converted + name + ".mat"));
+            Assert.That(copy.shader.name, Is.EqualTo("Universal Render Pipeline/Lit"), name);
+            Assert.That(Vector4.Distance(copy.GetColor("_BaseColor"), source.GetColor("_Color")), Is.LessThan(1e-5f), name); // a gamma round-trip leaves one float step (3e-8)
+            AssertTextureCopy(source, "_MainTex", copy, "_BaseMap");
+            AssertTextureCopy(source, "_BumpMap", copy, "_BumpMap");
+            AssertTextureCopy(source, "_MetallicGlossMap", copy, "_MetallicGlossMap");
+            var smoothness = source.GetTexture("_MetallicGlossMap") != null ? "_GlossMapScale" : "_Glossiness";
+            Assert.That(copy.GetFloat("_Smoothness"), Is.EqualTo(source.GetFloat(smoothness)), name);
+        }
+        private static void AssertTextureCopy(Material source, string from, Material copy, string to)
+        {
+            Assert.That(copy.GetTexture(to), Is.EqualTo(source.GetTexture(from)), source.name + "/" + from);
+            Assert.That(copy.GetTextureScale(to), Is.EqualTo(source.GetTextureScale(from)), source.name + "/" + from + " tiling");
+            Assert.That(copy.GetTextureOffset(to), Is.EqualTo(source.GetTextureOffset(from)), source.name + "/" + from + " offset");
         }
 
         [Test]

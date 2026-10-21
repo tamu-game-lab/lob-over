@@ -24,8 +24,9 @@ namespace LOBOver.Editor
         }
         public static Scene Build(bool saveScene = true)
         {
-            DataSync.Sync(); var assets = SiteAssetBuilder.Build();
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            // The new scene comes first: NewScene(Single) unloads prefab components that WorldAssets would already reference.
+            DataSync.Sync(); var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var assets = SiteAssetBuilder.Build();
             var light = new GameObject("Sun").AddComponent<Light>(); light.type = LightType.Directional;
             light.color = new Color(1, 0.94f, 0.82f); light.intensity = 1.2f; light.shadows = LightShadows.Soft;
             light.transform.rotation = Quaternion.Euler(48, -35, 0); RenderSettings.sun = light;
@@ -72,6 +73,8 @@ namespace LOBOver.Editor
             // The XR extension has its own asmdef under the WO-S4-allowed Start folder.
             var extension = Type.GetType("LOBOver.Start.Editor.XRSceneSetup, LOBOver.XR.Editor", true);
             extension.GetMethod("Build").Invoke(null, new object[] { world, preview, assets });
+            SiteAssetBuilder.ConvertPrefabMaterials();
+            foreach (var root in scene.GetRootGameObjects()) SiteAssetBuilder.ConvertRendererMaterials(root);
             Selection.activeGameObject = world.gameObject;
             if (saveScene)
             {

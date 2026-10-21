@@ -50,7 +50,7 @@ namespace LOBOver.World
         {
             var obj = Group(name, parent); obj.transform.localPosition = position;
             var text = obj.AddComponent<TextMeshPro>(); text.font = font;
-            text.fontSize = height * 100; text.color = new Color(0.95f, 0.94f, 0.9f);
+            text.fontSize = height * 10; text.color = new Color(0.95f, 0.94f, 0.9f);
             text.alignment = TextAlignmentOptions.TopLeft; text.rectTransform.sizeDelta = size;
             text.textWrappingMode = TextWrappingModes.Normal; text.overflowMode = TextOverflowModes.Overflow;
             text.richText = false; return text;

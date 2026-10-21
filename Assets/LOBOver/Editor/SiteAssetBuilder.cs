@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using LOBOver.World;
@@ -6,8 +7,11 @@ using Newtonsoft.Json.Linq;
 using TMPro;
 using UnityEditor;
 using UnityEditor.Animations;
+using UnityEditor.Rendering;
+using UnityEditor.Rendering.Universal;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using Object = UnityEngine.Object;
 
 namespace LOBOver.Editor
@@ -16,22 +20,32 @@ namespace LOBOver.Editor
     {
         public const string Imported = "Assets/LOBGame/";
         public const string Art = "Assets/LOBOver/Art/";
+        public const string Converted = Art + "Converted/";
         public const string Prefabs = "Assets/LOBOver/Prefabs/";
         public const string Equipment = Imported + "_Project/Art/Prefabs/Equipment/";
         public const string Worker = Imported + "_Project/Art/Prefabs/Workers/ProjectWorker.prefab";
         public const string Pipe = Imported + "_Project/Art/ProjectSite/ProjectPipeSegment.prefab";
         public static readonly string[] MachineNames = { "Excavator_Small", "Excavator_Standard", "Excavator_Large", "Crane_Standard", "Crane_Heavy", "Backfill_Small", "Backfill_Standard", "Backfill_Large" };
         public static T Required<T>(string path) where T : Object => AssetDatabase.LoadAssetAtPath<T>(path) ?? throw new FileNotFoundException("Required imported asset: " + path);
-        public static Material Material(string name) => Required<Material>(Imported + "_Project/Art/ProjectSite/Materials/" + name + ".mat");
+        private static readonly Dictionary<Material, Material> convertedMaterials = new Dictionary<Material, Material>();
+        public static Material Material(string name) => RenderMaterial(Required<Material>(Imported + "_Project/Art/ProjectSite/Materials/" + name + ".mat"));
         private static AudioClip Audio(string name, string extension = ".ogg") => Required<AudioClip>(Imported + "Audio/Construction/" + name + extension);
         public static WorldAssets Build()
         {
+            convertedMaterials.Clear();
             if (!File.Exists("Assets/TextMesh Pro/Resources/TMP Settings.asset"))
             {
                 TMP_PackageResourceImporter.ImportResources(true, false, false);
                 AssetDatabase.Refresh();
             }
-            Directory.CreateDirectory(Art); Directory.CreateDirectory(Prefabs); Directory.CreateDirectory(Prefabs + "Imported"); AssetDatabase.Refresh();
+            Directory.CreateDirectory(Converted); Directory.CreateDirectory(Prefabs); Directory.CreateDirectory(Prefabs + "Imported"); AssetDatabase.Refresh();
+            // Previous builder runs can leave built-in materials in extension prefabs (e.g. StopWorkFact).
+            // Upgrade only our generated assets, before the extension applies its presentation colours.
+            foreach (var guid in AssetDatabase.FindAssets("t:Material", new[] { Prefabs.TrimEnd('/') }))
+            {
+                var material = Required<Material>(AssetDatabase.GUIDToAssetPath(guid));
+                if (Incompatible(material)) { UpgradeMaterial(material); EditorUtility.SetDirty(material); }
+            }
             var assets = AssetDatabase.LoadAssetAtPath<WorldAssets>(Art + "WorldAssets.asset");
             if (assets == null) { assets = ScriptableObject.CreateInstance<WorldAssets>(); AssetDatabase.CreateAsset(assets, Art + "WorldAssets.asset"); }
             assets.font = TMP_Settings.defaultFontAsset; assets.soil = Material("Soil"); assets.timber = Material("Timber"); assets.steel = Material("StorageSteel"); assets.orange = Material("SafetyOrange");
@@ -55,6 +69,91 @@ namespace LOBOver.Editor
             }).ToArray();
             assets.cellPrefab = BuildCell(assets); assets.crewPrefab = BuildCrew();
             EditorUtility.SetDirty(assets); AssetDatabase.SaveAssets(); return assets;
+        }
+        private static bool Incompatible(Material material)
+        {
+            var shader = material.shader;
+            return shader == null || shader.name == "Standard" || shader.name == "Standard (Specular setup)"
+                || shader.name.StartsWith("Legacy Shaders/", StringComparison.Ordinal) || shader.name == "Hidden/InternalErrorShader";
+        }
+        private static bool NeedsMaterialCopy(Material material) => material != null
+            && (AssetDatabase.GetAssetPath(material).StartsWith(Imported, StringComparison.Ordinal) || Incompatible(material));
+        private static Material RenderMaterial(Material source)
+        {
+            if (!NeedsMaterialCopy(source)) return source;
+            if (convertedMaterials.TryGetValue(source, out var cached)) return cached;
+            var sourcePath = AssetDatabase.GetAssetPath(source);
+            string filename;
+            if (sourcePath.StartsWith(Imported + "_Project/Art/ProjectSite/Materials/", StringComparison.Ordinal))
+                filename = Path.GetFileNameWithoutExtension(sourcePath);
+            else
+            {
+                // FBX subassets often share names. GUID + local ID keeps their copies distinct and stable.
+                if (!AssetDatabase.TryGetGUIDAndLocalFileIdentifier(source, out string guid, out long localId))
+                    throw new InvalidOperationException("Material has no persistent source: " + source.name);
+                var safeName = string.Concat(source.name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
+                filename = safeName + "-" + guid + "-" + localId;
+            }
+            if (!AssetDatabase.IsValidFolder(Converted.TrimEnd('/'))) { Directory.CreateDirectory(Converted); AssetDatabase.Refresh(); }
+            var path = Converted + filename + ".mat";
+            var copy = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (copy == null) { copy = new Material(source); AssetDatabase.CreateAsset(copy, path); }
+            else EditorUtility.CopySerialized(source, copy);
+            copy.name = filename;
+            UpgradeMaterial(copy);
+            EditorUtility.SetDirty(copy); convertedMaterials.Add(source, copy); return copy;
+        }
+        private static void UpgradeMaterial(Material material)
+        {
+            var shaderName = material.shader == null ? "Hidden/InternalErrorShader" : material.shader.name;
+            if (!Incompatible(material) && material.GetTag("RenderPipeline", false) == "UniversalPipeline") return;
+            MaterialUpgrader upgrader = shaderName == "Standard" || shaderName == "Standard (Specular setup)"
+                ? new StandardUpgrader(shaderName)
+                : MaterialUpgrader.FetchAllUpgradersForPipeline(typeof(UniversalRenderPipelineAsset)).FirstOrDefault(item => item.OldShaderPath == shaderName);
+            if (upgrader != null)
+            {
+                MaterialUpgrader.Upgrade(material, upgrader, MaterialUpgrader.UpgradeFlags.None); return;
+            }
+            // Unknown imported shaders (including a non-URP FBX shader) retain their surface maps on Lit.
+            if (Shader.Find("Universal Render Pipeline/Lit") == null) throw new InvalidOperationException("Missing URP Lit shader");
+            upgrader = new MaterialUpgrader(); upgrader.RenameShader(shaderName, "Universal Render Pipeline/Lit");
+            upgrader.RenameTexture(MainProperty(material, ShaderPropertyFlags.MainTexture, "_MainTex"), "_BaseMap");
+            upgrader.RenameColor(MainProperty(material, ShaderPropertyFlags.MainColor, "_Color"), "_BaseColor");
+            upgrader.RenameFloat("_Glossiness", "_Smoothness");
+            // UpgradeFlags.None preserves matching maps (_BumpMap, _MetallicGlossMap) and their UV transforms.
+            upgrader.Upgrade(material, MaterialUpgrader.UpgradeFlags.None);
+            material.shaderKeywords = Array.Empty<string>();
+            CoreUtils.SetKeyword(material, "_NORMALMAP", material.GetTexture("_BumpMap") != null);
+            CoreUtils.SetKeyword(material, "_METALLICSPECGLOSSMAP", material.GetTexture("_MetallicGlossMap") != null);
+        }
+        private static string MainProperty(Material material, ShaderPropertyFlags flag, string fallback)
+        {
+            var shader = material.shader;
+            if (shader != null)
+                for (var i = 0; i < shader.GetPropertyCount(); i++)
+                    if ((shader.GetPropertyFlags(i) & flag) != 0) return shader.GetPropertyName(i);
+            return fallback;
+        }
+        public static void ConvertRendererMaterials(GameObject root)
+        {
+            foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
+            {
+                renderer.sharedMaterials = renderer.sharedMaterials.Select(RenderMaterial).ToArray();
+                if (renderer is ParticleSystemRenderer particles && particles.trailMaterial != null)
+                    particles.trailMaterial = RenderMaterial(particles.trailMaterial);
+            }
+        }
+        public static void ConvertPrefabMaterials()
+        {
+            foreach (var guid in AssetDatabase.FindAssets("t:Prefab", new[] { Prefabs.TrimEnd('/') }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid); var prefab = Required<GameObject>(path);
+                if (!prefab.GetComponentsInChildren<Renderer>(true).Any(renderer => renderer.sharedMaterials.Any(NeedsMaterialCopy)
+                    || renderer is ParticleSystemRenderer particles && NeedsMaterialCopy(particles.trailMaterial))) continue;
+                var root = PrefabUtility.LoadPrefabContents(path);
+                try { ConvertRendererMaterials(root); PrefabUtility.SaveAsPrefabAsset(root, path); }
+                finally { PrefabUtility.UnloadPrefabContents(root); }
+            }
         }
         public static Material OwnMaterial(string name, Color colour, bool transparent = false, string shaderName = "Universal Render Pipeline/Unlit")
         {
@@ -126,6 +225,7 @@ namespace LOBOver.Editor
                 {
                     bounds = BoundsOf(model); var collider = root.AddComponent<BoxCollider>(); collider.center = bounds.center; collider.size = bounds.size;
                 }
+                ConvertRendererMaterials(root);
                 return PrefabUtility.SaveAsPrefabAsset(root, Prefabs + "Imported/" + name + ".prefab");
             }
             finally { Object.DestroyImmediate(root); }
@@ -133,7 +233,7 @@ namespace LOBOver.Editor
         private static CrewRig BuildCrew()
         {
             var root = new GameObject("CrewRig"); root.AddComponent<CrewRig>();
-            try { return PrefabUtility.SaveAsPrefabAsset(root, Prefabs + "CrewRig.prefab").GetComponent<CrewRig>(); }
+            try { ConvertRendererMaterials(root); return PrefabUtility.SaveAsPrefabAsset(root, Prefabs + "CrewRig.prefab").GetComponent<CrewRig>(); }
             finally { Object.DestroyImmediate(root); }
         }
         private static RuntimeAnimatorController WorkController()
@@ -192,6 +292,7 @@ namespace LOBOver.Editor
                 cell.stationText = WorldDrawing.Text("Station", root.transform, new Vector3(0, 1.3f, 1.25f), new Vector2(1.4f, 0.4f), 0.3f, assets.font);
                 cell.stationText.transform.localRotation = Quaternion.Euler(0, 180, 0);
                 foreach (var obj in new[] { cell.floor, cell.walls, cell.pipes, cell.wetBand, cell.water, cell.slump, cell.box, cell.shoring }) obj.SetActive(false);
+                ConvertRendererMaterials(root);
                 return PrefabUtility.SaveAsPrefabAsset(root, Prefabs + "StationCell.prefab").GetComponent<StationCell>();
             }
             finally { Object.DestroyImmediate(root); }

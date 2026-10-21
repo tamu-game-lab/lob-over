@@ -55,7 +55,7 @@ namespace LOBOver.World
             this.root = root; this.assets = assets; this.length = length; this.deadline = deadline; this.area = area;
             var axes = WorldDrawing.Line("Axes", root, assets.ink, Color.white, 0.005f);
             axes.positionCount = 3; axes.SetPositions(new[] { Point(0, deadline), Point(0, 1), Point(length, 1) });
-            Label("StationAxis", "0 ft                       " + length + " ft", new Vector2(area.center.x, area.yMin - 0.045f), new Vector2(area.width, 0.1f), 0.045f);
+            Label("StationAxis", "0 ft", new Vector2(area.center.x, area.yMin - 0.045f), new Vector2(area.width, 0.1f), 0.045f); Label("StationEnd", length + " ft", new Vector2(area.center.x, area.yMin - 0.045f), new Vector2(area.width, 0.1f), 0.045f).alignment = TMPro.TextAlignmentOptions.TopRight;
             Label("DayAxis", "Day " + deadline, new Vector2(area.xMin + 0.1f, area.yMax + 0.045f), new Vector2(0.3f, 0.1f), 0.045f);
         }
         public Vector3 Point(double feet, double day) => new Vector3(

@@ -14,7 +14,8 @@ using Simulation = LOBOver.Sim.Sim;
 
 namespace LOBOver.Tests
 {
-    [PrebuildSetup("LOBOver.Tests.Editor.BuildSiteFixture")]
+    // The Site scene is builder output (LOB Over/Build/Site Scene, committed); a PrebuildSetup that rebuilt it
+    // replaced the Test Runner's init scene and the run never started.
     public sealed class SiteWorldTests
     {
         private SiteWorld world;
