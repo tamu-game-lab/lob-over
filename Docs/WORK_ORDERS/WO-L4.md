@@ -41,3 +41,7 @@ The warp (WO-L5), the hub panel, voices, the Plan page.
 ## Amendment 1 (orchestrator, 2026-10-21 12:25)
 
 Item 7, the sky: the procedural sky is the default. A cubemap skybox found under `Assets/` is used only when the sun probed from it sits above 30 degrees of elevation; then the light is aimed at it. In every other case the directional light keeps its 48 degree elevation and the procedural sky draws the sun disc at the light's direction with the cloud layers and the haze band. Reason: round 1 aimed the light at a daytime cubemap whose sun sits on the horizon, and the whole site went dark.
+
+## Amendment 2 (orchestrator, 2026-10-22 00:05, from Bryan's round 3 authorization)
+
+Two presentation requirements added to items 5 and 7. Item 7, the clouds: the two cloud layers fade out completely within 8 degrees of the horizon (zero cloud at and below 8 degrees of elevation, full strength again by about 16 degrees), and the cloud projection never stretches into radial streaks near the horizon; the haze band stays. Item 5, the trench walls: every trench surface (both walls, the slumped wall, the wet lower band, the floor) is textured by triplanar mapping in world units (about 1 m per tile) so the dirt texture reads continuous with no stretching or streaks, within the three-samples-per-layer rule of `Docs/XR_RENDERING.md`.
