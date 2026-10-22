@@ -63,6 +63,7 @@ Design decisions live in the design doc (`Docs/DESIGN_v0.md`, "Decisions needed"
 | O14 | Where do the three players talk? | In one room: the headset player sees the others through passthrough. Remote players use the web seats over Zoom; voice chat inside the headset is out of scope | Before any remote session |
 | O15 | Is this the voice concern: the headset player repeating what a voice says instead of working out what changed and what the problem is? | Yes; `VOICE.md` "The problem to avoid" is written on that reading | Before WO-S10 |
 | O16 | Live AI voices (players question a foreman) | Not now; if tried, `VOICE.md`'s principles bind them | After the showcase |
+| O17 | How far from the trench do the machines stand in the headset? On the far bank beside the trench (centres about 9 to 12 m from the player) the equipment has its real apparent size, but the excavator at a large real gap sits 60 degrees or more to the right, outside the view until the head turns; 14 m beyond the trench (Astra, WO-L8 round 0) keeps every crew inside the view but the equipment reads small again | The far bank (WO-L8 rejection 1): real size was the complaint, the slot formula already compresses the gaps, and the player turns to look | Before the fifth build |
 
 ## How to add a line
 
