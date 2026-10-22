@@ -45,3 +45,9 @@ Bryan's rulings, which replace the matching numbers above:
 - Workers keep their imported meshes: no mesh reduction on skinned meshes (the fence batching may stay).
 - The small excavator is scaled to 2.8 m to the cab roof within 10 percent like the other variants.
 - The Day-5 "in front" check of the PlayMode test is within 65 degrees of the facing direction (rejection 1).
+
+## Amendment 2 (October 22, K51 to K53, after round 3)
+
+- K51: the stage budget is 500,000 triangles and 150 draw calls in every view the player can look at (the hub keeps the 300,000 guideline); workers keep their meshes; a distance LOD for workers and machines is a follow-up only if the Quest 3S frame time shows it. The budget tests assert 500,000 and 150 for the stage views and log each number.
+- K52: grounding and the far-bank rule read only the renderers whose bounds touch the ground (lowest point within 0.3 m of the surface); booms, hooks, cables and animated parts are excluded from the placement checks and from the bounds-consistency test.
+- K53: a machine is scaled by one dimension, its length; the roof height is reported, not asserted.

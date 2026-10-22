@@ -110,6 +110,15 @@ Bryan's fourth headset test still showed the grey circle. The cause is in WO-L7:
 3. WO-L8 is judged on its head-camera screenshots against its goal sentence: three crews in front at real scale on the ground, a readable bubble, the panel in reach, a dusk frame. Reject anything that reads as small, floating, off to the side or unreadable.
 4. End with Sync Data, the ASTC override, the site republished, a push, and `ROUND6_READY_TO_BUILD` as the last line, with Bryan's steps: Build and Run Quest; `Play LOB Over.cmd` (or the Pages Level 1 with a phone as Site when there is no headset); the headset: whole room, one button, the site in front of him with the wire phase, bubbles, the log panel, dusks; the flipped chart on the Plan page.
 
+## Round 7, WO-L8 round 4 and the link (October 22)
+
+WO-L8 stopped after round 3 on the budget and three checks; Bryan rules K51 to K53 and authorizes a fourth round. He also wants the headset to join a game started from the Pages link, with nothing installed on a Mac: WO-L9 (K54), which needs his one-time `npx wrangler login` on the PC before its deploy step.
+
+1. First commit the pending documents (WO-L9, K51 to K54, this section) and push; the uncommitted WO-L8 tree stays in place for round 4.
+2. WO-L8 round 4 (Unity) and WO-L9's relay and web parts (`Relay/`, `Monitor/`) in parallel: disjoint folders. WO-L9's headset part after WO-L8 is accepted. If `wrangler login` has not been done, do everything up to the deploy, print what remains, and stop with STOPPED rather than waiting.
+3. WO-L8 round 4 is accepted when the five head-camera captures match the goal sentence, every logged view is under K51's budget, and the three checks pass as K52 and K53 define them. No further rounds without Bryan.
+4. End with Sync Data, the ASTC override, the site republished, every host stopped, a push, and `ROUND7_READY_TO_BUILD` as the last line with Bryan's steps: Build and Run Quest; open the Pages link on any machine, choose Level 1; put on the headset, touch the room, play.
+
 ## Finishing a goal (added October 22)
 
 1. The goal's token (or the word STOPPED) is the last line of the final message, alone, and nothing is added, withdrawn or restated after it: the goal is over. Round 5 printed both a token and a stop condition and then restated the stop condition six times under the goal hook, for no change to the repo.

@@ -29,6 +29,7 @@ One file per bounded job for Astra. The orchestrator dispatches them in order wi
 | WO-L6 | Level 1 on a Mac (`Play LOB Over.command`) and on GitHub Pages (browser-host Level 1, no headset) | WO-L1 | `Play LOB Over.command`, `Monitor/`, `Showcase/`, `README.md` |
 | WO-L7 | No tunnel (K42), head-camera verification (K43), chart days across and stations up (K44) | WO-L5 | `Assets/LOBOver/`, `Monitor/web/` |
 | WO-L8 | The site in front of you: one button, stage layout, real scale and grounding, gaze attention, speech bubbles, log panel, day and night, stronger wave | WO-L7 | `Assets/LOBOver/` |
+| WO-L9 | The headset joins by link: a Cloudflare relay, the Pages Level 1 as host over it, the hub lists rooms | WO-L6, WO-L8 | `Relay/`, `Monitor/web/`, `Assets/LOBOver/Runtime/Client/` |
 | WO-06 to WO-10 | Superseded (VR seat as a client of a LAN host); their world and verb sections are cited by WO-S3 and WO-S4 | — | — |
 | WO-07 | Quest client core (WebSocket, protocol, site-state model, HUD) | WO-06, imported assets | `Assets/LOBOver/Runtime/Client/` |
 | WO-08 | The site in VR: scene built by script, world in step with `state` | WO-07 | `Assets/LOBOver/Runtime/World/`, `Assets/LOBOver/Editor/` |

@@ -113,3 +113,13 @@ If not done already, in Unity, Play.unity: expand `[BuildingBlock] Camera Rig` >
 ```
 /goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md (sections "Unity through the MCP", "Round 5" rules, "Round 6" and "Finishing a goal") and follow them, starting with Round 6 step 1. Run WO-L7 alone, then WO-L8 and WO-L6 in parallel, through bash Tools/astra.sh, each verified in the Editor through the head camera as the orders say (max two rejection rounds), committed and pushed. Do not build for the Quest. Finish with Sync Data, the ASTC override, the site republished, a push, and my build steps. Done when the last line of your final message is exactly ROUND6_READY_TO_BUILD or exactly STOPPED.
 ```
+
+## Round 7 goal, WO-L8 round 4 and the headset by link (October 22)
+
+Before pasting, once: in PowerShell in the repo folder run `npx wrangler login` (it opens a browser; sign in or create a free Cloudflare account and approve; Node is already on the PC). Then paste:
+
+```
+/goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md (sections "Unity through the MCP", "Round 5" rules, "Round 7" and "Finishing a goal") and follow them, starting with Round 7 step 1. I authorize WO-L8 round 4 under K51 to K53. Run WO-L8 round 4 and WO-L9 (relay and web) in parallel, then WO-L9's headset part, through bash Tools/astra.sh, verified as the orders say (max two rejection rounds for WO-L9). Do not build for the Quest. Finish with Sync Data, the ASTC override, the site republished, the relay deployed, every host stopped, a push, and my steps. Done when the last line of your final message is exactly ROUND7_READY_TO_BUILD or exactly STOPPED.
+```
+
+When it prints `ROUND7_READY_TO_BUILD`: in Unity, `LOB Over > Build > Build and Run Quest`; on any machine open https://tamu-game-lab.github.io/lob-over/ and choose "Level 1, no headset" (the name changes to "Level 1" once the relay is in); put on the headset and touch the room it shows.
