@@ -19,7 +19,7 @@ main{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;
 body.browser-host{grid-template-rows:26px 86px minmax(0,1fr) 134px;gap:10px}#browser-banner{align-self:center;text-align:center;color:#eee8d7;font-size:12px}#browser-room{position:relative;font-size:12px;color:#eee8d7}#browser-room summary{cursor:pointer;list-style:none;border:1px solid #83918e;border-radius:4px;padding:8px}#room-code{font-family:monospace;letter-spacing:.08em}.room-panel{position:absolute;right:0;top:42px;z-index:5;width:230px;padding:16px;background:#29383c;border:1px solid #83918e;border-radius:4px;text-align:center;box-shadow:0 4px 12px #101a1d99}.room-panel canvas{display:block;width:196px;height:196px;margin-bottom:10px}.room-panel a{display:block;margin-bottom:8px}#room-status{font-size:11px}@media(min-width:1650px){body.browser-host{grid-template-rows:26px 105px minmax(0,1fr) 160px;gap:18px}}
 </style></head>
 <body>
-<p id="browser-banner" hidden>The headset joins only a game started with Play LOB Over on a PC or Mac</p>
+<p id="browser-banner" hidden><span id="relay-status" role="status">Relay: connecting</span></p>
 <header>
   <div class="brand"><h1>LOB, Over <small>Level 1 · Texas water main</small></h1></div>
   <div class="calendar" id="calendar" aria-label="Day 1"><span>DAY</span><strong id="day">1</strong></div>
@@ -42,7 +42,7 @@ body.browser-host{grid-template-rows:26px 86px minmax(0,1fr) 134px;gap:10px}#bro
 'use strict';
 const $=id=>document.getElementById(id), CREWS=['exc','pipe','back'];
 const browserHost=new URLSearchParams(location.search).get('host')==='browser';
-if(browserHost){document.body.classList.add('browser-host');$('browser-banner').hidden=false;$('browser-room').hidden=false;$('site-status').textContent='Waiting for the Site browser';}
+if(browserHost){document.body.classList.add('browser-host');$('browser-banner').hidden=false;$('browser-room').hidden=false;$('site-status').textContent='Waiting for headset or Site browser';}
 // WO-L3: shared crew inks and presentation timings; none affect the host clock.
 const COLORS={exc:'#E0A800',pipe:'#2E86C1',back:'#D35400'};
 const TAPE_MS=3000, WORRIED_MS=4000, TYPE_MS=600, COUNT_MS=1000, REPORT_LIMIT=5;
@@ -132,7 +132,7 @@ function render(){
     $('calendar').classList.remove('flip');void $('calendar').offsetWidth;$('calendar').classList.add('flip');audio.sound('tick');
   }
   $('clock').textContent=state.speed==='slow'?'Field is slow today':state.speed==='paused'?'Paused':'Running';$('clock').dataset.speed=state.speed;
-  $('site-status').textContent=v.siteClient==='quest'?'Headset connected':v.siteClient==='web'?'Site connected in a browser':browserHost?'Waiting for the Site browser':'Waiting for the headset';
+  $('site-status').textContent=v.siteClient==='quest'?'Headset connected':v.siteClient==='web'?'Site connected in a browser':browserHost?'Waiting for headset or Site browser':'Waiting for the headset';
   $('actual-label').textContent=result?'Actual work':'Reported through yesterday';
   $('start').textContent=result?'Run again':'Start';$('start').disabled=!connected||mirror||starting||(!result&&state.speed!=='paused');
   $('board-title').textContent=hasStarted?'Texas water main · Crew reports':`The PM's plan: promised Day ${v.promisedDay}`;
