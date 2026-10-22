@@ -93,10 +93,19 @@ namespace LOBOver.Editor
             voice.source = WorldDrawing.Sound(WorldDrawing.Group("ForemanVoice", client), false, HostVoice.SilentMetres);
             voice.source.minDistance = HostVoice.ClearMetres;
             var preview = Root("Preview"); preview.gameObject.tag = "EditorOnly";
-            var camera = WorldDrawing.Group("DesktopCamera", preview).AddComponent<Camera>();
-            camera.transform.position = new Vector3(0, 1.65f, 0); camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = Color.clear; camera.allowHDR = false; camera.nearClipPlane = 0.05f; camera.farClipPlane = 6000; camera.depth = 100;
-            var desktop = preview.gameObject.AddComponent<PlayPreview>(); desktop.view = camera; desktop.rig = xr; desktop.back = back;
+            var survey = WorldDrawing.Group("SurveyCamera", preview).AddComponent<Camera>();
+            survey.transform.position = new Vector3(0, 1.65f, 0); survey.clearFlags = CameraClearFlags.SolidColor;
+            survey.backgroundColor = Color.clear; survey.allowHDR = false; survey.nearClipPlane = 0.05f; survey.farClipPlane = 6000;
+            survey.enabled = false;
+            xr.Resolve(false);
+            // This owned child lives under Bryan's rig. Reuse it so rebuilding never duplicates it or changes the rig.
+            const string HeadCameraName = "[LOBOver] HeadPreviewCamera";
+            var head = xr.CentreEye.Find(HeadCameraName);
+            var camera = head == null ? WorldDrawing.Group(HeadCameraName, xr.CentreEye).AddComponent<Camera>() : head.GetComponent<Camera>();
+            camera.gameObject.tag = "EditorOnly"; camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = Color.clear; camera.allowHDR = false; camera.depth = 100;
+            var desktop = preview.gameObject.AddComponent<PlayPreview>(); desktop.view = camera; desktop.survey = survey; desktop.rig = xr; desktop.back = back;
+            desktop.AlignHeadCamera();
             xr.editorHead = camera.transform;
             sky.observer = camera.transform;
             sky.rig = xr;

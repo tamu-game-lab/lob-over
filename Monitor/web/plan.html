@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LOB · Plan</title>
 <style>
-:root{font:14px/1.45 system-ui,sans-serif;color:#23313b;background:#eeeae2}*{box-sizing:border-box}body{margin:0}header{background:#243540;color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}h1{font-size:21px;margin:0}h2{font-size:15px;margin:0 0 12px}h3{font-size:14px}small,.muted{color:#65737b}.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase}header .eyebrow{color:#d5dfe4}main{padding:18px 24px;max-width:1600px;margin:auto}.budget{display:grid;grid-template-columns:repeat(7,1fr);background:#faf8f3;border:1px solid #c7cec9;margin-bottom:16px}.budget div{padding:10px 14px;border-right:1px solid #d9dcd7}.budget span{display:block;font-size:11px;color:#52616b}.budget b{font:600 18px ui-monospace,monospace;white-space:nowrap}.layout{display:grid;grid-template-columns:minmax(0,2.15fr) minmax(310px,1fr);gap:16px}.panel{background:#fffdf8;border:1px solid #c7cec9;padding:16px;margin-bottom:16px}svg{width:100%;display:block}#chart{height:460px;touch-action:none}svg text{font:12px system-ui;fill:#334651}.legend{font-size:12px;display:flex;gap:18px;color:#53636b}.bottom{display:grid;grid-template-columns:1fr 1fr;gap:16px}button,input,select{font:inherit;border:1px solid #8b999f;background:#fffdf8;color:#23313b;border-radius:3px;padding:7px 9px;max-width:100%}button{cursor:pointer}button:hover{background:#e7edf0}button:disabled{opacity:.5;cursor:default}button.primary{background:#243f50;color:white;border:1px solid #243f50}label{font-size:12px;display:flex;flex-direction:column;gap:4px;margin-bottom:9px}.row{display:flex;gap:8px;align-items:end;flex-wrap:wrap}.row label{flex:1;min-width:75px}.row button{margin-bottom:9px}details{border-top:1px solid #d3d9d8;padding:9px 0}summary{cursor:pointer;font-weight:600}.scroll{max-height:260px;overflow:auto}.item{border-bottom:1px solid #d9dedb;padding:9px 0}.item:first-child{padding-top:0}.item p{margin:4px 0}.draft{padding-left:20px}#feedback{min-height:22px;white-space:pre-wrap}#pm{border-left:3px solid #5a7180;padding:10px 13px;background:#e9edef}#pm[hidden],#responses[hidden],#overlay[hidden]{display:none}.response{margin-bottom:12px}table{width:100%;border-collapse:collapse;font-size:12px}td,th{text-align:left;padding:6px;border-bottom:1px solid #d9dedb}.result-details{display:grid;grid-template-columns:1fr 1fr;gap:16px}.keypad input{width:130px}.start-handle{cursor:ns-resize;fill:white;stroke:#23313b;stroke-width:2}#events:empty{display:none}@media(max-width:850px){main{padding:12px}.layout,.bottom,.result-details{grid-template-columns:1fr}.budget{grid-template-columns:repeat(3,1fr)}header{padding:14px}#chart{height:400px}}
+:root{font:14px/1.45 system-ui,sans-serif;color:#23313b;background:#eeeae2}*{box-sizing:border-box}body{margin:0}header{background:#243540;color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}h1{font-size:21px;margin:0}h2{font-size:15px;margin:0 0 12px}h3{font-size:14px}small,.muted{color:#65737b}.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase}header .eyebrow{color:#d5dfe4}main{padding:18px 24px;max-width:1600px;margin:auto}.budget{display:grid;grid-template-columns:repeat(7,1fr);background:#faf8f3;border:1px solid #c7cec9;margin-bottom:16px}.budget div{padding:10px 14px;border-right:1px solid #d9dcd7}.budget span{display:block;font-size:11px;color:#52616b}.budget b{font:600 18px ui-monospace,monospace;white-space:nowrap}.layout{display:grid;grid-template-columns:minmax(0,2.15fr) minmax(310px,1fr);gap:16px}.panel{background:#fffdf8;border:1px solid #c7cec9;padding:16px;margin-bottom:16px}svg{width:100%;display:block}#chart{height:460px;touch-action:none}svg text{font:12px system-ui;fill:#334651}.legend{font-size:12px;display:flex;gap:18px;color:#53636b}.bottom{display:grid;grid-template-columns:1fr 1fr;gap:16px}button,input,select{font:inherit;border:1px solid #8b999f;background:#fffdf8;color:#23313b;border-radius:3px;padding:7px 9px;max-width:100%}button{cursor:pointer}button:hover{background:#e7edf0}button:disabled{opacity:.5;cursor:default}button.primary{background:#243f50;color:white;border:1px solid #243f50}label{font-size:12px;display:flex;flex-direction:column;gap:4px;margin-bottom:9px}.row{display:flex;gap:8px;align-items:end;flex-wrap:wrap}.row label{flex:1;min-width:75px}.row button{margin-bottom:9px}details{border-top:1px solid #d3d9d8;padding:9px 0}summary{cursor:pointer;font-weight:600}.scroll{max-height:260px;overflow:auto}.item{border-bottom:1px solid #d9dedb;padding:9px 0}.item:first-child{padding-top:0}.item p{margin:4px 0}.draft{padding-left:20px}#feedback{min-height:22px;white-space:pre-wrap}#pm{border-left:3px solid #5a7180;padding:10px 13px;background:#e9edef}#pm[hidden],#responses[hidden],#overlay[hidden]{display:none}.response{margin-bottom:12px}table{width:100%;border-collapse:collapse;font-size:12px}td,th{text-align:left;padding:6px;border-bottom:1px solid #d9dedb}.result-details{display:grid;grid-template-columns:1fr 1fr;gap:16px}.keypad input{width:130px}.start-handle{cursor:ew-resize;fill:white;stroke:#23313b;stroke-width:2}#events:empty{display:none}@media(max-width:850px){main{padding:12px}.layout,.bottom,.result-details{grid-template-columns:1fr}.budget{grid-template-columns:repeat(3,1fr)}header{padding:14px}#chart{height:400px}}
 button.primary:hover{background:#365568}
 </style></head><body>
 <header><div><div class="eyebrow">LOB, Over / Scheduler</div><h1 id="title">Plan</h1></div><div><div id="speed">paused</div><small id="connection" style="color:inherit">Connecting</small></div></header>
 <main><section id="budget" class="budget" aria-label="Budget"></section><div class="layout"><div>
-<section class="panel"><h2 id="chart-title">Line of balance</h2><div class="legend"><span>━ exc</span><span>┄ pipe</span><span>┈ back</span><span>Thin lines: daily reports</span></div><svg id="chart" viewBox="0 0 800 470" role="img" aria-label="Stations by day"></svg>
+<section class="panel"><h2 id="chart-title">Line of balance</h2><div class="legend"><span style="color:#E0A800">━ exc</span><span style="color:#2E86C1">━ pipe</span><span style="color:#D35400">━ back</span><span>Dashed: PM's plan · Solid: daily reports</span></div><svg id="chart" viewBox="0 0 800 470" role="img" aria-label="Days across from Day 1 at the left, stations up from 0+00 to 30+00"></svg>
 <div id="overlay" hidden><div class="result-details"><div><h3>Run numbers</h3><table id="numbers"></table></div><div><h3>Change log</h3><div id="changes" class="scroll"></div></div></div><h3>Events</h3><div id="result-events"></div></div></section>
 <div id="pm" hidden><b>PM</b><p id="pm-text"></p></div><div id="events" class="panel"></div>
 <div class="bottom"><section class="panel"><h2>Inbox</h2><div id="inbox" class="scroll"></div></section><section class="panel"><h2>Radio log</h2><div id="radio" class="scroll"></div></section></div>
@@ -14,7 +14,7 @@ button.primary:hover{background:#365568}
 <section class="panel"><h2>Draft &amp; Commit</h2><ol id="draft" class="draft"></ol><button id="commit" class="primary">Commit (no change)</button> <button id="clear-draft">Clear draft</button><p id="feedback" role="status"></p>
 <details open><summary>Hold / Resume</summary><div class="row"><label>Crew<select id="hold-crew"><option value="back">back</option><option value="pipe">pipe</option><option value="exc">exc</option></select></label><label>From day<input id="hold-from" type="number" min="1" step="1" placeholder="Arrival"></label><label>Days<input id="hold-days" type="number" min="1" step="1" placeholder="Until resume"></label></div><button id="add-hold">Draft hold</button> <button id="add-resume">Draft resume</button></details>
 <details open><summary>Lend</summary><label>Machine<select id="lend-machine"></select></label><div class="row"><label>To crew<select id="lend-crew"><option value="pipe">pipe</option><option value="back">back</option><option value="exc">exc</option></select></label><label>Days<input id="lend-days" type="number" min="1" step="1"></label><button id="add-lend">Draft lend</button></div></details>
-<details><summary>Start days</summary><p class="muted">Drag a crew's first point vertically; days snap to whole numbers.</p><div class="row"><label>Crew<select id="start-crew"><option>exc</option><option>pipe</option><option>back</option></select></label><label>Day<input id="start-day" type="number" min="1" step="1"></label><button id="add-start">Draft start</button></div></details>
+<details><summary>Start days</summary><p class="muted">Drag a crew's first point horizontally; days snap to whole numbers.</p><div class="row"><label>Crew<select id="start-crew"><option>exc</option><option>pipe</option><option>back</option></select></label><label>Day<input id="start-day" type="number" min="1" step="1"></label><button id="add-start">Draft start</button></div></details>
 <details><summary>Order</summary><label>Machine<select id="order-machine"></select></label><p id="order-price"></p><button id="add-order">Draft order</button><table id="machine-catalog"></table></details>
 <details><summary>Protect</summary><label>Protection<select id="protect-kind"></select></label><div class="row"><label>From station<input id="protect-from" placeholder="6+00"></label><label>To station<input id="protect-to" placeholder="9+00"></label></div><button id="add-protect">Draft protection</button><table id="protection-catalog"></table></details>
 <details><summary>Demob / Remob</summary><div id="demob"></div></details></section>
@@ -30,7 +30,9 @@ const usd=n=>'$'+Math.round(n).toLocaleString('en-US'), num=n=>Number(n.toFixed(
 const station=ft=>Math.floor(ft/100)+'+'+String(Math.round(ft%100)).padStart(2,'0');
 const parseStation=text=>text.includes('+')?Number(text.split('+')[0])*100+Number(text.split('+')[1]):Number(text);
 const html=(id,value)=>{if($(id).innerHTML!==value)$(id).innerHTML=value;};
-const CREWS=['exc','pipe','back'], DASH=['','9 5','2 5'];
+const CREWS=['exc','pipe','back'];
+// WO-L7: use the Level 1 board crew inks for both planned and actual work.
+const COLORS={exc:'#E0A800',pipe:'#2E86C1',back:'#D35400'};
 // WO-03 fallback voice duration, independent of simulation time.
 const VOICE_MS=8000;
 let state, result, lastReport, draft=[], sequence=0, stage, lastDay=0, catalogStage, drag, pmTimer;
@@ -98,38 +100,43 @@ function render(){
 }
 function drawChart(){
   const v=state.view,job=v.project.job,maxDay=v.budget.deadlineDay;
-  const x=ft=>58+ft/job.lengthFt*660,y=t=>425-t/(maxDay-1)*380;
+  $('chart').setAttribute('aria-label',`Days across from Day 1 at the left, stations up from 0+00 to ${station(job.lengthFt)}`);
+  const x=t=>58+t/(maxDay-1)*660,y=ft=>425-ft/job.lengthFt*380;
   let s='';
-  for(const [i,z] of job.zones.entries())s+=`<rect x="${x(z.fromFt)}" y="40" width="${x(z.toFt)-x(z.fromFt)}" height="385" fill="${i%2?'#eef1ef':'#f8f7f2'}"/><text x="${(x(z.fromFt)+x(z.toFt))/2}" y="25" text-anchor="middle">Zone ${z.id}</text><line x1="${x(z.fromFt)}" y1="40" x2="${x(z.fromFt)}" y2="425" stroke="#a9b6bb"/>`;
-  for(let day=1;day<=maxDay;day+=5)s+=`<line x1="58" y1="${y(day-1)}" x2="718" y2="${y(day-1)}" stroke="#d4dcd9"/><text x="48" y="${y(day-1)+4}" text-anchor="end">${day}</text>`;
-  for(const ft of [...job.zones.map(z=>z.fromFt),job.lengthFt])s+=`<text x="${x(ft)}" y="446" text-anchor="middle">${station(ft)}</text>`;
-  s+='<text x="10" y="32">Day</text><text x="375" y="466">Station</text>';
-  for(const [day,label] of [[v.budget.promisedDay,'Promise'],[maxDay,'Deadline']])s+=`<line x1="58" y1="${y(day-1)}" x2="718" y2="${y(day-1)}" stroke="#7e6e55" stroke-dasharray="5 3"/><text x="65" y="${y(day-1)-6}">${label} ${day}</text>`;
-  function lines(data,{reported=false,opacity=1,labels=false}={}){
+  for(const [i,z] of job.zones.entries())s+=`<rect class="zone-band" x="58" y="${y(z.toFt)}" width="660" height="${y(z.fromFt)-y(z.toFt)}" fill="${i%2?'#eef1ef':'#f8f7f2'}"/><text x="730" y="${y((z.fromFt+z.toFt)/2)+4}">Zone ${z.id}</text>`;
+  for(let day=1;day<=maxDay;day+=5)s+=`<line x1="${x(day-1)}" y1="45" x2="${x(day-1)}" y2="425" stroke="#d4dcd9"/><text class="day-label" x="${x(day-1)}" y="446" text-anchor="middle">${day}</text>`;
+  for(let ft=0;ft<=job.lengthFt;ft+=job.stationEveryFt){
+    s+=`<line x1="58" y1="${y(ft)}" x2="718" y2="${y(ft)}" stroke="#d4dcd9"/>`;
+    if(ft%500===0)s+=`<text class="station-label" x="48" y="${y(ft)+4}" text-anchor="end">${station(ft)}</text>`;
+  }
+  s+='<text x="388" y="466" text-anchor="middle">Day</text>';
+  for(const [day,label] of [[v.budget.promisedDay,'Promise'],[maxDay,'Deadline']])s+=`<line x1="${x(day-1)}" y1="45" x2="${x(day-1)}" y2="425" stroke="#7e6e55" stroke-dasharray="5 3"/><text x="${x(day-1)}" y="20" text-anchor="middle">${label} ${day}</text>`;
+  function lines(data,{reported=false,opacity=1,labels=false,previous=false}={}){
     const endpoints=[];
-    for(const [i,id] of CREWS.entries()){
+    for(const id of CREWS){
       const points=data[id]??[];if(!points.length)continue;
       const plotted=reported?points.flatMap((p,j)=>j?[{ft:points[j-1].ft,t:p.t},p]:[p]):points;
-      s+=`<polyline data-line="${id}" points="${plotted.map(p=>`${x(p.ft)},${y(p.t)}`).join(' ')}" fill="none" stroke="${reported?'#6a8291':'#213e50'}" stroke-width="${reported?1.5:2.4}" stroke-dasharray="${DASH[i]}" opacity="${opacity}"/>`;
-      const end=points.at(-1);if(labels)endpoints.push({id,x:x(end.ft)+5,y:y(end.t)-5});
-      if(reported&&!result)s+=`<circle cx="${x(end.ft)}" cy="${y(end.t)}" r="4" fill="#fffdf8" stroke="#526e80"/>`;
+      s+=`<polyline data-line="${id}" data-kind="${previous?'previous':reported?'actual':'plan'}" points="${plotted.map(p=>`${x(p.t)},${y(p.ft)}`).join(' ')}" fill="none" stroke="${COLORS[id]}" stroke-width="${reported?2.4:2}" ${reported?'':'stroke-dasharray="9 5"'} opacity="${opacity}"/>`;
+      const end=points.at(-1);if(labels)endpoints.push({id,x:x(end.t)+5,y:y(end.ft)-5});
+      if(reported&&!result)s+=`<circle cx="${x(end.t)}" cy="${y(end.ft)}" r="4" fill="#fffdf8" stroke="${COLORS[id]}"/>`;
     }
     let lastLabel=-Infinity;
     for(const end of endpoints.sort((a,b)=>a.y-b.y)){const labelY=Math.max(end.y,lastLabel+14);s+=`<text x="${end.x}" y="${labelY}" opacity="${opacity}">${end.id}</text>`;lastLabel=labelY;}
   }
-  if(result?.previousRun){lines(result.previousRun.lines.planned,{opacity:.18});lines(result.previousRun.lines.actual,{reported:true,opacity:.25});}
+  if(result?.previousRun){lines(result.previousRun.lines.planned,{opacity:.18,previous:true});lines(result.previousRun.lines.actual,{reported:true,opacity:.25,previous:true});}
   lines(result?.lines.planned??v.plannedPolylines,{labels:true});lines(result?.lines.actual??v.reportedLines,{reported:true});
+  s+=`<g id="ruler" transform="translate(${x(state.displayDay-1)} 0)"><rect x="-4" y="45" width="8" height="380" fill="#8c7958" fill-opacity=".18"/><path d="M0 45V425" stroke="#71634a"/><text x="0" y="36" text-anchor="middle">Day ${state.displayDay}</text></g>`;
   if(!result){
     for(const [i,id] of CREWS.entries()){
       const u=v.uncertainty[id],p=v.plannedPolylines[id][0];
-      s+=`<line x1="${x(u.fromFt)}" y1="${y(state.day)}" x2="${x(u.toFt)}" y2="${y(state.day)}" stroke="#7b8b92" stroke-width="5" opacity=".3"/><text x="${x(u.toFt)+4}" y="${y(state.day)-8-i*12}">${id} ±${num((u.toFt-u.fromFt)/2)} ft</text><circle class="start-handle" data-crew="${id}" cx="${x(p.ft)}" cy="${y(p.t)}" r="6"><title>${id} start day ${v.plannedLines[id].startDay}</title></circle>`;
+      s+=`<line x1="${x(state.day)}" y1="${y(u.fromFt)}" x2="${x(state.day)}" y2="${y(u.toFt)}" stroke="#7b8b92" stroke-width="5" opacity=".3"/><text x="${x(state.day)+4}" y="${y(u.toFt)-8-i*12}">${id} ±${num((u.toFt-u.fromFt)/2)} ft</text><circle class="start-handle" data-crew="${id}" cx="${x(p.t)}" cy="${y(p.ft)}" r="6"><title>${id} start day ${v.plannedLines[id].startDay}</title></circle>`;
     }
-    for(const f of v.flags)s+=`<path d="M ${x(f.stationFt)} ${y(f.day)} v -16 l 9 4 l -9 4" fill="none" stroke="#344855"/><text x="${x(f.stationFt)+10}" y="${y(f.day)-12}">Day ${Math.floor(f.day)+1}${f.note?' · '+esc(f.note):''}</text>`;
+    for(const f of v.flags)s+=`<path d="M ${x(f.day)} ${y(f.stationFt)} v -16 l 9 4 l -9 4" fill="none" stroke="#344855"/><text x="${x(f.day)+10}" y="${y(f.stationFt)-12}">Day ${Math.floor(f.day)+1}${f.note?' · '+esc(f.note):''}</text>`;
   }
   $('chart').innerHTML=s;
 }
-$('chart').onpointerdown=e=>{if(!e.target.dataset.crew||result)return;drag={crew:e.target.dataset.crew};$('chart').setPointerCapture(e.pointerId);};
-$('chart').onpointermove=e=>{if(!drag)return;const point=new DOMPoint(e.clientX,e.clientY).matrixTransform($('chart').getScreenCTM().inverse());drag.day=Math.max(1,Math.min(state.view.budget.deadlineDay,Math.round(1+(425-point.y)/380*(state.view.budget.deadlineDay-1))));$('start-crew').value=drag.crew;$('start-day').value=drag.day;};
+$('chart').onpointerdown=e=>{if(!e.target.dataset.crew||result)return;e.preventDefault();drag={crew:e.target.dataset.crew};$('chart').setPointerCapture(e.pointerId);};
+$('chart').onpointermove=e=>{if(!drag)return;const point=new DOMPoint(e.clientX,e.clientY).matrixTransform($('chart').getScreenCTM().inverse());drag.day=Math.max(1,Math.min(state.view.budget.deadlineDay,Math.round(1+(point.x-58)/660*(state.view.budget.deadlineDay-1))));$('start-crew').value=drag.crew;$('start-day').value=drag.day;};
 $('chart').onpointerup=()=>{if(drag?.day)add({op:'setStart',crew:drag.crew,day:drag.day});drag=null;drawChart();};
 function showResult(message){
   result=message;$('overlay').hidden=false;$('chart-title').textContent=state.view.project.title;

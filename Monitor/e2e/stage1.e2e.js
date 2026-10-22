@@ -5,6 +5,7 @@ import { once } from 'node:events';
 import { mkdir, readFile, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { assertChart } from './chart-assertions.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const output = fileURLToPath(new URL('../out/e2e/', import.meta.url));
@@ -69,6 +70,20 @@ test('Stage 1: three-seat field loop, daily report, argument and final overlay',
       await page.waitForFunction(() => !!state);
     }
     const { plan, site, facilitator } = pages;
+    await assertChart(plan);
+    // WO-L7: dragging start days follows the horizontal time axis and still snaps to whole days.
+    const handle = plan.locator('.start-handle[data-crew="back"]');
+    const target = await handle.evaluate(element => {
+      const chart = document.getElementById('chart'), matrix = chart.getScreenCTM();
+      const start = new DOMPoint(Number(element.getAttribute('cx')), Number(element.getAttribute('cy'))).matrixTransform(matrix);
+      const end = new DOMPoint(58 + 6 / (state.view.budget.deadlineDay - 1) * 660, Number(element.getAttribute('cy'))).matrixTransform(matrix);
+      return { start: { x: start.x, y: start.y }, end: { x: end.x, y: end.y } };
+    });
+    await plan.mouse.move(target.start.x, target.start.y); await plan.mouse.down();
+    await plan.mouse.move(target.end.x, target.end.y); await plan.mouse.up();
+    assert.deepEqual(await plan.evaluate(() => draft.at(-1)), { op: 'setStart', crew: 'back', day: 7 });
+    assert.equal(await plan.evaluate(() => getSelection().toString()), '');
+    await plan.locator('#clear-draft').click();
     assert.equal(await facilitator.locator('#speed').innerText(), 'paused');
     await clickAck(facilitator, facilitator.locator('#start'));
     await ride(site, 720);
@@ -77,6 +92,7 @@ test('Stage 1: three-seat field loop, daily report, argument and final overlay',
     assert.equal(await plan.getByText(/collapse/i).count(), 0);
     assert.equal(await plan.locator('#inbox .item').first().getAttribute('data-kind'), 'report');
     await plan.screenshot({ path: `${output}/plan-report.png` });
+    await assertChart(plan);
     await site.screenshot({ path: `${output}/site-event.png` });
     await clickAck(site, site.locator('#stop-work'));
     await plan.locator('#lend-machine').selectOption('excavator_standard');
@@ -116,6 +132,7 @@ test('Stage 1: three-seat field loop, daily report, argument and final overlay',
     assert.equal(final.lost, undefined);
     assert.equal(await plan.locator('#overlay').isVisible(), true);
     assert.ok(await plan.locator('#chart polyline').count() >= 6);
+    await assertChart(plan);
     assert.equal(await plan.locator('#changes .item').count(), final.changeLog.length);
     for (const [name, page] of Object.entries(pages)) {
       await page.evaluate(() => window.scrollTo(0, 0));

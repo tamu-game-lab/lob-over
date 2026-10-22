@@ -78,8 +78,14 @@ namespace LOBOver.Editor
                 Debug.Log("LOB Over: Passthrough layer " + PathOf(layer.transform) + (layer.GetComponent<OVRCameraRig>() != null ? " (additional rig layer; preserved)" : ""));
             var forbidden = level1 ? Forbidden(scene) : new List<string>();
             foreach (var name in forbidden) Debug.LogError("LOB Over: remove " + name + " in the Building Blocks window before building Play.unity.");
-            return missing.Count == 0 && forbidden.Count == 0;
+            var tunnels = RenderingTunnels(scene);
+            foreach (var tunnel in tunnels)
+                Debug.LogError("LOB Over: active TunnelingEffect " + PathOf(tunnel.transform) + "; run Configure Building Blocks.");
+            return missing.Count == 0 && forbidden.Count == 0 && tunnels.Length == 0;
         }
+        public static TunnelingEffect[] RenderingTunnels(Scene scene) => XRRig.Components<TunnelingEffect>(scene)
+            .Where(t => t.gameObject.activeInHierarchy && t.GetComponentsInChildren<MeshRenderer>(true)
+                .Any(r => r.gameObject.activeInHierarchy && r.enabled)).ToArray();
         public static List<string> Forbidden(Scene scene)
         {
             var result = new List<string>();
@@ -100,12 +106,14 @@ namespace LOBOver.Editor
         {
             if (!File.Exists(PlaySceneBuilder.ScenePath)) { CheckPlay(); return; }
             var scene = PlaySceneBuilder.OpenExisting();
-            if (!Check(scene)) return;
+            // Rendering tunnels are repairable here; missing or forbidden blocks still require Bryan.
+            if (Missing(scene).Count > 0 || Forbidden(scene).Count > 0) { Check(scene); return; }
             Configure(scene);
-            EditorSceneManager.SaveScene(scene);
+            if (Check(scene) && scene.isDirty) EditorSceneManager.SaveScene(scene);
         }
         public static void Configure(Scene scene)
         {
+            ConfigureTunnels(scene);
             foreach (var component in XRRig.Components<Behaviour>(scene))
             {
                 // Include the SDK's event broadcasters/connections: enabled listeners could still move a disabled locomotor.
@@ -141,6 +149,13 @@ namespace LOBOver.Editor
                     Change(camera, "backgroundColor", camera.backgroundColor, Color.clear, () => camera.backgroundColor = Color.clear);
                 if (camera.allowHDR) Change(camera, "allowHDR", true, false, () => camera.allowHDR = false);
             }
+        }
+        public static void ConfigureTunnels(Scene scene)
+        {
+            // WO-L7 rejection 1: legacy rigs also carry tunnels outside Building Blocks.
+            foreach (var tunnel in XRRig.Components<TunnelingEffect>(scene))
+                if (tunnel.gameObject.activeSelf)
+                    Change(tunnel.gameObject, "activeSelf", true, false, () => tunnel.gameObject.SetActive(false));
         }
         private static bool BelongsToBlocks(Component component) => component.GetComponentInParent<BuildingBlock>(true) != null
             || component.GetComponentInParent<OVRCameraRig>(true) != null;

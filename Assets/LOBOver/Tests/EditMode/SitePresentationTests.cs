@@ -287,7 +287,8 @@ namespace LOBOver.Tests.Editor
                 Assert.That(surface.shadowCastingMode, Is.EqualTo(UnityEngine.Rendering.ShadowCastingMode.Off));
                 Assert.That(surface.receiveShadows, Is.True);
             }
-            var camera = scene.GetRootGameObjects().Single(r => r.name == "[LOBOver] Preview").GetComponentInChildren<Camera>();
+            // WO-L7: only the explicitly named survey view may move freely for WO-L4 statistics.
+            var camera = scene.GetRootGameObjects().Single(r => r.name == "[LOBOver] Preview").GetComponent<LOBOver.Play.PlayPreview>().survey;
             var oldTarget = camera.targetTexture; var oldPosition = camera.transform.position; var oldRotation = camera.transform.rotation;
             // Scene view and the rig's centre eye are outside the owned roots. Include
             // hidden Editor cameras too; Scene view may explicitly render even disabled.

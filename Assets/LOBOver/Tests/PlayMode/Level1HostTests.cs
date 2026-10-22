@@ -53,6 +53,10 @@ namespace LOBOver.Tests
         }
         private void SetTestEndpoint(Scene scene, LoadSceneMode mode)
         {
+            // WO-L7: simulate the tracked head itself, so all head-attached rendering shares its pose.
+            var cameraRig = XRRig.Components<OVRCameraRig>(scene).Single();
+            cameraRig.enabled = false;
+            cameraRig.centerEyeAnchor.SetPositionAndRotation(new Vector3(0, 1.65f, 0), Quaternion.identity);
             var client = XRRig.Components<HostConnection>(scene).Single();
             client.enabled = false; client.EndpointOverride = "ws://127.0.0.1:7333/ws";
             client.Message += message => received.Add((string)message["t"]);
@@ -219,6 +223,114 @@ namespace LOBOver.Tests
             yield break;
 #endif
         }
+        [UnityTest]
+        public IEnumerator HeadFramesHaveNoTunnelAndHubCompositeShowsRoomOutsidePanel()
+        {
+#if UNITY_EDITOR
+            var preview = Object.FindFirstObjectByType<PlayPreview>();
+            var hub = Object.FindFirstObjectByType<HubPanel>();
+            warp.rig.CentreEye.SetPositionAndRotation(new Vector3(0.8f, 1.65f, -0.4f), Quaternion.Euler(0, 23, 0));
+            hub.Recenter();
+            yield return Until(() => hub.Placed, 3);
+            yield return null;
+            Assert.That(warp.Progress, Is.Zero);
+            AssertHeadFrame(preview, hub, "head-hub", true);
+            Assert.That(warp.Visit("pipe"), Is.True);
+            yield return Until(() => !warp.Busy, 3);
+            Assert.That(warp.Progress, Is.EqualTo(1));
+            AssertHeadFrame(preview, hub, "head-site", false);
+#else
+            yield break;
+#endif
+        }
+#if UNITY_EDITOR
+        private static void AssertHeadFrame(PlayPreview preview, HubPanel hub, string name, bool inHub)
+        {
+            const string Folder = "Monitor/out/unity";
+            // WO-L7 specifies the SDK tunnel grey and per-channel tolerance.
+            const float TunnelGrey = 0.547f, GreyTolerance = 0.03f;
+            // WO-L7 rejection 1: exclude a central disc of radius 30% of frame width; fewer than 0.5% grey pixels.
+            const float CentralDiscRadius = 0.3f, MaxTunnelGreyFraction = 0.005f;
+            Directory.CreateDirectory(Folder); PlayPreview.EnsureRoom(Folder + "/room.png");
+            var room = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            Texture2D frame = null, composite = null;
+            try
+            {
+                Assert.That(room.LoadImage(File.ReadAllBytes(Folder + "/room.png")), Is.True);
+                frame = preview.CaptureFrame(); composite = PlayPreview.CompositeFrame(frame, room);
+                File.WriteAllBytes(Folder + "/" + name + "-raw.png", frame.EncodeToPNG());
+                File.WriteAllBytes(Folder + "/" + name + "-composite.png", composite.EncodeToPNG());
+                var eye = preview.rig.CentreEye.GetComponent<Camera>();
+                Assert.That(preview.view.transform.parent, Is.EqualTo(eye.transform));
+                Assert.That(preview.view.transform.position, Is.EqualTo(eye.transform.position));
+                Assert.That(Quaternion.Angle(preview.view.transform.rotation, eye.transform.rotation), Is.LessThan(0.001f));
+                Assert.That(preview.view.fieldOfView, Is.EqualTo(eye.fieldOfView));
+                Assert.That(preview.view.nearClipPlane, Is.EqualTo(eye.nearClipPlane));
+                Assert.That(preview.view.farClipPlane, Is.EqualTo(eye.farClipPlane));
+                var pixels = frame.GetPixels();
+                // Project the panel bounds with the capture's square aspect, not the desktop Game view aspect.
+                var aspect = preview.view.aspect; preview.view.aspect = (float)frame.width / frame.height;
+                Vector2 min = Vector2.one, max = Vector2.zero;
+                try
+                {
+                    foreach (var renderer in hub.panel.GetComponentsInChildren<Renderer>(true))
+                    {
+                        var bounds = renderer.bounds;
+                        for (var i = 0; i < 8; i++)
+                        {
+                            var point = preview.view.WorldToViewportPoint(new Vector3((i & 1) == 0 ? bounds.min.x : bounds.max.x,
+                                (i & 2) == 0 ? bounds.min.y : bounds.max.y, (i & 4) == 0 ? bounds.min.z : bounds.max.z));
+                            min = Vector2.Min(min, point); max = Vector2.Max(max, point);
+                        }
+                    }
+                }
+                finally { preview.view.aspect = aspect; }
+                var ringPixels = 0; var greyPixels = 0;
+                var radius = frame.width * CentralDiscRadius;
+                for (var y = 0; y < frame.height; y++) for (var x = 0; x < frame.width; x++)
+                {
+                    var dx = x + 0.5f - frame.width * 0.5f; var dy = y + 0.5f - frame.height * 0.5f;
+                    if (dx * dx + dy * dy <= radius * radius) continue;
+                    var u = (x + 0.5f) / frame.width; var v = (y + 0.5f) / frame.height;
+                    // Use the same panel rectangle and antialias margin as the alpha check.
+                    if (u >= min.x - 2f / frame.width && u <= max.x + 2f / frame.width
+                        && v >= min.y - 2f / frame.height && v <= max.y + 2f / frame.height) continue;
+                    ringPixels++;
+                    var pixel = pixels[y * frame.width + x];
+                    if (Mathf.Abs(pixel.r - TunnelGrey) <= GreyTolerance && Mathf.Abs(pixel.g - TunnelGrey) <= GreyTolerance
+                        && Mathf.Abs(pixel.b - TunnelGrey) <= GreyTolerance) greyPixels++;
+                }
+                Assert.That(ringPixels, Is.GreaterThan(0), name + ": outer ring must remain measurable");
+                TestContext.WriteLine(name + ": " + greyPixels + "/" + ringPixels + " outer-ring pixels are tunnel grey");
+                Assert.That((double)greyPixels / ringPixels, Is.LessThan(MaxTunnelGreyFraction),
+                    name + ": tunnel-grey outer ring; inspect the saved head composite");
+                if (!inHub) { Assert.That(pixels.Min(c => c.a), Is.EqualTo(1)); return; }
+                Assert.That(pixels.Count(c => c.a == 1), Is.GreaterThan(0), "Hub panel must be rendered");
+                var composed = composite.GetPixels(); var outside = 0; var covered = 0; var mismatched = 0;
+                for (var y = 0; y < frame.height; y++) for (var x = 0; x < frame.width; x++)
+                {
+                    var u = (x + 0.5f) / frame.width; var v = (y + 0.5f) / frame.height;
+                    // Two pixels include the panel's antialiased boundary.
+                    if (u >= min.x - 2f / frame.width && u <= max.x + 2f / frame.width
+                        && v >= min.y - 2f / frame.height && v <= max.y + 2f / frame.height) continue;
+                    outside++;
+                    if (pixels[y * frame.width + x].a != 0) covered++;
+                    var expected = room.GetPixelBilinear(u, v); var actual = composed[y * frame.width + x];
+                    if (Mathf.Abs(actual.r - expected.r) > 1f / 255 || Mathf.Abs(actual.g - expected.g) > 1f / 255
+                        || Mathf.Abs(actual.b - expected.b) > 1f / 255) mismatched++;
+                }
+                Assert.That(outside, Is.GreaterThan(frame.width * frame.height / 2), "Panel exclusion must leave most of the room visible");
+                Assert.That(covered, Is.Zero, "Unexpected head mask or geometry outside the panel");
+                Assert.That(mismatched, Is.Zero, "Composite must preserve room.png, including every grid line outside the panel");
+            }
+            finally
+            {
+                Object.DestroyImmediate(room);
+                if (frame != null) Object.DestroyImmediate(frame);
+                if (composite != null) Object.DestroyImmediate(composite);
+            }
+        }
+#endif
         [UnityTest]
         public IEnumerator TwoTurnExchangesPlayInOrderWithoutOverlap()
         {

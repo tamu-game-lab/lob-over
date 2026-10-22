@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { mkdir, readFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 import { startHost } from '../src/host/server.js';
+import { assertChart } from './chart-assertions.js';
 
 const scenarioPath = fileURLToPath(new URL('../../Data/Scenarios/level1_texas.json', import.meta.url));
 const output = fileURLToPath(new URL('../out/play/', import.meta.url));
@@ -31,6 +32,7 @@ async function fits(page) {
   assert.doesNotMatch(await page.locator('body').innerText(), forbidden);
 }
 async function screenshots(page, name) {
+  await assertChart(page, true);
   for (const [width, height] of [[1366, 768], [1920, 1080]]) {
     await page.setViewportSize({ width, height }); await fits(page);
     await page.waitForFunction(() => !document.getAnimations().some(animation => animation.playState === 'running'));

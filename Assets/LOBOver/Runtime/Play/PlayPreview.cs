@@ -12,16 +12,18 @@ using UnityEngine.InputSystem;
 
 namespace LOBOver.Play
 {
-    // The entire root is EditorOnly. Mouse clicks exercise the same ISDK event as a ray selection.
+    // The root and head camera are EditorOnly. Mouse clicks exercise the same ISDK event as a ray selection.
     public sealed class PlayPreview : MonoBehaviour
     {
         public Camera view;
+        public Camera survey;
         public XRRig rig;
         public CrewButton back;
         private void Start()
         {
 #if UNITY_EDITOR
-            if (OVRManager.isHmdPresent) gameObject.SetActive(false);
+            if (OVRManager.isHmdPresent) { view.enabled = false; gameObject.SetActive(false); }
+            else AlignHeadCamera();
 #else
             gameObject.SetActive(false);
 #endif
@@ -50,6 +52,19 @@ namespace LOBOver.Play
             ray.PublishPointerEvent(new PointerEvent(-1, PointerEventType.Unhover, pose));
         }
 #if UNITY_EDITOR
+        private void LateUpdate() => AlignHeadCamera();
+        public void AlignHeadCamera()
+        {
+            if (rig.CameraRig == null) rig.Resolve(false);
+            var eye = rig.CentreEye == null ? null : rig.CentreEye.GetComponent<Camera>();
+            if (eye == null) throw new InvalidOperationException("Head preview requires the rig's centre eye camera.");
+            if (view.transform.parent != eye.transform) view.transform.SetParent(eye.transform, false);
+            view.transform.localPosition = Vector3.zero; view.transform.localRotation = Quaternion.identity;
+            view.transform.localScale = Vector3.one;
+            view.fieldOfView = eye.fieldOfView; view.nearClipPlane = eye.nearClipPlane; view.farClipPlane = eye.farClipPlane;
+            view.cullingMask = eye.cullingMask;
+            view.stereoTargetEye = StereoTargetEyeMask.None;
+        }
         // WO-L5 item 6 / WO-L4 preview resolution.
         public const int FrameSize = 1440;
         private static readonly float[] WarpSteps = { 0.2f, 0.45f, 0.7f, 0.9f, 1f };
@@ -117,6 +132,7 @@ namespace LOBOver.Play
         }
         public Texture2D CaptureFrame()
         {
+            AlignHeadCamera();
             var target = RenderTexture.GetTemporary(FrameSize, FrameSize, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
             var previousTarget = view.targetTexture; var previousActive = RenderTexture.active;
             var previousHdr = view.allowHDR; var previousClear = view.clearFlags; var previousBackground = view.backgroundColor;
@@ -135,6 +151,15 @@ namespace LOBOver.Play
                 RenderTexture.active = previousActive; RenderTexture.ReleaseTemporary(target);
             }
         }
+        public static Texture2D CompositeFrame(Texture2D frame, Texture2D room)
+        {
+            var pixels = frame.GetPixels();
+            for (var y = 0; y < frame.height; y++) for (var x = 0; x < frame.width; x++)
+                pixels[y * frame.width + x] = Composite(pixels[y * frame.width + x],
+                    room.GetPixelBilinear((x + 0.5f) / frame.width, (y + 0.5f) / frame.height), QualitySettings.activeColorSpace == ColorSpace.Linear);
+            var composite = new Texture2D(frame.width, frame.height, TextureFormat.RGBA32, false);
+            composite.SetPixels(pixels); composite.Apply(); return composite;
+        }
         public static Color Composite(Color premultipliedFrame, Color roomSrgb, bool linear)
         {
             // The eye's RGB is already premultiplied: multiplying it by alpha again darkens the wire.
@@ -142,7 +167,7 @@ namespace LOBOver.Play
             if (linear) result = result.gamma;
             result.a = 1; return result;
         }
-        private static void EnsureRoom(string path)
+        public static void EnsureRoom(string path)
         {
             if (File.Exists(path)) return;
             // WO-L5: a mid-grey wall, 20 cm grid. Stand-in wall spans four metres.

@@ -27,7 +27,7 @@ main{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;
 <main>
   <section class="board" aria-labelledby="board-title"><div class="eyebrow">Site office / Line of balance</div><h2 id="board-title">The PM's plan: promised Day 18</h2>
     <div class="legend"><span><i class="dashed"></i>PM's plan</span><span><i></i><span id="actual-label">Reported through yesterday</span></span><span id="previous-label" hidden><i class="faint"></i>Previous run · 25%</span></div>
-    <div class="chart-wrap"><svg id="chart" viewBox="0 0 1000 590" role="img" aria-label="Crew stations across from 0+00 to 30+00, days down"><g id="grid"></g><g id="previous-lines"></g><g id="planned-lines"></g><g id="reported-lines"></g><g id="ruler" hidden><rect x="65" y="-5" width="850" height="10" fill="#8c7958" fill-opacity=".18"/><path d="M65 0H915" stroke="#71634a" stroke-width="1.4"/><text id="today-label" x="928" y="4">Today</text></g></svg></div>
+    <div class="chart-wrap"><svg id="chart" viewBox="0 0 1000 590" role="img" aria-label="Days across from Day 1 at the left, stations up from 0+00 to 30+00"><g id="grid"></g><g id="previous-lines"></g><g id="planned-lines"></g><g id="reported-lines"></g><g id="ruler" hidden><rect x="-5" y="38" width="10" height="486" fill="#8c7958" fill-opacity=".18"/><path d="M0 38V524" stroke="#71634a" stroke-width="1.4"/><text id="today-label" x="0" y="28" text-anchor="middle">Today</text></g></svg></div>
     <div class="stamp" id="result" hidden><div class="eyebrow">Run record</div><div id="finish"></div><div class="eyebrow" style="margin-top:12px">Idle crew-days</div><div id="idle"></div></div>
   </section>
   <aside class="console" aria-labelledby="console-title"><div class="console-heading"><h2 id="console-title">Crew radio</h2><span>PLAN / TRANSMIT</span></div><div id="crews"></div>
@@ -95,21 +95,21 @@ function drawChart(){
   const actual=result?.lines.actual??v.reportedLines,planned=result?.lines.planned??v.plannedPolylines;
   const all=[...Object.values(actual).flat(),...Object.values(previous??{}).flat()];
   const maxDay=Math.max(v.promisedDay+3,state.displayDay,...all.map(p=>Math.ceil(p.t+1)));
-  const x=ft=>65+ft/length*850,y=t=>38+t/(maxDay-1)*486;
+  const x=t=>65+t/(maxDay-1)*850,y=ft=>524-ft/length*486;
   const nextGrid=JSON.stringify([length,maxDay,v.project.job.zones]);
   if(gridKey!==nextGrid){
-    let grid=v.project.job.zones.map((z,i)=>`<rect x="${x(z.fromFt)}" y="38" width="${x(z.toFt)-x(z.fromFt)}" height="486" fill="${i%2?'#b3bea5':'#bda47b'}" opacity=".12"/><text class="zone-label" x="${x((z.fromFt+z.toFt)/2)}" y="18" text-anchor="middle">ZONE ${z.id}</text>`).join('');
+    let grid=v.project.job.zones.map((z,i)=>`<rect class="zone-band" x="65" y="${y(z.toFt)}" width="850" height="${y(z.fromFt)-y(z.toFt)}" fill="${i%2?'#b3bea5':'#bda47b'}" opacity=".12"/><text class="zone-label" x="928" y="${y((z.fromFt+z.toFt)/2)+4}">ZONE ${z.id}</text>`).join('');
     for(let ft=0;ft<=length;ft+=v.project.job.stationEveryFt){
-      const major=ft%500===0;grid+=`<line x1="${x(ft)}" x2="${x(ft)}" y1="38" y2="524" stroke="#7f8870" stroke-opacity="${major?.3:.12}"/>`;
-      if(major)grid+=`<text x="${x(ft)}" y="549" text-anchor="middle">${station(ft)}</text>`;
+      const major=ft%500===0;grid+=`<line x1="65" x2="915" y1="${y(ft)}" y2="${y(ft)}" stroke="#7f8870" stroke-opacity="${major?.3:.12}"/>`;
+      if(major)grid+=`<text class="station-label" x="53" y="${y(ft)+4}" text-anchor="end">${station(ft)}</text>`;
     }
-    for(let day=1;day<=maxDay;day++)grid+=`<line x1="65" x2="915" y1="${y(day-1)}" y2="${y(day-1)}" stroke="#7f8870" stroke-opacity=".2"/><text class="day-label" x="49" y="${y(day-1)+4}" text-anchor="end">${day}</text>`;
-    grid+=`<text x="19" y="18">DAY</text><text x="490" y="578" text-anchor="middle">STATION / FEET</text><path d="M65 ${y(v.promisedDay-1)}H915" stroke="#776c52" stroke-dasharray="3 5"/><text x="928" y="${y(v.promisedDay-1)+4}">${v.promisedDay}</text>`;
+    for(let day=1;day<=maxDay;day++)grid+=`<line x1="${x(day-1)}" x2="${x(day-1)}" y1="38" y2="524" stroke="#7f8870" stroke-opacity=".2"/><text class="day-label" x="${x(day-1)}" y="549" text-anchor="middle">${day}</text>`;
+    grid+=`<text x="490" y="578" text-anchor="middle">Day</text><path d="M${x(v.promisedDay-1)} 38V524" stroke="#776c52" stroke-dasharray="3 5"/>`;
     $('grid').innerHTML=grid;gridKey=nextGrid;
   }
   const nextKey=JSON.stringify([nextGrid,planned,actual,previous]);
   if(chartKey!==nextKey){
-    const line=(id,points,kind,opacity=1,extra='')=>points?.length>1?`<polyline data-line="${id}" data-kind="${kind}" points="${points.map(p=>`${x(p.ft)},${y(p.t)}`).join(' ')}" fill="none" stroke="${COLORS[id]}" stroke-width="${kind==='plan'?2.5:3.5}" stroke-linecap="round" stroke-linejoin="round" ${kind==='plan'?'stroke-dasharray="9 7"':''} opacity="${opacity}" ${extra}/>`:'';
+    const line=(id,points,kind,opacity=1,extra='')=>points?.length>1?`<polyline data-line="${id}" data-kind="${kind}" points="${points.map(p=>`${x(p.t)},${y(p.ft)}`).join(' ')}" fill="none" stroke="${COLORS[id]}" stroke-width="${kind==='plan'?2.5:3.5}" stroke-linecap="round" stroke-linejoin="round" ${kind==='plan'?'stroke-dasharray="9 7"':''} opacity="${opacity}" ${extra}/>`:'';
     $('previous-lines').innerHTML=CREWS.map(id=>line(id,previous?.[id],'previous',.25)).join('');
     $('planned-lines').innerHTML=CREWS.map(id=>line(id,planned[id],'plan')).join('');
     $('reported-lines').innerHTML=CREWS.map(id=>{
@@ -120,7 +120,7 @@ function drawChart(){
     chartKey=nextKey;drawn=structuredClone(actual);
   }
   $('previous-label').hidden=!previous;$('ruler').toggleAttribute('hidden',!hasStarted);
-  $('ruler').style.transform=`translateY(${y(state.displayDay-1)}px)`;
+  $('ruler').style.transform=`translateX(${x(state.displayDay-1)}px)`;
   $('today-label').textContent='Day '+state.displayDay;
 }
 function render(){

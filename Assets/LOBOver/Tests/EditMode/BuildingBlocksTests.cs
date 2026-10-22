@@ -10,6 +10,9 @@ using NUnit.Framework;
 using Oculus.Interaction;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
+using UnityEditor;
+using UnityEditor.SceneManagement;
 
 namespace LOBOver.Tests.Editor
 {
@@ -60,6 +63,18 @@ namespace LOBOver.Tests.Editor
                 Assert.That(XRRig.Components<LOBOver.Runtime.Director>(scene), Is.Empty);
                 Assert.That(XRRig.Components<LOBOver.World.PlanPanel>(scene), Is.Empty);
                 Assert.That(start.panel.GetComponentInParent<OVRCameraRig>(), Is.Null);
+                var preview = XRRig.Components<PlayPreview>(scene).Single();
+                var eye = XRRig.Components<OVRCameraRig>(scene).Single().centerEyeAnchor.GetComponent<Camera>();
+                Assert.That(preview.view.transform.parent, Is.EqualTo(eye.transform));
+                Assert.That(preview.view.transform.localPosition, Is.EqualTo(Vector3.zero));
+                Assert.That(preview.view.transform.localRotation, Is.EqualTo(Quaternion.identity));
+                Assert.That(preview.view.fieldOfView, Is.EqualTo(eye.fieldOfView));
+                Assert.That(preview.view.nearClipPlane, Is.EqualTo(eye.nearClipPlane));
+                Assert.That(preview.view.farClipPlane, Is.EqualTo(eye.farClipPlane));
+                Assert.That(preview.view.CompareTag("EditorOnly"), Is.True);
+                Assert.That(XRRig.Components<Camera>(scene).Count(c => c.name == "[LOBOver] HeadPreviewCamera"), Is.EqualTo(1));
+                Assert.That(preview.survey.name, Is.EqualTo("SurveyCamera"));
+                Assert.That(preview.survey.enabled, Is.False);
             }
             finally { if (sentinel != null) UnityEngine.Object.DestroyImmediate(sentinel); }
         }
@@ -67,16 +82,75 @@ namespace LOBOver.Tests.Editor
         [Test]
         public void ConfigureIsIdempotentAndDisablesLocomotion()
         {
-            var scene = PlaySceneBuilder.OpenExisting();
-            BuildingBlocksSetup.Configure(scene);
-            var components = XRRig.Components<Component>(scene).Where(c => c != null).ToArray();
-            var before = components.Select(UnityEditor.EditorJsonUtility.ToJson).ToArray();
-            BuildingBlocksSetup.Configure(scene);
-            CollectionAssert.AreEqual(before, components.Select(UnityEditor.EditorJsonUtility.ToJson).ToArray());
-            foreach (var behaviour in XRRig.Components<Behaviour>(scene).Where(c => c.GetType().Namespace == "Oculus.Interaction.Locomotion"))
-                Assert.That(behaviour.enabled, Is.False, behaviour.name);
-            foreach (var locomotor in XRRig.Components<Oculus.Interaction.Locomotion.FirstPersonLocomotor>(scene))
-                Assert.That(locomotor.GravityFactor, Is.Zero);
+            // Open committed bytes separately so another builder test cannot hide an initial Configure change.
+            var scene = EditorSceneManager.OpenPreviewScene(PlaySceneBuilder.ScenePath);
+            try
+            {
+                var objects = XRRig.Components<Component>(scene).Where(c => c != null).Cast<UnityEngine.Object>()
+                    .Concat(XRRig.Components<Transform>(scene).Select(t => (UnityEngine.Object)t.gameObject)).ToArray();
+                var before = objects.Select(EditorJsonUtility.ToJson).ToArray();
+                var dirty = scene.isDirty;
+                Assert.That(BuildingBlocksSetup.Check(scene), Is.True);
+                for (var pass = 0; pass < 2; pass++)
+                {
+                    BuildingBlocksSetup.Configure(scene);
+                    CollectionAssert.AreEqual(before, objects.Select(EditorJsonUtility.ToJson).ToArray());
+                    Assert.That(scene.isDirty, Is.EqualTo(dirty));
+                }
+                foreach (var tunnel in XRRig.Components<TunnelingEffect>(scene)) Assert.That(tunnel.gameObject.activeSelf, Is.False);
+                foreach (var behaviour in XRRig.Components<Behaviour>(scene).Where(c => c != null && c.GetType().Namespace == "Oculus.Interaction.Locomotion"))
+                    Assert.That(behaviour.enabled, Is.False, behaviour.name);
+                foreach (var locomotor in XRRig.Components<Oculus.Interaction.Locomotion.FirstPersonLocomotor>(scene))
+                    Assert.That(locomotor.GravityFactor, Is.Zero);
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
+        [Test]
+        public void ActiveTunnelsFailCheckAndConfigureOnlyChangesTheirActiveValues()
+        {
+            var scene = EditorSceneManager.OpenPreviewScene(PlaySceneBuilder.ScenePath);
+            try
+            {
+                var tunnels = XRRig.Components<TunnelingEffect>(scene);
+                Assert.That(tunnels.Length, Is.EqualTo(2), "Exercise both installed SDK tunnel objects");
+                var components = XRRig.Components<Component>(scene).Where(c => c != null).ToArray();
+                var before = components.Select(EditorJsonUtility.ToJson).ToArray();
+                foreach (var tunnel in tunnels)
+                {
+                    tunnel.gameObject.SetActive(true);
+                    LogAssert.Expect(LogType.Error, new Regex("active TunnelingEffect .*" + Regex.Escape(tunnel.name)));
+                }
+                Assert.That(BuildingBlocksSetup.Check(scene), Is.False);
+                BuildingBlocksSetup.Configure(scene);
+                Assert.That(BuildingBlocksSetup.Check(scene), Is.True);
+                foreach (var tunnel in tunnels) Assert.That(tunnel.gameObject.activeSelf, Is.False);
+                CollectionAssert.AreEqual(components, XRRig.Components<Component>(scene).Where(c => c != null).ToArray());
+                CollectionAssert.AreEqual(before, components.Select(EditorJsonUtility.ToJson).ToArray());
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
+        [Test]
+        public void CheckFindsUnownedTunnelsEvenWithDisabledDriverButIgnoresHiddenRenderers()
+        {
+            var scene = EditorSceneManager.OpenPreviewScene(PlaySceneBuilder.ScenePath);
+            try
+            {
+                var obj = new GameObject("Unowned tunnel"); SceneManager.MoveGameObjectToScene(obj, scene);
+                var tunnel = obj.AddComponent<TunnelingEffect>(); tunnel.enabled = false;
+                var mesh = new GameObject("Mesh"); mesh.transform.SetParent(obj.transform, false);
+                var renderer = mesh.AddComponent<MeshRenderer>();
+                LogAssert.Expect(LogType.Error, new Regex("active TunnelingEffect Unowned tunnel;"));
+                Assert.That(BuildingBlocksSetup.Check(scene), Is.False);
+                renderer.enabled = false; Assert.That(BuildingBlocksSetup.Check(scene), Is.True);
+                renderer.enabled = true; mesh.SetActive(false); Assert.That(BuildingBlocksSetup.Check(scene), Is.True);
+                mesh.SetActive(true);
+                BuildingBlocksSetup.Configure(scene);
+                Assert.That(obj.activeSelf, Is.False, "Configure must reach tunnels outside Building Blocks");
+                Assert.That(BuildingBlocksSetup.Check(scene), Is.True);
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
         }
 
         [Test]
