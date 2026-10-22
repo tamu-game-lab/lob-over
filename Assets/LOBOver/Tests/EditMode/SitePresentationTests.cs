@@ -288,7 +288,6 @@ namespace LOBOver.Tests.Editor
                 Assert.That(surface.receiveShadows, Is.True);
             }
             var camera = scene.GetRootGameObjects().Single(r => r.name == "[LOBOver] Preview").GetComponentInChildren<Camera>();
-            var target = new RenderTexture(1440, 1440, 24, RenderTextureFormat.ARGB32);
             var oldTarget = camera.targetTexture; var oldPosition = camera.transform.position; var oldRotation = camera.transform.rotation;
             // Scene view and the rig's centre eye are outside the owned roots. Include
             // hidden Editor cameras too; Scene view may explicitly render even disabled.
@@ -296,11 +295,17 @@ namespace LOBOver.Tests.Editor
                 .Select(c => (camera: c, enabled: c.enabled, mask: c.cullingMask, clear: c.clearFlags)).ToArray();
             // OVR hides these at runtime; EditMode must exclude its controller/hand
             // variants from site statistics, restoring every enabled state afterwards.
-            var rigRenderers = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<OVRCameraRig>(true))
+            var rigRenderers = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>(true))
+                .Where(t => t.name == "[BuildingBlock] Camera Rig")
                 .SelectMany(r => r.GetComponentsInChildren<Renderer>(true)).Distinct().Where(r => r != null)
                 .Select(r => (renderer: r, enabled: r.enabled)).ToArray();
             var crewShadows = world.GetComponentsInChildren<CrewRig>(true).SelectMany(c => c.GetComponentsInChildren<Renderer>(true))
                 .Select(r => (renderer: r, mode: r.shadowCastingMode)).ToArray();
+            var staticGeometry = site.GetComponentsInChildren<MeshFilter>(true)
+                .Where(f => GameObjectUtility.AreStaticEditorFlagsSet(f.gameObject, StaticEditorFlags.BatchingStatic)
+                    && f.sharedMesh != null && f.GetComponent<MeshRenderer>() != null)
+                .Select(f => (filter: f, mesh: f.sharedMesh, renderer: f.GetComponent<MeshRenderer>(),
+                    rendererState: EditorJsonUtility.ToJson(f.GetComponent<MeshRenderer>()))).ToArray();
             var enabled = camera.enabled; var active = site.activeSelf; var observer = world.sky.observer;
             var gameViewType = typeof(EditorWindow).Assembly.GetType("UnityEditor.GameView", true);
             var gameView = Resources.FindObjectsOfTypeAll(gameViewType).Cast<EditorWindow>().FirstOrDefault();
@@ -319,27 +324,32 @@ namespace LOBOver.Tests.Editor
                 { entry.camera.enabled = false; entry.camera.cullingMask = 0; entry.camera.clearFlags = CameraClearFlags.Nothing; }
                 foreach (var entry in rigRenderers) if (entry.renderer != null) entry.renderer.enabled = false;
                 Debug.Log($"WO-L4 excluded Camera Rig renderers: {rigRenderers.Length} total, {rigRenderers.Count(r => r.enabled)} enabled.");
-                // Explicit rendering only: do not also submit this camera from the Game view.
-                camera.enabled = false;
-                camera.targetTexture = target;
+                // Amendment 3: UnityStats counts Game view frames, not Camera.Render into a texture.
+                camera.enabled = true;
+                camera.targetTexture = null;
                 var x = (float)world.Crew("pipe").StationFt * WorldUnits.MetresPerFoot;
                 camera.transform.position = new Vector3(x, 1.65f, WorldUnits.RoadZ);
                 camera.transform.rotation = Quaternion.LookRotation(new Vector3(0, -0.12f, -1));
                 world.sky.observer = camera.transform;
                 foreach (var crew in world.GetComponentsInChildren<CrewRig>(true)) crew.RefreshDistancePresentation(camera.transform);
+                // Match the player build's batching of only the builder's static-flagged geometry.
+                StaticBatchingUtility.Combine(staticGeometry.Select(g => g.filter.gameObject).ToArray(), site);
                 yield return null;
-                for (var i = 0; i < 3; i++) { camera.Render(); yield return null; }
+                gameView.Repaint();
+                yield return null;
                 var triangles = UnityStats.triangles; var drawCalls = UnityStats.drawCalls;
-                Debug.Log($"WO-L4 preview 1440x1440: {triangles} triangles, {drawCalls} draw calls.");
+                Debug.Log($"WO-L4 across trench Game view: {triangles} triangles, {drawCalls} draw calls.");
                 Assert.That(gameView.maximized, Is.True, "Game view must hide SceneView for the measurement");
                 Assert.That(triangles, Is.GreaterThan(0), "No Editor render statistics; run with the Game view visible.");
                 Assert.That(drawCalls, Is.GreaterThan(0));
                 Assert.That(triangles, Is.LessThan(300000)); Assert.That(drawCalls, Is.LessThan(150));
-                camera.transform.LookAt(world.Crew("exc").transform.position + Vector3.up);
-                for (var i = 0; i < 3; i++) { camera.Render(); yield return null; }
-                Debug.Log($"WO-L4 toward excavator 1440x1440: {UnityStats.triangles} triangles, {UnityStats.drawCalls} draw calls.");
-                Assert.That(UnityStats.triangles, Is.GreaterThan(0)); Assert.That(UnityStats.triangles, Is.LessThan(300000));
-                Assert.That(UnityStats.drawCalls, Is.GreaterThan(0)); Assert.That(UnityStats.drawCalls, Is.LessThan(150));
+                foreach (var view in new[] { (crew: "exc", label: "excavator"), (crew: "back", label: "backfill crew") })
+                {
+                    camera.transform.LookAt(world.Crew(view.crew).transform.position + Vector3.up);
+                    gameView.Repaint();
+                    yield return null;
+                    Debug.Log($"WO-L4 toward {view.label} Game view: {UnityStats.triangles} triangles, {UnityStats.drawCalls} draw calls.");
+                }
             }
             finally
             {
@@ -351,7 +361,16 @@ namespace LOBOver.Tests.Editor
                 foreach (var entry in rigRenderers) if (entry.renderer != null) entry.renderer.enabled = entry.enabled;
                 foreach (var entry in crewShadows) if (entry.renderer != null) entry.renderer.shadowCastingMode = entry.mode;
                 if (world != null) foreach (var lod in world.GetComponentsInChildren<LODGroup>(true)) lod.ForceLOD(-1);
-                if (site != null) site.SetActive(active); Object.DestroyImmediate(target);
+                // Combining replaces meshes and renderer batch metadata; leave neither behind in EditMode.
+                var combinedMeshes = staticGeometry.Where(g => g.filter != null).Select(g => g.filter.sharedMesh)
+                    .Where(m => m != null && !EditorUtility.IsPersistent(m) && !staticGeometry.Any(g => g.mesh == m)).Distinct().ToArray();
+                foreach (var entry in staticGeometry)
+                {
+                    if (entry.filter != null) entry.filter.sharedMesh = entry.mesh;
+                    if (entry.renderer != null) EditorJsonUtility.FromJsonOverwrite(entry.rendererState, entry.renderer);
+                }
+                foreach (var mesh in combinedMeshes) Object.DestroyImmediate(mesh);
+                if (site != null) site.SetActive(active);
                 if (gameView != null)
                 {
                     gameView.maximized = wasMaximized;
