@@ -312,6 +312,9 @@ namespace LOBOver.Tests.Editor
             var createdGameView = gameView == null; var wasMaximized = gameView != null && gameView.maximized;
             var focusedWindow = EditorWindow.focusedWindow;
             var maximizedWindows = Resources.FindObjectsOfTypeAll<EditorWindow>().Where(w => w != gameView && w.maximized).ToArray();
+            var cameraRenderCount = 0;
+            void CountCameraRender(UnityEngine.Rendering.ScriptableRenderContext context, Camera renderedCamera)
+            { if (renderedCamera == camera) cameraRenderCount++; }
             try
             {
                 // SceneView can render despite a disabled camera. Hide it for the entire
@@ -325,6 +328,7 @@ namespace LOBOver.Tests.Editor
                 foreach (var entry in rigRenderers) if (entry.renderer != null) entry.renderer.enabled = false;
                 Debug.Log($"WO-L4 excluded Camera Rig renderers: {rigRenderers.Length} total, {rigRenderers.Count(r => r.enabled)} enabled.");
                 // Amendment 3: UnityStats counts Game view frames, not Camera.Render into a texture.
+                UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering += CountCameraRender;
                 camera.enabled = true;
                 camera.targetTexture = null;
                 var x = (float)world.Crew("pipe").StationFt * WorldUnits.MetresPerFoot;
@@ -337,7 +341,9 @@ namespace LOBOver.Tests.Editor
                 yield return null;
                 gameView.Repaint();
                 yield return null;
-                var triangles = UnityStats.triangles; var drawCalls = UnityStats.drawCalls;
+                // Amendment 4: the test runner may repaint this camera more than once per statistics window.
+                var renderCount = Math.Max(1, cameraRenderCount);
+                var triangles = UnityStats.triangles / renderCount; var drawCalls = UnityStats.drawCalls / renderCount;
                 Debug.Log($"WO-L4 across trench Game view: {triangles} triangles, {drawCalls} draw calls.");
                 Assert.That(gameView.maximized, Is.True, "Game view must hide SceneView for the measurement");
                 Assert.That(triangles, Is.GreaterThan(0), "No Editor render statistics; run with the Game view visible.");
@@ -345,14 +351,17 @@ namespace LOBOver.Tests.Editor
                 Assert.That(triangles, Is.LessThan(300000)); Assert.That(drawCalls, Is.LessThan(150));
                 foreach (var view in new[] { (crew: "exc", label: "excavator"), (crew: "back", label: "backfill crew") })
                 {
+                    cameraRenderCount = 0;
                     camera.transform.LookAt(world.Crew(view.crew).transform.position + Vector3.up);
                     gameView.Repaint();
                     yield return null;
-                    Debug.Log($"WO-L4 toward {view.label} Game view: {UnityStats.triangles} triangles, {UnityStats.drawCalls} draw calls.");
+                    renderCount = Math.Max(1, cameraRenderCount);
+                    Debug.Log($"WO-L4 toward {view.label} Game view: {UnityStats.triangles / renderCount} triangles, {UnityStats.drawCalls / renderCount} draw calls.");
                 }
             }
             finally
             {
+                UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering -= CountCameraRender;
                 if (camera != null)
                 { camera.targetTexture = oldTarget; camera.transform.SetPositionAndRotation(oldPosition, oldRotation); camera.enabled = enabled; }
                 if (world != null && world.sky != null) world.sky.observer = observer;

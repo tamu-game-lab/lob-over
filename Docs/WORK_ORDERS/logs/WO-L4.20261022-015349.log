@@ -1,0 +1,2575 @@
+=== WO-L4 dispatched 20261022-015349
+=== root: /c/Users/bryan/Documents/TAMU/02-Research/Creative Care/Unity/LOB-OVER
+=== flags: --sandbox workspace-write -c approval_policy=never 
+=== note: Amendment 3 (not a rejection round): implement the measurement method of Amendment 3 in Docs/WORK_ORDERS/WO-L4.md inside Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs, test PipeStationPreviewStaysInsideQuestBudget only: the preview camera enabled with no target texture, the Game view repainted and UnityStats read on the frame after the repaint, every other camera and every renderer under the Camera Rig disabled for the measured frames and restored, static-flagged site geometry combined with StaticBatchingUtility.Combine before measuring, the item 11 assertions only for the frame facing across the trench, the along-trench views logged with their numbers and not asserted. Touch nothing else; WO-L4 and WO-L5 are committed on main (e172095). Ignore .agents/ in the scope check. Compile offline with Assets/LOBOver/Tests/CompileOffline.ps1.
+
+Reading additional input from stdin...
+OpenAI Codex v0.163.0-alpha.11
+--------
+workdir: C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+model: gpt-6-astra
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a16263-3362-7fc3-85e5-604a7ba38922
+--------
+user
+You are Astra, the implementer on this repository. Read AGENTS.md first and obey it.
+Then read Docs/WORK_ORDERS/WO-L4.md and carry out that work order exactly: only the files it allows,
+only the behaviour it specifies, every acceptance check run by you before you finish.
+Do not commit. Do not touch Data/ unless the work order says so. Do not add dependencies.
+If something outside your scope blocks you, stop and report BLOCKED with the exact reason.
+Finish with the STATUS block in the format AGENTS.md gives, as the very last thing you print.
+Orchestrator note for this dispatch: Amendment 3 (not a rejection round): implement the measurement method of Amendment 3 in Docs/WORK_ORDERS/WO-L4.md inside Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs, test PipeStationPreviewStaysInsideQuestBudget only: the preview camera enabled with no target texture, the Game view repainted and UnityStats read on the frame after the repaint, every other camera and every renderer under the Camera Rig disabled for the measured frames and restored, static-flagged site geometry combined with StaticBatchingUtility.Combine before measuring, the item 11 assertions only for the frame facing across the trench, the along-trench views logged with their numbers and not asserted. Touch nothing else; WO-L4 and WO-L5 are committed on main (e172095). Ignore .agents/ in the scope check. Compile offline with Assets/LOBOver/Tests/CompileOffline.ps1.
+2026-10-22T06:53:52.649756Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://mcp.consensus.app/.well-known/oauth-protected-resource\", scope=\"search\"" })
+warning: Codex is ignoring 2 unrecognized configuration settings. Check for typos or deprecated settings.
+  user (C:\Users\bryan\.codex\config.toml): `features.rmcp_client` is ignored.
+  user (C:\Users\bryan\.codex\config.toml): `mcp_servers.code-review-graph.type` is ignored.
+warning: Codex is ignoring 2 unrecognized configuration settings. Check for typos or deprecated settings.
+  user (C:\Users\bryan\.codex\config.toml): `features.rmcp_client` is ignored.
+  user (C:\Users\bryan\.codex\config.toml): `mcp_servers.code-review-graph.type` is ignored.
+warning: loading hooks from both C:\Users\bryan\.codex\hooks.json and C:\Users\bryan\.codex\config.toml; prefer a single representation for this layer
+warning: clamping SessionEnd hook timeout to 3s in C:\Users\bryan\.codex\hooks.json
+warning: clamping SessionEnd hook timeout to 3s in C:\Users\bryan\.codex\config.toml
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+hook: UserPromptSubmit Completed
+codex
+Step 1 of 4: I’ll read `AGENTS.md` and `WO-L4.md`, then update only the named test and run the required checks.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath AGENTS.md' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 65ms:
+# AGENTS.md â€” rules for the implementer (Codex / Astra)
+
+You are the implementer on LOB, Over, a three-seat cooperative construction-scheduling game (VR inspector, web scheduler, paper spec-keeper). An orchestrator (Claude Code) writes you bounded work orders, verifies the result, and accepts or rejects it. You do not decide design questions; you build exactly what the work order says and report precisely.
+
+## Read first, every time
+
+1. This file.
+2. The work order you were given: `Docs/WORK_ORDERS/WO-xx.md`. It names the files you may touch, the acceptance checks, and what is out of scope.
+3. Only the design files the work order points you to (usually one or two sections of `Docs/DESIGN_v0.md`, `Docs/PROTOCOL.md`, `Docs/SCENARIO_SCHEMA.md`). Do not read the whole design doc unless the work order says so.
+
+## Repository layout (root = the Unity project root)
+
+```
+Assets/ Packages/ ProjectSettings/   Unity (Phase 1; do not touch in Phase 0 work orders)
+Data/        catalog.json, Scenarios/*.json, goldens/*.json   â€” source of truth for sim, kit and voice
+Docs/        DESIGN_v0.md, PROTOCOL.md, SCENARIO_SCHEMA.md, ORCHESTRATOR.md, WORK_ORDERS/, WORKLOG.md, DECISIONS.md
+Monitor/     Node host + JS reference simulation + browser pages (Plan page, 2D Site page, facilitator page)
+Paper/       field manual source and generated printable kit
+Tools/       astra.sh (dispatch), reference/ (Python oracle for goldens), voice/ (Kokoro batch)
+Voice/       generated WAV lines (output)
+```
+
+## Hard rules
+
+- **Scope.** Touch only the files and folders the work order lists under "You may change". If the job needs a change elsewhere, stop and say so in the STATUS block (`BLOCKED`), do not make it.
+- **No design decisions.** If the work order is ambiguous, pick the reading that is simplest to change later, state the choice in `NOTES`, and continue. Never invent game rules, numbers, event behaviours or UI feedback that the work order or the pointed-to design section does not state.
+- **No verdict feedback, ever.** Nothing in any player-facing surface may tell players that a choice was right or wrong: no green/red for decisions, no "correct", no score, no hint text, no "you should have". Boards post facts (a permit number, a day count, a dollar figure). This is the project's core educational rule (design doc, "No verdicts during play"). Typo-level rejection of a code that is not on file is allowed; judgement of whether entering it was wise is not.
+- **Determinism.** The simulation is seeded and must produce identical output for identical input and seed. No `Math.random()` without the seeded RNG, no wall-clock reads inside the simulation, no iteration-order dependence on object keys for anything that affects state.
+- **One truth, filtered per seat.** The host holds one state; each seat gets a filtered view (`Docs/PROTOCOL.md`). Never send the Plan seat live field truth, and never send the Site seat the plan or the money.
+- **No network from your sandbox.** Dependencies are installed by the orchestrator before you run. If a module is missing, say so in `BLOCKED`; do not try to install it or vendor a copy.
+- **Data files are authored, not generated by you.** Do not modify `Data/Scenarios/*.json`, `Data/catalog.json` or `Data/goldens/*.json` unless the work order says so explicitly.
+- **Git.** This is a git repo. Do not commit, branch, stash or reset; the orchestrator commits. Never run git on any other folder (LOB-Game is under Plastic SCM and is read-only reference material).
+- **Keep it plain.** Vanilla JS (ES modules), Node 20+, no framework, no bundler, no TypeScript in Phase 0. Tests with Node's built-in `node:test`. Pages are single HTML files with inline CSS and JS, served by the host.
+- **Code style.** Small modules, pure functions for the simulation (`state, input -> state`), named constants for every number that comes from the design, each constant with a comment naming its source (catalog, workbook, decided rule). Comments say why, not what.
+- **Do not touch** `Assets/`, `Packages/`, `ProjectSettings/`, `.gitignore`, `AGENTS.md`, `CLAUDE.md`, `Docs/ORCHESTRATOR.md`, or anything under `Docs/WORK_ORDERS/logs/`.
+
+## How to work a work order
+
+1. Restate the acceptance checks to yourself; they are what the orchestrator will run.
+2. Build the smallest thing that passes them, then stop. No extra features, no refactors of files outside scope, no "while I was here".
+3. Run every acceptance check yourself. Paste the actual command output (trimmed) into `TESTS`.
+4. If a check cannot pass because of something outside your scope, report `BLOCKED` with the exact reason and the smallest change that would unblock it.
+5. Scope check: `git status --short` must show only your own changes. Ignore `Docs/WORK_ORDERS/logs/` (the dispatch log being written while you run) and `Docs/WORKLOG.md` / `Docs/DECISIONS.md` if the orchestrator left them modified; never clean those up and never treat them as a blocker.
+6. Windows shell: your commands run in PowerShell, where `npm` and `npx` resolve to `.ps1` shims that the execution policy blocks. Call `npm.cmd` and `npx.cmd` instead; the acceptance checks mean exactly that. `node`, `python`, `pip` and `git` work as written.
+
+## STATUS block (always the last thing you print)
+
+```
+STATUS: DONE | PARTIAL | BLOCKED
+WO: WO-xx
+CHANGED:
+  - path/one.js  (new)        one line on what it is
+  - path/two.html (modified)  one line on what changed
+TESTS:
+  - <command>  ->  <pass/fail, key numbers>
+NOTES:
+  - choices you made where the order was silent, each in one line
+  - anything the verifier must know (known gaps, follow-ups, risks)
+```
+
+`DONE` means every acceptance check passed on your machine. `PARTIAL` means some passed and you list which did not and why. `BLOCKED` means you could not proceed; name the blocker. Never claim a check passed that you did not run.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath Docs/WORK_ORDERS/WO-L4.md' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 77ms:
+# WO-L4 The site looks real
+
+## Goal
+
+Standing on the road in `Play.unity`, the headset player sees a construction site, not a drawing: textured ground with relief, a real trench with spoil, bedding and pipe, a gravel road, fences, cones and barriers, the trailer, the crews and machines, a sky with sun and clouds, shadows, and haze toward the horizon, inside the Quest 3S budget of `Docs/XR_RENDERING.md`. Every site material uses one shader, `LOBOver/SiteLit`, so WO-L5 can add the warp to all of them at once. Bryan's words on the first build: the assets are extremely poor, it does not feel realistic, a horizontal line like a drawing.
+
+## Read
+
+- `AGENTS.md`, `Docs/XR_RENDERING.md` (all of it), `Docs/LEVEL1.md` ("In the headset"), `Docs/DECISIONS.md` K37 to K40
+- `Assets/LOBOver/Editor/{PlaySceneBuilder,SiteAssetBuilder,SiteSceneBuilder,BuildingBlocksSetup}.cs`, `Assets/LOBOver/Runtime/World/**` (StationCell, CrewRig, SiteWorld, WorldAssets, WorldDrawing), `Assets/LOBOver/Runtime/Play/HostWorldPresenter.cs`, `Assets/LOBOver/Art/PlaySky.shader`, `Tools/import_lobgame_assets.ps1`
+- LOB-Game's assets already imported under `Assets/LOBGame/` (the sand pile photoscan with its textures, `pipe/` with PBR textures, `road-barrier-collection`, `trafic-cone`, `water-barriers`, `Construction Assets/Traffic Props` fences and jersey barrier, the workers and machines) and the ones this order adds: `3D_Models/Tree` (`Tree 2/fast-urban-tree`, `Tree 2/beech`, `Tree1/tree`), `3D_Models/sophiaImports` (`trench_DigNFill_03.fbx` with its `groundTrenchDig` albedo, normal and metallic-smoothness textures), `3D_Models/traffic-props`, `3D_Models/construction-site-barrier`
+- `Assets/Settings/Mobile_RPAsset.asset`, `Mobile_Renderer.asset`, `Assets/Oculus/OculusProjectConfig.asset`
+
+## You may change
+
+`Assets/LOBOver/Editor/**`, `Assets/LOBOver/Runtime/**`, `Assets/LOBOver/Art/**` (including generated textures and materials), `Assets/LOBOver/Tests/**`, `Assets/Settings/Mobile_RPAsset.asset` and `Mobile_Renderer.asset` (only the values named below), `Tools/import_lobgame_assets.ps1` (add folders only), `Play.unity` only through the builder. Never `Assets/LOBGame/**` (copies go to `Assets/LOBOver/Art/Converted/` as now), never a `[BuildingBlock]` object.
+
+## Build
+
+1. **Imports.** Add the four LOB-Game folders above to `Tools/import_lobgame_assets.ps1`; the orchestrator runs it before verification. Convert their Built-in materials to URP copies the way `SiteAssetBuilder` already does; every converted material ends on `LOBOver/SiteLit` (item 2) with its textures kept.
+2. **`LOBOver/SiteLit`** (URP HLSL, `Art/SiteLit.shader`): opaque, lit through `UniversalFragmentPBR` with the main light and its shadows, SH ambient, fog; base map, normal map, smoothness and occlusion (a metallic-smoothness map where the source has one); tiling in world units for ground materials (triplanar for the ground mesh, so no stretching on slopes); a `_Splat` keyword variant for the ground that blends three tiled layers (dirt, gravel, dry grass) by vertex colour r, g, b; GPU instancing; the stereo macros of `XR_RENDERING.md`. One material per surface kind under `Art/Materials/`. The old `Soil`, `AccessRoad`, `Timber`, `StorageSteel`, `Repair_SiteCabin` copies move to this shader with the textures below.
+3. **Textures.** If `Assets/` holds `TerrainLayer` assets or tileable textures whose names contain grass, dirt, soil, mud or gravel (a pack Bryan imported), use the best three for the ground layers and a dirt one for the trench. Otherwise generate them: an Editor generator writes tileable 1024Â² albedo, normal and smoothness textures to `Art/Generated/` for packed dirt (fBm with fine grain), gravel (Worley cells with varied stone tint), dry grass (streaked fBm, straw and olive), and a 256Â² soft dust sprite (radial falloff, brown, alpha) for the work particles. Normal maps from the height field; `sRGB` on albedo only; ASTC 6x6 on Android. LOB-Game's `groundTrenchDig` textures are the trench wall and bedding; the sand pile's albedo and occlusion are the spoil.
+4. **Ground.** Replace the flat bank boxes with a built mesh, 1,200 m by 200 m, 2 m cells within 30 m of the trench and 10 m cells beyond (under 60,000 triangles), with gentle relief (fBm, 0.6 m amplitude, flat within 8 m of the trench and the road), vertex colours painting gravel on the road and its shoulders, dirt within 12 m of the trench, dry grass beyond, with noisy edges. A gravel road 4 m wide along the trench at `WorldUnits.RoadZ` with two shallow ruts. Beyond 100 m from the trench the ground continues as a simple plane to 3,000 m so the horizon never ends in a line against the sky. No colliders are needed on the site in Level 1 (the hub floor collider stays).
+5. **Trench.** Per station cell, real geometry: a 1.2 m wide, 1.8 m deep cut with slightly irregular walls (noise-displaced), the trench wall texture; bedding gravel in the bottom when piped; LOB-Game's `PIPE.fbx` with its PBR textures as the laid pipe; a continuous spoil windrow on the far side from the road (noise-displaced mounds with the spoil texture, 1 m high, breaking every 30 m), the photoscanned sand pile as a hero pile at each crew's station; the slumped wall as a collapsed wedge with loose material on the floor; standing water as a dark reflective plane 0.3 m above the floor; seepage as a dark wet band on the lower wall; backfilled cells as a disturbed dirt strip at grade. Stakes: wooden lath 1.2 m, 5 cm wide, pink flagging, and a small station sign with the station text in 4 cm letters readable from the road.
+6. **Props and surroundings.** Fences (`fence_long`) along the road's outer edge every 10 m for 60 m either side of each crew; cones and a barrier at the collapse and around each working machine; two jersey barriers at the gate; the trailer as a box with the site cabin material, a door and a window; a tree line (the lightest LOB-Game tree under 8,000 triangles, at most 30 instances, GPU instanced) 80 to 120 m beyond the far side with gaps; nothing within 20 m of the player that is a bare box.
+7. **Sky and light.** A dome shader `LOBOver/SiteSky` (replaces `PlaySky`): if a cubemap skybox material exists under `Assets/` use its cubemap, else a procedural sky (zenith to horizon gradient, sun disc at the light's direction with a soft halo, two fBm cloud layers drifting slowly, a haze band at the horizon). The directional light: elevation 48Â°, warm white, soft shadows, one cascade, 2048, 60 m. Ambient trilight tuned to the sky. Linear fog 300 to 2,500 m in the horizon colour. Rain and the cloud bank keep working through `SiteSky`.
+8. **Particles.** The work particles use the dust sprite on URP Particles/Unlit (alpha blended, soft, brown, small); no untextured white sprites anywhere.
+9. **Settings** (values only): Mobile RP asset render scale 1.0, MSAA 4x, HDR off, no post-processing; `XRRuntimeSettings` foveation Low; static batching on the builder's static geometry; GPU instancing on repeated props.
+10. **Scale sanity.** A worker is 1.8 m, the excavator cab roof about 3.2 m, the pipe 0.3 m outside diameter, the trench 1.2 m wide; the builder logs any imported model whose bounds are off by more than 25% and scales it.
+11. **Tests.** EditMode: the builder runs twice and changes nothing the second time; every renderer under `[LOBOver] Site` uses `LOBOver/SiteLit`, `LOBOver/SiteSky` or URP Particles/Unlit; no material has a null main texture except the sky; the Editor stats at the pipe crew's station facing across the trench stay under 300k triangles and 150 draw calls (read through `UnityEditor.UnityStats`); the generated textures are tileable (the left and right edge columns match within 2%).
+
+## Acceptance checks
+
+- Orchestrator through the MCP: import script run; compile clean; Play Scene twice; tests pass; Play in the Editor with `Play LOB Over.cmd` running and the game started, at the pipe crew's station at eye height: screenshots facing across the trench, along the trench toward the excavator and toward the backfill crew, and one from the road at the collapse after Day 4, all through the preview camera at 1440 by 1440. Reviewed against the goal's first sentence: textured ground with relief, trench with spoil and pipe, road, fences and props, sky with clouds, shadows, haze, no white blobs, no bare boxes near the player; stats under budget.
+- No build. Bryan builds and judges in the headset (K35, K41).
+
+## Out of scope
+
+The warp (WO-L5), the hub panel, voices, the Plan page.
+
+## Amendment 1 (orchestrator, 2026-10-21 12:25)
+
+Item 7, the sky: the procedural sky is the default. A cubemap skybox found under `Assets/` is used only when the sun probed from it sits above 30 degrees of elevation; then the light is aimed at it. In every other case the directional light keeps its 48 degree elevation and the procedural sky draws the sun disc at the light's direction with the cloud layers and the haze band. Reason: round 1 aimed the light at a daytime cubemap whose sun sits on the horizon, and the whole site went dark.
+
+## Amendment 2 (orchestrator, 2026-10-22 00:05, from Bryan's round 3 authorization)
+
+Two presentation requirements added to items 5 and 7. Item 7, the clouds: the two cloud layers fade out completely within 8 degrees of the horizon (zero cloud at and below 8 degrees of elevation, full strength again by about 16 degrees), and the cloud projection never stretches into radial streaks near the horizon; the haze band stays. Item 5, the trench walls: every trench surface (both walls, the slumped wall, the wet lower band, the floor) is textured by triplanar mapping in world units (about 1 m per tile) so the dirt texture reads continuous with no stretching or streaks, within the three-samples-per-layer rule of `Docs/XR_RENDERING.md`.
+
+## Amendment 3 (orchestrator, 2026-10-22 02:00, measurement method for item 11)
+
+Item 11's budget test measures through `UnityEditor.UnityStats`, which counts only what the Game view draws in a frame: an explicit `Camera.Render()` into a RenderTexture is never counted, and a hidden Scene view's repaint is. The test therefore: enables the preview camera with no target texture at the pipe crew's station facing across the trench, maximizes the Game view, disables every other camera and every renderer under the `[BuildingBlock] Camera Rig` for the measured frames (OVR hides those models on the device), combines the static-flagged site geometry with `StaticBatchingUtility.Combine` as the player build does, repaints the Game view, and reads `UnityStats` on the frame after the repaint, restoring everything afterwards. The assertions of item 11 apply to that frame only: under 300,000 triangles and 150 draw calls facing across the trench. The views along the trench (toward the excavator and toward the backfill crew) are logged with their triangle and draw-call figures and are not asserted. Reason: the orchestrator's frame-by-frame experiment (Monitor/out/unity/l4-framestats.txt) showed the delivered test reading the Scene view's repaint (1,031,536 triangles) instead of its own render; this amendment states the instrument, it does not change the budget.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'git status --short' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 77ms:
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+?? .agents/
+?? Docs/WORK_ORDERS/logs/WO-L4.20261022-015349.log
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath Assets/LOBOver/Tests/CompileOffline.ps1; Get-Content -LiteralPath Docs/XR_RENDERING.md' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath .agents/skills/quest-mr-rendering/SKILL.md' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 84ms:
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using LOBOver.Editor;
+using LOBOver.Sim;
+using LOBOver.World;
+using Newtonsoft.Json.Linq;
+using NUnit.Framework;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.TestTools;
+using Object = UnityEngine.Object;
+
+namespace LOBOver.Tests.Editor
+{
+    public sealed class SitePresentationTests
+    {
+        [Test]
+        public void PlayRebuildHasIdenticalGeometryMaterialsAndArtBytes()
+        {
+            var scene = PlaySceneBuilder.Build(false);
+            var first = Hierarchy(scene.GetRootGameObjects()); var files = ArtHashes();
+            PlaySceneBuilder.Build(false);
+            var secondFiles = ArtHashes();
+            CollectionAssert.AreEqual(first, Hierarchy(scene.GetRootGameObjects()), "Owned hierarchy changed on second build");
+            CollectionAssert.AreEquivalent(files.Keys, secondFiles.Keys, "Second build generated extra art");
+            foreach (var pair in files) Assert.That(secondFiles[pair.Key], Is.EqualTo(pair.Value), pair.Key);
+        }
+        private static string[] Hierarchy(IEnumerable<GameObject> roots)
+        {
+            string PathOf(Transform t) => t.parent == null ? t.name : PathOf(t.parent) + "/" + t.name;
+            return roots.Where(r => r.name.StartsWith("[LOBOver]", StringComparison.Ordinal)).SelectMany(r => r.GetComponentsInChildren<Transform>(true))
+                .Select(t => PathOf(t) + "|" + t.localPosition.ToString("R") + "|" + t.localRotation.ToString("R") + "|" + t.localScale.ToString("R")
+                    + "|" + t.gameObject.activeSelf + "|" + string.Join(",", t.GetComponents<Component>().Select(c => c == null ? "missing" : c.GetType().FullName))
+                    + "|" + string.Join(",", t.GetComponents<Renderer>().SelectMany(r => r.sharedMaterials).Select(m => AssetDatabase.GetAssetPath(m))))
+                .OrderBy(s => s, StringComparer.Ordinal).ToArray();
+        }
+        private static Dictionary<string, string> ArtHashes()
+        {
+            using var hash = SHA256.Create();
+            return Directory.GetFiles(SiteAssetBuilder.Art, "*", SearchOption.AllDirectories)
+                .Where(p => !p.EndsWith(".meta", StringComparison.Ordinal))
+                .ToDictionary(p => p, p => Convert.ToBase64String(hash.ComputeHash(File.ReadAllBytes(p))));
+        }
+        [Test]
+        public void EveryRuntimeSiteRendererUsesTexturedApprovedShader()
+        {
+            var scene = PlaySceneBuilder.Build(false);
+            var site = scene.GetRootGameObjects().Single(r => r.name == "[LOBOver] Site");
+            var world = site.GetComponentInChildren<SiteWorld>(true); Populate(world);
+            Assert.That(scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Light>(true)).Count(l => l.enabled), Is.EqualTo(1));
+            var shaders = new[] { "LOBOver/SiteLit", "LOBOver/SiteSky", "Universal Render Pipeline/Particles/Unlit" };
+            foreach (var renderer in site.GetComponentsInChildren<Renderer>(true))
+                foreach (var material in renderer.sharedMaterials)
+                {
+                    Assert.That(material, Is.Not.Null, renderer.name); Assert.That(material.shader, Is.Not.Null, material.name);
+                    var lettering = renderer.GetComponent<TMPro.TextMeshPro>() is not null && material.shader.name.StartsWith("TextMeshPro/", StringComparison.Ordinal);
+                    if (!lettering) Assert.That(shaders, Does.Contain(material.shader.name), renderer.name + "/" + material.name);
+                    if (material.shader.name != "LOBOver/SiteSky") Assert.That(material.mainTexture, Is.Not.Null, renderer.name + "/" + material.name);
+                    Assert.That(ShaderUtil.GetShaderMessages(material.shader).Where(m => m.severity.ToString() == "Error"), Is.Empty, material.shader.name);
+                }
+            Assert.That(site.GetComponentsInChildren<Collider>(true).Where(c => c.enabled), Is.Empty);
+            Assert.That(world.assets.tree == null || SiteModelBuilder.Triangles(world.assets.tree) < 8000, Is.True);
+            foreach (var crew in site.GetComponentsInChildren<CrewRig>(true))
+                Assert.That(crew.GetComponentsInChildren<TMPro.TMP_Text>(true), Is.Empty, "Detailed crews must not have floating labels");
+        }
+        [Test]
+        public void GroundAndPhysicalDetailsMatchTheSpecifiedDimensions()
+        {
+            var a = SitePresentationBuilder.BuildAssets();
+            Assert.That(a.groundMesh.triangles.Length / 3, Is.LessThan(60000));
+            Assert.That(a.groundMesh.bounds.size.x, Is.EqualTo(1200).Within(0.01));
+            Assert.That(a.groundMesh.bounds.size.z, Is.EqualTo(200).Within(0.01));
+            Assert.That(a.groundMesh.vertices.Max(v => v.y) - a.groundMesh.vertices.Min(v => v.y), Is.GreaterThan(0.1f));
+            foreach (var vertex in a.groundMesh.vertices.Where(v => Mathf.Abs(v.z) > 12)) Assert.That(Mathf.Abs(vertex.y), Is.LessThanOrEqualTo(0.6f));
+            Assert.That(SiteGeometryBuilder.Height(100, WorldUnits.RoadZ + 0.85f), Is.LessThan(SiteGeometryBuilder.Height(100, WorldUnits.RoadZ)));
+            foreach (var c in a.groundMesh.colors) Assert.That(c.r + c.g + c.b, Is.EqualTo(1).Within(0.001));
+            Assert.That(a.wallNearMesh.bounds.size.y, Is.EqualTo(1.8f).Within(0.001));
+            Assert.That(a.stripMesh.bounds.size.z, Is.EqualTo(1.2f).Within(0.001));
+            Assert.That(PrefabSize(a.worker).y, Is.EqualTo(1.8f).Within(0.01));
+            var pipe = PrefabSize(a.pipe);
+            Assert.That(Mathf.Max(pipe.y, pipe.z), Is.EqualTo(0.3f).Within(0.01));
+            Assert.That(a.cellPrefab.water.transform.localPosition.y, Is.EqualTo(-1.5f).Within(0.001));
+            Assert.That(a.cellPrefab.pipes.GetComponentsInChildren<MeshRenderer>(true).Length, Is.GreaterThan(1));
+            Assert.That(SiteModelBuilder.Triangles(a.cellPrefab.pipes), Is.LessThanOrEqualTo(400));
+            Assert.That(SiteModelBuilder.Triangles(a.spoil), Is.LessThanOrEqualTo(4000));
+            Assert.That(a.spoil.GetComponentInChildren<Renderer>().sharedMaterial, Is.EqualTo(a.spoilSurface));
+            var spoilColour = a.spoilSurface.GetColor("_BaseColor"); var expectedSpoil = new Color(0.55f, 0.45f, 0.35f);
+            for (var channel = 0; channel < 4; channel++) Assert.That(spoilColour[channel], Is.EqualTo(expectedSpoil[channel]).Within(0.01));
+            Assert.That(a.spoilSurface.GetTexture("_BumpMap"), Is.Not.Null);
+            Assert.That(a.spoilSurface.GetTexture("_OcclusionMap"), Is.Not.Null);
+            Assert.That(a.cellPrefab.debugStateChanges, Is.False);
+            Assert.That(a.cellPrefab.stationText.fontSharedMaterial.shader.name, Is.EqualTo("LOBOver/SiteLit"));
+            Assert.That(a.cellPrefab.stationText.fontSharedMaterial.IsKeywordEnabled("_SITE_TEXT"), Is.True);
+            Assert.That(a.cellPrefab.stationText.fontSharedMaterial.GetTexture("_MainTex"), Is.EqualTo(a.font.atlasTexture));
+            Assert.That(a.cellPrefab.stationText.fontSharedMaterial.mainTexture, Is.EqualTo(a.font.atlasTexture));
+            // Rejection 3: maps come from tileable terrain layers, never the trench UV atlas.
+            foreach (var material in new[] { a.trench, a.wetSoil, a.bedding })
+            {
+                var layer = material == a.bedding ? a.road : a.soil;
+                foreach (var property in new[] { "_BaseMap", "_BumpMap", "_MetallicGlossMap" })
+                    Assert.That(material.GetTexture(property), Is.EqualTo(layer.GetTexture(property)), material.name + "/" + property);
+                Assert.That(material.IsKeywordEnabled("_WORLD"), Is.True);
+                Assert.That(material.GetFloat("_TileMetres"), Is.EqualTo(1));
+            }
+            foreach (var pair in new[] { (a.trench, new Color(0.80f, 0.75f, 0.70f)), (a.wetSoil, new Color(0.45f, 0.42f, 0.40f)) })
+                for (var channel = 0; channel < 4; channel++) Assert.That(pair.Item1.GetColor("_BaseColor")[channel], Is.EqualTo(pair.Item2[channel]).Within(0.01));
+            Assert.That(a.cellPrefab.pipeMaterial, Is.EqualTo(a.trench));
+            Assert.That(SiteModelBuilder.Triangles(a.tree), Is.EqualTo(4));
+            var treeMaterial = a.tree.GetComponent<Renderer>().sharedMaterial;
+            Assert.That(treeMaterial.IsKeywordEnabled("_ALPHATEST_ON") && treeMaterial.enableInstancing, Is.True);
+            Assert.That(treeMaterial.mainTexture.width, Is.EqualTo(512)); Assert.That(treeMaterial.mainTexture.height, Is.EqualTo(512));
+            Assert.That(a.tree.GetComponent<Renderer>().shadowCastingMode, Is.EqualTo(UnityEngine.Rendering.ShadowCastingMode.Off));
+            foreach (var machine in a.machines.Where(m => m.crew == "exc"))
+            {
+                Assert.That(machine.prefab.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Mesh1552"), Is.False);
+                var lods = machine.prefab.GetComponent<LODGroup>().GetLODs();
+                Assert.That(lods.Length, Is.EqualTo(2));
+                Assert.That(lods[0].renderers.Sum(RendererTriangles), Is.LessThan(90000));
+                CollectionAssert.AreEquivalent(new[] { "Body", "Boom" }, lods[1].renderers.Select(r => r.name));
+                Assert.That(lods[1].renderers.Sum(RendererTriangles), Is.EqualTo(24));
+            }
+            AssertOpenCut(a);
+        }
+        private static int RendererTriangles(Renderer renderer)
+        {
+            var mesh = renderer is SkinnedMeshRenderer skinned ? skinned.sharedMesh : renderer.GetComponent<MeshFilter>().sharedMesh;
+            return Enumerable.Range(0, mesh.subMeshCount).Sum(i => (int)mesh.GetIndexCount(i) / 3);
+        }
+        [Test]
+        public void CrewShadowsFollowTheHeadDistanceAndRestoreAfterAMachineChange()
+        {
+            var assets = SitePresentationBuilder.BuildAssets(); var parent = new GameObject("DistanceTest");
+            var head = new GameObject("Head");
+            try
+            {
+                var crew = Object.Instantiate(assets.crewPrefab, parent.transform); crew.Initialize("exc", assets);
+                foreach (var machine in assets.machines.Where(m => m.crew == "exc"))
+                {
+                    crew.Apply(new CrewView { id = "exc", machinePlate = machine.plate, status = "working", stationFt = 100 });
+                    foreach (var distance in new[] { 30f, 30.01f, 60.01f, 0f })
+                    {
+                        head.transform.position = crew.transform.position + Vector3.right * distance;
+                        crew.RefreshDistancePresentation(head.transform);
+                        var expected = distance <= 30 ? UnityEngine.Rendering.ShadowCastingMode.On : UnityEngine.Rendering.ShadowCastingMode.Off;
+                        foreach (var renderer in crew.GetComponentsInChildren<Renderer>(true))
+                            if (!(renderer is ParticleSystemRenderer)) Assert.That(renderer.shadowCastingMode, Is.EqualTo(expected), renderer.name);
+                    }
+                }
+            }
+            finally { Object.DestroyImmediate(parent); Object.DestroyImmediate(head); }
+        }
+        private static void AssertOpenCut(WorldAssets assets)
+        {
+            var vertices = assets.groundMesh.vertices; var indices = assets.groundMesh.triangles;
+            const float tolerance = 0.0001f;
+            for (var i = 0; i < indices.Length; i += 3)
+            {
+                var triangle = new[] { vertices[indices[i]], vertices[indices[i + 1]], vertices[indices[i + 2]] };
+                if (triangle.Max(v => v.x) <= 0) continue;
+                Assert.That(triangle.Min(v => v.z) >= WorldUnits.TrenchWidth / 2 - tolerance
+                    || triangle.Max(v => v.z) <= -WorldUnits.TrenchWidth / 2 + tolerance, Is.True, "Ground bridges the trench footprint");
+            }
+            foreach (var pair in new[] { (assets.wallNearMesh, 1), (assets.wallFarMesh, -1) })
+            {
+                Assert.That(pair.Item1.bounds.min.y, Is.EqualTo(-WorldUnits.TrenchDepth).Within(tolerance));
+                Assert.That(pair.Item1.bounds.max.y, Is.EqualTo(0).Within(tolerance));
+                foreach (var normal in pair.Item1.normals) Assert.That(normal.z * pair.Item2, Is.LessThan(0), "Wall must face into the cut");
+            }
+            var cell = Object.Instantiate(assets.cellPrefab);
+            try
+            {
+                cell.Initialize(500, assets);
+                foreach (var state in new[] { "undug", "open", "piped", "backfilled", "open" })
+                {
+                    cell.Apply(new TrenchView { state = state, wall = "stable", water = "dry", protection = "none" });
+                    var dug = state == "open" || state == "piped";
+                    Assert.That(cell.surface.activeSelf, Is.EqualTo(!dug), state);
+                    Assert.That(cell.floor.activeSelf && cell.walls.activeSelf, Is.EqualTo(dug), state);
+                    Assert.That(cell.pipes.activeSelf, Is.EqualTo(state == "piped"), state);
+                    Assert.That(cell.nearWall.GetComponent<MeshFilter>().sharedMesh, Is.EqualTo(assets.wallNearMesh));
+                    Assert.That(cell.farWall.GetComponent<MeshFilter>().sharedMesh, Is.EqualTo(assets.wallFarMesh));
+                }
+            }
+            finally { Object.DestroyImmediate(cell.gameObject); }
+        }
+        [Test]
+        public void PrefabComparisonUsesContentAndRemapsInternalReferences()
+        {
+            var a = new GameObject("Model"); var b = new GameObject("Model");
+            try
+            {
+                foreach (var root in new[] { a, b })
+                {
+                    // Repeated names reproduce the imported machine's ambiguous local IDs.
+                    var first = new GameObject("Part"); first.transform.SetParent(root.transform, false);
+                    var second = new GameObject("Part"); second.transform.SetParent(root.transform, false);
+                    var renderer = root.AddComponent<SkinnedMeshRenderer>(); renderer.bones = new[] { first.transform, second.transform };
+                }
+                Assert.That(SiteModelBuilder.SameContent(a, b), Is.True);
+                b.transform.GetChild(1).localPosition = Vector3.up;
+                Assert.That(SiteModelBuilder.SameContent(a, b), Is.False);
+                b.transform.GetChild(1).localPosition = Vector3.zero;
+                b.GetComponent<SkinnedMeshRenderer>().bones = new[] { b.transform.GetChild(1), b.transform.GetChild(0) };
+                Assert.That(SiteModelBuilder.SameContent(a, b), Is.False, "Bone references are content, not disposable IDs");
+                b.GetComponent<SkinnedMeshRenderer>().bones = new[] { b.transform.GetChild(0), b.transform.GetChild(1) };
+                Assert.That(SiteModelBuilder.SameContent(a, b), Is.True, "Restoring the bone paths restores equivalent content");
+                // Reproduce TMP's unsaved filter between two serialized components.
+                var transient = a.AddComponent<MeshFilter>(); transient.hideFlags = HideFlags.HideInInspector | HideFlags.HideAndDontSave;
+                a.AddComponent<BoxCollider>(); b.AddComponent<BoxCollider>();
+                Assert.That(SiteModelBuilder.SameContent(a, b), Is.True, "DontSave components must not shift serialized component paths");
+                Assert.That(SiteModelBuilder.SameContent(b, a), Is.True, "Comparison must be symmetric");
+                transient.hideFlags = HideFlags.None;
+                Assert.That(SiteModelBuilder.SameContent(a, b), Is.False, "A saved component is a real content change");
+            }
+            finally { Object.DestroyImmediate(a); Object.DestroyImmediate(b); }
+        }
+        [Test]
+        public void SkyRejectsNonDaylightNamesAndAlignsTheLight()
+        {
+            foreach (var name in new[] { "AllSky_Overcast4_Low", "NIGHT", "dusk", "Epic_BlueSunset", "Space_AnotherPlanet" })
+                Assert.That(SitePresentationBuilder.DaylightSkyName(name), Is.False, name);
+            Assert.That(SitePresentationBuilder.DaylightSkyName("ClearDay"), Is.True);
+            Assert.That(SitePresentationBuilder.ElevatedCubemapSun(Vector3.zero), Is.False);
+            Assert.That(SitePresentationBuilder.ElevatedCubemapSun(new Vector3(1, 0.01f, 0)), Is.False, "Horizon sun must use the procedural sky");
+            Assert.That(SitePresentationBuilder.ElevatedCubemapSun(new Vector3(Mathf.Sqrt(3), 1, 0)), Is.False, "Exactly 30 degrees is not above 30");
+            Assert.That(SitePresentationBuilder.ElevatedCubemapSun(new Vector3(1, 1, 0)), Is.True);
+            var scene = PlaySceneBuilder.Build(false);
+            var sun = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Light>()).Single(l => l.enabled);
+            var sky = scene.GetRootGameObjects().Single(r => r.name == "[LOBOver] Site").GetComponentInChildren<SiteWorld>(true).assets.skyMaterial;
+            if (sky.GetFloat("_UseCube") > 0.5f)
+            {
+                Assert.That(SitePresentationBuilder.DaylightSkyName(sky.GetTexture("_Cube").name), Is.True);
+                Vector3 direction = sky.GetVector("_SunDirection");
+                Assert.That(SitePresentationBuilder.ElevatedCubemapSun(direction), Is.True);
+                Assert.That(Vector3.Dot(-sun.transform.forward, direction.normalized), Is.GreaterThan(0.999f));
+            }
+            else Assert.That(sun.transform.eulerAngles.x, Is.EqualTo(48).Within(0.01f));
+        }
+        private static Vector3 PrefabSize(GameObject prefab)
+        {
+            var copy = Object.Instantiate(prefab);
+            try { return SiteModelBuilder.Bounds(copy).size; }
+            finally { Object.DestroyImmediate(copy); }
+        }
+        [Test]
+        public void GeneratedMapsAreTileableAndImportedAsLinearDataExceptAlbedo()
+        {
+            // Exercise the fallback even on Bryan's machine where authored TerrainLayers exist.
+            foreach (var kind in new[] { "Dirt", "Gravel", "Grass" }) SiteTextureBuilder.Generate(kind);
+            SiteTextureBuilder.Dust();
+            foreach (var path in Directory.GetFiles(SiteTextureBuilder.Folder, "*.png"))
+            {
+                var image = new Texture2D(2, 2, TextureFormat.RGBA32, false, true);
+                try
+                {
+                    Assert.That(image.LoadImage(File.ReadAllBytes(path)), Is.True);
+                    var pixels = image.GetPixels(); var size = image.width;
+                    for (var i = 0; i < size; i++)
+                    {
+                        AssertChannels(pixels[i * size], pixels[i * size + size - 1], path);
+                        AssertChannels(pixels[i], pixels[(size - 1) * size + i], path);
+                    }
+                    var importer = (TextureImporter)AssetImporter.GetAtPath(path.Replace('\\', '/'));
+                    if (path.Contains("_Normal") || path.Contains("_Mask")) Assert.That(importer.sRGBTexture, Is.False, path);
+                    var android = importer.GetPlatformTextureSettings("Android");
+                    Assert.That(android.overridden, Is.True); Assert.That(android.format, Is.EqualTo(TextureImporterFormat.ASTC_6x6));
+                }
+                finally { Object.DestroyImmediate(image); }
+            }
+        }
+        private static void AssertChannels(Color a, Color b, string context)
+        { for (var channel = 0; channel < 4; channel++) Assert.That(Mathf.Abs(a[channel] - b[channel]), Is.LessThanOrEqualTo(0.02f), context); }
+
+        [UnityTest]
+        public IEnumerator PipeStationPreviewStaysInsideQuestBudget()
+        {
+            var scene = PlaySceneBuilder.Build(false); var site = scene.GetRootGameObjects().Single(r => r.name == "[LOBOver] Site");
+            var world = site.GetComponentInChildren<SiteWorld>(true); Populate(world, 8);
+            foreach (var name in new[] { "Ground", "Horizon" })
+            {
+                var surface = site.transform.Find(name).GetComponent<Renderer>();
+                Assert.That(surface.shadowCastingMode, Is.EqualTo(UnityEngine.Rendering.ShadowCastingMode.Off));
+                Assert.That(surface.receiveShadows, Is.True);
+            }
+            var camera = scene.GetRootGameObjects().Single(r => r.name == "[LOBOver] Preview").GetComponentInChildren<Camera>();
+            var target = new RenderTexture(1440, 1440, 24, RenderTextureFormat.ARGB32);
+            var oldTarget = camera.targetTexture; var oldPosition = camera.transform.position; var oldRotation = camera.transform.rotation;
+            // Scene view and the rig's centre eye are outside the owned roots. Include
+            // hidden Editor cameras too; Scene view may explicitly render even disabled.
+            var otherCameras = Resources.FindObjectsOfTypeAll<Camera>().Where(c => c != null && c != camera && !EditorUtility.IsPersistent(c))
+                .Select(c => (camera: c, enabled: c.enabled, mask: c.cullingMask, clear: c.clearFlags)).ToArray();
+            // OVR hides these at runtime; EditMode must exclude its controller/hand
+            // variants from site statistics, restoring every enabled state afterwards.
+            var rigRenderers = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<OVRCameraRig>(true))
+                .SelectMany(r => r.GetComponentsInChildren<Renderer>(true)).Distinct().Where(r => r != null)
+                .Select(r => (renderer: r, enabled: r.enabled)).ToArray();
+            var crewShadows = world.GetComponentsInChildren<CrewRig>(true).SelectMany(c => c.GetComponentsInChildren<Renderer>(true))
+                .Select(r => (renderer: r, mode: r.shadowCastingMode)).ToArray();
+            var enabled = camera.enabled; var active = site.activeSelf; var observer = world.sky.observer;
+            var gameViewType = typeof(EditorWindow).Assembly.GetType("UnityEditor.GameView", true);
+            var gameView = Resources.FindObjectsOfTypeAll(gameViewType).Cast<EditorWindow>().FirstOrDefault();
+            var createdGameView = gameView == null; var wasMaximized = gameView != null && gameView.maximized;
+            var focusedWindow = EditorWindow.focusedWindow;
+            var maximizedWindows = Resources.FindObjectsOfTypeAll<EditorWindow>().Where(w => w != gameView && w.maximized).ToArray();
+            try
+            {
+                // SceneView can render despite a disabled camera. Hide it for the entire
+                // measured frame by maximizing Game, then restore the Editor layout below.
+                foreach (var window in maximizedWindows) window.maximized = false;
+                if (gameView == null) gameView = EditorWindow.GetWindow(gameViewType);
+                gameView.Focus(); gameView.maximized = true; gameView.Repaint();
+                site.SetActive(true);
+                foreach (var entry in otherCameras) if (entry.camera != null)
+                { entry.camera.enabled = false; entry.camera.cullingMask = 0; entry.camera.clearFlags = CameraClearFlags.Nothing; }
+                foreach (var entry in rigRenderers) if (entry.renderer != null) entry.renderer.enabled = false;
+                Debug.Log($"WO-L4 excluded Camera Rig renderers: {rigRenderers.Length} total, {rigRenderers.Count(r => r.enabled)} enabled.");
+                // Explicit rendering only: do not also submit this camera from the Game view.
+                camera.enabled = false;
+                camera.targetTexture = target;
+                var x = (float)world.Crew("pipe").StationFt * WorldUnits.MetresPerFoot;
+                camera.transform.position = new Vector3(x, 1.65f, WorldUnits.RoadZ);
+                camera.transform.rotation = Quaternion.LookRotation(new Vector3(0, -0.12f, -1));
+                world.sky.observer = camera.transform;
+                foreach (var crew in world.GetComponentsInChildren<CrewRig>(true)) crew.RefreshDistancePresentation(camera.transform);
+                yield return null;
+                for (var i = 0; i < 3; i++) { camera.Render(); yield return null; }
+                var triangles = UnityStats.triangles; var drawCalls = UnityStats.drawCalls;
+                Debug.Log($"WO-L4 preview 1440x1440: {triangles} triangles, {drawCalls} draw calls.");
+                Assert.That(gameView.maximized, Is.True, "Game view must hide SceneView for the measurement");
+                Assert.That(triangles, Is.GreaterThan(0), "No Editor render statistics; run with the Game view visible.");
+                Assert.That(drawCalls, Is.GreaterThan(0));
+                Assert.That(triangles, Is.LessThan(300000)); Assert.That(drawCalls, Is.LessThan(150));
+                camera.transform.LookAt(world.Crew("exc").transform.position + Vector3.up);
+                for (var i = 0; i < 3; i++) { camera.Render(); yield return null; }
+                Debug.Log($"WO-L4 toward excavator 1440x1440: {UnityStats.triangles} triangles, {UnityStats.drawCalls} draw calls.");
+                Assert.That(UnityStats.triangles, Is.GreaterThan(0)); Assert.That(UnityStats.triangles, Is.LessThan(300000));
+                Assert.That(UnityStats.drawCalls, Is.GreaterThan(0)); Assert.That(UnityStats.drawCalls, Is.LessThan(150));
+            }
+            finally
+            {
+                if (camera != null)
+                { camera.targetTexture = oldTarget; camera.transform.SetPositionAndRotation(oldPosition, oldRotation); camera.enabled = enabled; }
+                if (world != null && world.sky != null) world.sky.observer = observer;
+                foreach (var entry in otherCameras) if (entry.camera != null)
+                { entry.camera.enabled = entry.enabled; entry.camera.cullingMask = entry.mask; entry.camera.clearFlags = entry.clear; }
+                foreach (var entry in rigRenderers) if (entry.renderer != null) entry.renderer.enabled = entry.enabled;
+                foreach (var entry in crewShadows) if (entry.renderer != null) entry.renderer.shadowCastingMode = entry.mode;
+                if (world != null) foreach (var lod in world.GetComponentsInChildren<LODGroup>(true)) lod.ForceLOD(-1);
+                if (site != null) site.SetActive(active); Object.DestroyImmediate(target);
+                if (gameView != null)
+                {
+                    gameView.maximized = wasMaximized;
+                    if (createdGameView) gameView.Close();
+                }
+                foreach (var window in maximizedWindows) if (window != null) window.maximized = true;
+                if (focusedWindow != null) focusedWindow.Focus();
+            }
+        }
+        private static void Populate(SiteWorld world, int? displayDay = null)
+        {
+            var scenario = JObject.Parse(File.ReadAllText("Data/Scenarios/slice_texas.json"));
+            var transcript = JObject.Parse(File.ReadAllText("Data/transcripts/slice_play.json"));
+            var snapshots = (JArray)transcript["snapshots"];
+            var snapshot = displayDay.HasValue ? snapshots.OfType<JObject>().Single(s => (int)Math.Floor((double)s["t"]) + 1 == displayDay.Value)
+                : snapshots.OfType<JObject>().FirstOrDefault(s => ((JArray)s["site"]["trench"]).OfType<JObject>().Any(t => (string)t["state"] == "piped")) ?? (JObject)snapshots[1];
+            world.Configure((JObject)scenario["job"], 0); world.Apply(SiteView.From((JObject)snapshot["site"]), displayDay ?? 4);
+            foreach (var crew in WorldUnits.CrewIds) world.Crew(crew).SnapPose();
+        }
+    }
+}
+
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "rg --files -g AGENTS.md -g '*framestats*' -g '*test*' Assets/LOBOver/Tests Monitor/out/unity; rg -n 'In the headset|K3[7-9]|K40|K41' Docs/LEVEL1.md Docs/DECISIONS.md" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 92ms:
+param([string]$UnityData = 'C:/Program Files/Unity/Hub/Editor/6000.3.8f1/Editor/Data')
+$ErrorActionPreference = 'Stop'
+$projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '../../..')).Path
+Set-Location -LiteralPath $projectRoot
+$scratch = Join-Path $PSScriptRoot '.offline'
+New-Item -ItemType Directory -Path $scratch -Force | Out-Null
+$generated = [System.Collections.Generic.List[string]]::new()
+$script:compiledCount = 0
+function Compile-Assembly([string]$name, [string]$folder, [string[]]$references, [string]$defines = 'UNITY_EDITOR;UNITY_6000_3_OR_NEWER;UNITY_INCLUDE_TESTS') {
+    # Match Unity's declared assembly graph; a broad compiler reference set can hide missing asmdef references.
+    $definition = Get-ChildItem -LiteralPath $folder -Filter '*.asmdef' | Select-Object -First 1
+    if ($definition) {
+        $asm = Get-Content -LiteralPath $definition.FullName -Raw | ConvertFrom-Json
+        $references = @($baseReferences)
+        if (!$asm.noEngineReferences) { $references += $engineReferences }
+        foreach ($dependency in $asm.references) {
+            $compiled = Join-Path $scratch ($dependency + '.dll')
+            $androidDependency = Join-Path $scratch ($dependency + '.Android.dll')
+            if ($defines -match 'UNITY_ANDROID' -and $defines -notmatch 'UNITY_EDITOR' -and (Test-Path -LiteralPath $androidDependency)) { $compiled = $androidDependency }
+            $references += $(if (Test-Path -LiteralPath $compiled) { $compiled } else { 'Library/ScriptAssemblies/' + $dependency + '.dll' })
+        }
+        if ($asm.optionalUnityReferences -contains 'TestAssemblies') {
+            $references += 'Library/ScriptAssemblies/UnityEngine.TestRunner.dll', 'Library/ScriptAssemblies/UnityEditor.TestRunner.dll'
+        }
+        if ($asm.precompiledReferences -contains 'nunit.framework.dll') {
+            $references += (Get-ChildItem 'Library/PackageCache/com.unity.ext.nunit*/net40/unity-custom/nunit.framework.dll').FullName
+        }
+    }
+    $output = Join-Path $scratch ($name + '.dll')
+    $response = Join-Path $scratch ($name + '.rsp')
+    $generated.Add($output)
+    $generated.Add($response)
+    $argsForCompiler = @('-nologo', '-target:library', '-langversion:9', '-nostdlib+', ('-define:' + $defines), ('-out:"' + $output + '"'))
+    foreach ($reference in $references) { $argsForCompiler += '-r:"' + $reference + '"' }
+    foreach ($source in (Get-ChildItem -LiteralPath $folder -Recurse -Filter '*.cs' | Where-Object { $folder -notmatch 'Runtime/(VR|MR|Start)$' -or $_.FullName -notmatch '[\\/]Editor[\\/]' })) { $argsForCompiler += '"' + $source.FullName + '"' }
+    $argsForCompiler | Set-Content -LiteralPath $response -Encoding UTF8
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') (Join-Path $UnityData 'DotNetSdkRoslyn/csc.dll') ('@' + $response)
+    if ($LASTEXITCODE -ne 0) { throw "Offline compilation failed: $name" }
+    $script:compiledCount++
+    Write-Output "$name`: 0 errors"
+}
+try {
+    $baseReferences = @((Join-Path $UnityData 'NetStandard/ref/2.1.0/netstandard.dll'))
+    $baseReferences += (Get-ChildItem (Join-Path $UnityData 'NetStandard/compat/2.1.0/shims/netfx') -Filter '*.dll').FullName
+    $jsonDll = (Get-ChildItem 'Library/PackageCache/com.unity.nuget.newtonsoft-json*/Runtime/Newtonsoft.Json.dll').FullName
+    $baseReferences += $jsonDll
+    $sdkAssemblies = @(Get-ChildItem 'Library/ScriptAssemblies/Oculus.Interaction*.dll', 'Library/ScriptAssemblies/Meta.XR.BuildingBlocks*.dll')
+    $sdkPackages = @(Get-ChildItem 'Library/PackageCache' -Directory | Where-Object Name -Like 'com.meta.xr.sdk.interaction*')
+    $sdkSources = @(Get-ChildItem $sdkPackages.FullName -Recurse -Filter '*.cs')
+    foreach ($required in @('PointableCanvas.cs', 'RayInteractable.cs', 'PokeInteractable.cs', 'FirstPersonLocomotor.cs', 'CharacterController.cs', 'PlayerLocomotor.cs')) {
+        if (!($sdkSources | Where-Object Name -EQ $required)) { throw "Missing installed Interaction SDK source: $required" }
+    }
+    if ($sdkAssemblies.Count -eq 0) { throw 'Missing imported Interaction SDK / Building Blocks assemblies' }
+    Write-Output "SDK inputs: $($sdkAssemblies.Count) imported assemblies; $($sdkSources.Count) installed package sources (no restore)."
+    $engineReferences = (Get-ChildItem (Join-Path $UnityData 'Managed/UnityEngine') -Filter '*.dll').FullName
+    Compile-Assembly 'LOBOver.Sim' 'Assets/LOBOver/Sim' $baseReferences
+    Compile-Assembly 'LOBOver.Client' 'Assets/LOBOver/Runtime/Client' $baseReferences
+    Compile-Assembly 'LOBOver.Client.Android' 'Assets/LOBOver/Runtime/Client' $baseReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    $runtimeReferences = $baseReferences + $engineReferences + @((Join-Path $scratch 'LOBOver.Sim.dll'))
+    Compile-Assembly 'LOBOver.Director' 'Assets/LOBOver/Runtime/Director' $runtimeReferences
+    $worldReferences = $runtimeReferences + @((Join-Path $scratch 'LOBOver.Director.dll'), 'Library/ScriptAssemblies/Unity.TextMeshPro.dll', 'Library/ScriptAssemblies/Unity.InputSystem.dll', 'Library/ScriptAssemblies/UnityEngine.UI.dll')
+    Compile-Assembly 'LOBOver.XR' 'Assets/LOBOver/Runtime/XR' $worldReferences
+    Compile-Assembly 'LOBOver.XR.Android' 'Assets/LOBOver/Runtime/XR' $worldReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    Compile-Assembly 'LOBOver.World' 'Assets/LOBOver/Runtime/World' $worldReferences
+    # Compile the conditional Android reader too, without opening the Editor or changing build settings.
+    Compile-Assembly 'LOBOver.Director.Android' 'Assets/LOBOver/Runtime/Director' $runtimeReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    Compile-Assembly 'LOBOver.World.Android' 'Assets/LOBOver/Runtime/World' $worldReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    Compile-Assembly 'LOBOver.Play' 'Assets/LOBOver/Runtime/Play' $worldReferences
+    Compile-Assembly 'LOBOver.Play.Android' 'Assets/LOBOver/Runtime/Play' $worldReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    # SDK assemblies are already installed/imported; this check never restores packages.
+    $xrReferences = $worldReferences + @((Join-Path $scratch 'LOBOver.World.dll'),
+        'Library/ScriptAssemblies/Oculus.VR.dll', 'Library/ScriptAssemblies/Unity.XR.OpenXR.dll',
+        'Library/ScriptAssemblies/Unity.XR.Management.dll')
+    foreach ($assembly in @('VR', 'MR', 'Start')) {
+        $folder = 'Assets/LOBOver/Runtime/' + $assembly
+        if (!(Test-Path -LiteralPath $folder)) { continue }
+        Compile-Assembly ('LOBOver.' + $assembly) $folder $xrReferences
+        Compile-Assembly ('LOBOver.' + $assembly + '.Android') $folder $xrReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+        $xrReferences += (Join-Path $scratch ('LOBOver.' + $assembly + '.dll'))
+    }
+    $editorReferences = $worldReferences + @((Join-Path $scratch 'LOBOver.World.dll'), 'Library/ScriptAssemblies/Unity.RenderPipelines.Core.Runtime.dll')
+    Compile-Assembly 'LOBOver.Editor' 'Assets/LOBOver/Editor' $editorReferences
+    $xrEditorReferences = $xrReferences + $editorReferences + @((Join-Path $scratch 'LOBOver.Editor.dll'),
+        'Library/ScriptAssemblies/Unity.XR.Management.Editor.dll', 'Library/ScriptAssemblies/Unity.XR.OpenXR.Editor.dll',
+        'Library/ScriptAssemblies/Unity.XR.OpenXR.Features.MetaQuestSupport.dll')
+    Compile-Assembly 'LOBOver.XR.Editor' 'Assets/LOBOver/Runtime/Start/Editor' $xrEditorReferences
+    $testReferences = $xrEditorReferences + @((Join-Path $scratch 'LOBOver.Editor.dll'), 'Library/ScriptAssemblies/UnityEngine.TestRunner.dll', 'Library/ScriptAssemblies/UnityEditor.TestRunner.dll')
+    $testReferences += (Get-ChildItem 'Library/PackageCache/com.unity.ext.nunit*/net40/unity-custom/nunit.framework.dll').FullName
+    Compile-Assembly 'LOBOver.EditModeTests' 'Assets/LOBOver/Tests/EditMode' $testReferences
+    Compile-Assembly 'LOBOver.PlayModeTests' 'Assets/LOBOver/Tests/PlayMode' $testReferences
+    Write-Output "PASS: $script:compiledCount offline assembly compilations; Unity import, tests and rendering still require the Editor."
+    $fixtureProgram = Join-Path $scratch 'VerifyFixtures.dll'
+    $fixtureResponse = Join-Path $scratch 'VerifyFixtures.rsp'
+    $fixtureConfig = Join-Path $scratch 'VerifyFixtures.runtimeconfig.json'
+    $fixtureJson = Join-Path $scratch 'Newtonsoft.Json.dll'
+    foreach ($file in @($fixtureProgram, $fixtureResponse, $fixtureConfig, $fixtureJson)) { $generated.Add($file) }
+    $fixtureArgs = @('-nologo', '-target:exe', '-langversion:9', '-nostdlib+', ('-out:"' + $fixtureProgram + '"'), ('-r:"' + (Join-Path $scratch 'LOBOver.Sim.dll') + '"'))
+    foreach ($reference in $baseReferences) { $fixtureArgs += '-r:"' + $reference + '"' }
+    $fixtureArgs += '-r:"' + (Join-Path $scratch 'LOBOver.VR.dll') + '"'
+    $fixtureArgs += '"' + (Join-Path $PSScriptRoot 'VerifyFixtures.cs.txt') + '"'
+    $fixtureArgs += '"' + (Join-Path $PSScriptRoot 'VerifyPresenter.cs.txt') + '"'
+    $fixtureArgs += '"' + (Join-Path $PSScriptRoot 'VerifyLevel1.cs.txt') + '"'
+    $fixtureArgs += '"' + (Join-Path $projectRoot 'Assets/LOBOver/Runtime/Client/DiscoveryPacket.cs') + '"'
+    $fixtureArgs += '"' + (Join-Path $projectRoot 'Assets/LOBOver/Runtime/Client/VoiceTurn.cs') + '"'
+    $fixtureArgs | Set-Content -LiteralPath $fixtureResponse -Encoding UTF8
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') (Join-Path $UnityData 'DotNetSdkRoslyn/csc.dll') ('@' + $fixtureResponse)
+    if ($LASTEXITCODE -ne 0) { throw 'Fixture verifier did not compile' }
+    Copy-Item -LiteralPath (Join-Path $UnityData 'DotNetSdkRoslyn/csc.runtimeconfig.json') -Destination $fixtureConfig
+    Copy-Item -LiteralPath $jsonDll -Destination $fixtureJson
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') $fixtureProgram
+    if ($LASTEXITCODE -ne 0) { throw 'Fixture replay failed' }
+}
+finally {
+    # Only exact outputs from this invocation are removed; never traverse another workspace.
+    foreach ($file in $generated) { if (Test-Path -LiteralPath $file) { Remove-Item -LiteralPath $file -Force } }
+    if ((Get-ChildItem -LiteralPath $scratch -Force | Measure-Object).Count -eq 0) { Remove-Item -LiteralPath $scratch }
+}
+# Rendering on the Quest with passthrough
+
+Written October 21, 2026, after two headset builds failed on compositing and look. The facts below are what every headset work order has to respect. `.claude/skills/quest-mr-rendering/SKILL.md` points the orchestrator here; work orders list this file under Read.
+
+## How passthrough reaches the eye
+
+1. The Passthrough block's `OVRPassthroughLayer` is an underlay: the compositor draws the cameras' image behind the app's eye buffer and uses the eye buffer's alpha to blend. Alpha 0 shows the room, alpha 1 shows the app, values between blend.
+2. The eye buffer uses premultiplied alpha (`OVRManager.eyeFovPremultipliedAlphaModeEnabled`, on by default). A pixel that should show the room is (0, 0, 0, 0). A half-transparent pixel is (rgb Ã— a, a). Never write colour with alpha 0 and never disable premultiplied alpha (the Real Hands block does; that is why it is out, K34).
+3. Everything that touches the alpha channel matters:
+   - The XR camera clears to Solid Color with alpha 0. A Skybox clear writes alpha 1 everywhere and hides the room.
+   - HDR off on the camera and on the Mobile render pipeline asset. The 11-11-10 HDR colour format has no alpha channel; with it the whole view goes opaque.
+   - Post-processing off on the XR camera (and no Volume with Vignette, Bloom or Tonemapping in the scene). URP's post-processing writes alpha 1 unless Alpha Processing is on in the pipeline asset; off is simpler and cheaper.
+   - Opaque shaders write alpha 1, which is correct for the full-scale site once it is fully there. Transparent shaders with `Blend SrcAlpha OneMinusSrcAlpha` leave a sensible alpha behind.
+   - MSAA resolves alpha normally. Render scale and upscaling keep alpha.
+4. Anything meant to show the room must not be drawn at all (`clip()` or not rendered); do not cover the view with a mesh that writes alpha 0, because any mistake in that mesh (position, stuck animation, culling) cuts the view into a window. The October 21 build did this with a 4 m sphere around the head and the player saw the site through a hole.
+5. The sky in the site is a dome mesh with its own shader, never the camera skybox, so it can fade in and out like the rest of the site.
+6. Turn the passthrough layer off (`enabled = false`, `hidden = true`) only when the site is fully opaque, and on again before anything starts to dissolve. While it is on, the compositor pays for it; while it is off, alpha does nothing.
+
+## Stereo and shaders
+
+- Single-pass instanced rendering. Every hand-written shader has `#pragma multi_compile_instancing`, `UNITY_VERTEX_INPUT_INSTANCE_ID`, `UNITY_VERTEX_OUTPUT_STEREO`, `UNITY_SETUP_INSTANCE_ID`, `UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO` and `UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX`, and uses URP's `Core.hlsl`, `Lighting.hlsl` and `Shadows.hlsl` transforms, never `UNITY_MATRIX_VP` by hand.
+- Lit shaders go through `UniversalFragmentPBR` (or `UniversalFragmentBlinnPhong` where cheaper) with `GetMainLight(shadowCoord)` so they receive the directional shadows and the SH ambient, and `MixFog` for the fog.
+- Global values for an effect over the whole site go through `Shader.SetGlobalFloat` and `Shader.SetGlobalVector`, read by every site shader; no per-material loops in C#.
+- Vulkan on the Quest compiles `clip()` fine. Avoid dependent texture reads in loops, `discard` in a depth prepass (there is none) and more than three texture samples per layer.
+- Shader Graph is allowed when a graph is easier to keep than HLSL, with the same stereo rules (Shader Graph handles them), alpha clip on, and the warp values as global properties (exposed off).
+
+## Budget for the Quest 3S at 72 Hz
+
+- About 300k visible triangles, 150 draw calls (static batching on for the builder's static geometry, GPU instancing on materials for repeated props).
+- One directional light with soft shadows, one cascade, 2048 shadow map, shadow distance 60 m. No point or spot lights.
+- MSAA 4x (cheap on a tile GPU). Render scale 1.0 (0.8 blurs text and distant detail). Fixed foveated rendering Low; Medium and High blur the edge of the view enough that testers call it a lens.
+- Ambient from a gradient (trilight) or a baked sky probe. Linear fog from 300 m to 2,500 m into the horizon colour; it is what gives the flat ground depth.
+- No screen-space ambient occlusion, no post-processing, no realtime reflection probes.
+- Textures 1024Â² or 2048Â², ASTC 6x6; normal maps on every ground and prop material, because flat colour without normals is what reads as a drawing.
+
+## Readable and comfortable
+
+- Text at 0.5 m: cap height at least 1.5 cm (2.5 cm for titles), TextMeshPro SDF, high contrast on an opaque panel. Buttons at least 11 by 6 cm.
+- Nothing moves the player: the world changes in place (the site root is moved before it appears; the rig and the camera are never moved). Transitions last 1 to 2 s. No vignette is needed because there is no vection.
+- A transition always finishes: a watchdog snaps it to its end state after 3 s, Back is never blocked, and each phase logs one line (`adb logcat -s Unity`) so a stuck state can be read from the device.
+
+## Seeing the real thing before a build
+
+The Editor cannot show passthrough. For every screenshot of a passthrough state, render the eye view to an ARGB32 texture and composite it over a stand-in room image (`Monitor/out/unity/room.png`, a mid-grey wall with a 20 cm grid) using the eye buffer's alpha; the result is what the compositor would show. Review those, not the raw frame. Quest Link with "Passthrough over Link" shows the real compositor in the headset but is not required.
+
+ succeeded in 63ms:
+---
+name: quest-mr-rendering
+description: Rules for anything drawn on the Quest in this project (passthrough compositing, alpha, URP settings, stereo shaders, the Quest 3S budget, readable panels, transitions). Load before writing or verifying a headset work order, a shader, a scene builder or a Quest build setting.
+---
+
+Read `Docs/XR_RENDERING.md` first; it is the source. Then, for the work in hand:
+
+1. Passthrough shows where the eye buffer alpha is 0. Camera: Solid Color, alpha 0, HDR off, post-processing off; no camera skybox (a dome mesh instead); never cover the view with an alpha-0 mesh.
+2. Premultiplied alpha: transparent pixels are (rgb Ã— a, a); fully transparent is (0, 0, 0, 0). Do not touch `eyeFovPremultipliedAlphaModeEnabled`.
+3. Shaders: single-pass instanced macros, URP includes, main light with shadows, SH ambient, fog; global properties for site-wide effects.
+4. Budget: 300k triangles, 150 draw calls, one shadowed directional light (1 cascade, 2048, 60 m), MSAA 4x, render scale 1.0, foveation Low, no post, no SSAO.
+5. Panels: text 1.5 cm or taller at 0.5 m, opaque, within reach; buttons 11 by 6 cm. Transitions change the world, never the player; they end within 2 s, have a 3 s watchdog, log every phase, and never block Back.
+6. Verification: composite eye renders over `Monitor/out/unity/room.png` by alpha before judging any passthrough state; read `adb logcat -s Unity` from the device after a headset test; a headset work order is accepted only by Bryan in the headset (K35).
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ exited 1 in 478ms:
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:1
++ rg --files -g AGENTS.md -g '*framestats*' -g '*test*' Assets/LOBOver/ ...
++ ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:95
++ ... tats*' -g '*test*' Assets/LOBOver/Tests Monitor/out/unity; rg -n 'In  ...
++                                                                ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+Step 1 of 4 done: Amendment 3 limits this dispatch to the budget test. I’m applying the `quest-mr-rendering` and `unity-mcp-orchestrator` skills to check the measurement setup and run it in Unity.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs | Select-Object -Skip 290' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath Assets/LOBOver/Tests/CompileOffline.ps1; Get-Content -LiteralPath Docs/XR_RENDERING.md' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "rg --files -g AGENTS.md -g '*framestats*' Assets Monitor/out/unity; rg -n 'In the headset|K3[7-9]|K40|K41' Docs/LEVEL1.md Docs/DECISIONS.md; Get-Content -LiteralPath Monitor/out/unity/l4-framestats.txt" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 66ms:
+param([string]$UnityData = 'C:/Program Files/Unity/Hub/Editor/6000.3.8f1/Editor/Data')
+$ErrorActionPreference = 'Stop'
+$projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '../../..')).Path
+Set-Location -LiteralPath $projectRoot
+$scratch = Join-Path $PSScriptRoot '.offline'
+New-Item -ItemType Directory -Path $scratch -Force | Out-Null
+$generated = [System.Collections.Generic.List[string]]::new()
+$script:compiledCount = 0
+function Compile-Assembly([string]$name, [string]$folder, [string[]]$references, [string]$defines = 'UNITY_EDITOR;UNITY_6000_3_OR_NEWER;UNITY_INCLUDE_TESTS') {
+    # Match Unity's declared assembly graph; a broad compiler reference set can hide missing asmdef references.
+    $definition = Get-ChildItem -LiteralPath $folder -Filter '*.asmdef' | Select-Object -First 1
+    if ($definition) {
+        $asm = Get-Content -LiteralPath $definition.FullName -Raw | ConvertFrom-Json
+        $references = @($baseReferences)
+        if (!$asm.noEngineReferences) { $references += $engineReferences }
+        foreach ($dependency in $asm.references) {
+            $compiled = Join-Path $scratch ($dependency + '.dll')
+            $androidDependency = Join-Path $scratch ($dependency + '.Android.dll')
+            if ($defines -match 'UNITY_ANDROID' -and $defines -notmatch 'UNITY_EDITOR' -and (Test-Path -LiteralPath $androidDependency)) { $compiled = $androidDependency }
+            $references += $(if (Test-Path -LiteralPath $compiled) { $compiled } else { 'Library/ScriptAssemblies/' + $dependency + '.dll' })
+        }
+        if ($asm.optionalUnityReferences -contains 'TestAssemblies') {
+            $references += 'Library/ScriptAssemblies/UnityEngine.TestRunner.dll', 'Library/ScriptAssemblies/UnityEditor.TestRunner.dll'
+        }
+        if ($asm.precompiledReferences -contains 'nunit.framework.dll') {
+            $references += (Get-ChildItem 'Library/PackageCache/com.unity.ext.nunit*/net40/unity-custom/nunit.framework.dll').FullName
+        }
+    }
+    $output = Join-Path $scratch ($name + '.dll')
+    $response = Join-Path $scratch ($name + '.rsp')
+    $generated.Add($output)
+    $generated.Add($response)
+    $argsForCompiler = @('-nologo', '-target:library', '-langversion:9', '-nostdlib+', ('-define:' + $defines), ('-out:"' + $output + '"'))
+    foreach ($reference in $references) { $argsForCompiler += '-r:"' + $reference + '"' }
+    foreach ($source in (Get-ChildItem -LiteralPath $folder -Recurse -Filter '*.cs' | Where-Object { $folder -notmatch 'Runtime/(VR|MR|Start)$' -or $_.FullName -notmatch '[\\/]Editor[\\/]' })) { $argsForCompiler += '"' + $source.FullName + '"' }
+    $argsForCompiler | Set-Content -LiteralPath $response -Encoding UTF8
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') (Join-Path $UnityData 'DotNetSdkRoslyn/csc.dll') ('@' + $response)
+    if ($LASTEXITCODE -ne 0) { throw "Offline compilation failed: $name" }
+    $script:compiledCount++
+    Write-Output "$name`: 0 errors"
+}
+try {
+    $baseReferences = @((Join-Path $UnityData 'NetStandard/ref/2.1.0/netstandard.dll'))
+    $baseReferences += (Get-ChildItem (Join-Path $UnityData 'NetStandard/compat/2.1.0/shims/netfx') -Filter '*.dll').FullName
+    $jsonDll = (Get-ChildItem 'Library/PackageCache/com.unity.nuget.newtonsoft-json*/Runtime/Newtonsoft.Json.dll').FullName
+    $baseReferences += $jsonDll
+    $sdkAssemblies = @(Get-ChildItem 'Library/ScriptAssemblies/Oculus.Interaction*.dll', 'Library/ScriptAssemblies/Meta.XR.BuildingBlocks*.dll')
+    $sdkPackages = @(Get-ChildItem 'Library/PackageCache' -Directory | Where-Object Name -Like 'com.meta.xr.sdk.interaction*')
+    $sdkSources = @(Get-ChildItem $sdkPackages.FullName -Recurse -Filter '*.cs')
+    foreach ($required in @('PointableCanvas.cs', 'RayInteractable.cs', 'PokeInteractable.cs', 'FirstPersonLocomotor.cs', 'CharacterController.cs', 'PlayerLocomotor.cs')) {
+        if (!($sdkSources | Where-Object Name -EQ $required)) { throw "Missing installed Interaction SDK source: $required" }
+    }
+    if ($sdkAssemblies.Count -eq 0) { throw 'Missing imported Interaction SDK / Building Blocks assemblies' }
+    Write-Output "SDK inputs: $($sdkAssemblies.Count) imported assemblies; $($sdkSources.Count) installed package sources (no restore)."
+    $engineReferences = (Get-ChildItem (Join-Path $UnityData 'Managed/UnityEngine') -Filter '*.dll').FullName
+    Compile-Assembly 'LOBOver.Sim' 'Assets/LOBOver/Sim' $baseReferences
+    Compile-Assembly 'LOBOver.Client' 'Assets/LOBOver/Runtime/Client' $baseReferences
+    Compile-Assembly 'LOBOver.Client.Android' 'Assets/LOBOver/Runtime/Client' $baseReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    $runtimeReferences = $baseReferences + $engineReferences + @((Join-Path $scratch 'LOBOver.Sim.dll'))
+    Compile-Assembly 'LOBOver.Director' 'Assets/LOBOver/Runtime/Director' $runtimeReferences
+    $worldReferences = $runtimeReferences + @((Join-Path $scratch 'LOBOver.Director.dll'), 'Library/ScriptAssemblies/Unity.TextMeshPro.dll', 'Library/ScriptAssemblies/Unity.InputSystem.dll', 'Library/ScriptAssemblies/UnityEngine.UI.dll')
+    Compile-Assembly 'LOBOver.XR' 'Assets/LOBOver/Runtime/XR' $worldReferences
+    Compile-Assembly 'LOBOver.XR.Android' 'Assets/LOBOver/Runtime/XR' $worldReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    Compile-Assembly 'LOBOver.World' 'Assets/LOBOver/Runtime/World' $worldReferences
+    # Compile the conditional Android reader too, without opening the Editor or changing build settings.
+    Compile-Assembly 'LOBOver.Director.Android' 'Assets/LOBOver/Runtime/Director' $runtimeReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    Compile-Assembly 'LOBOver.World.Android' 'Assets/LOBOver/Runtime/World' $worldReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    Compile-Assembly 'LOBOver.Play' 'Assets/LOBOver/Runtime/Play' $worldReferences
+    Compile-Assembly 'LOBOver.Play.Android' 'Assets/LOBOver/Runtime/Play' $worldReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+    # SDK assemblies are already installed/imported; this check never restores packages.
+    $xrReferences = $worldReferences + @((Join-Path $scratch 'LOBOver.World.dll'),
+        'Library/ScriptAssemblies/Oculus.VR.dll', 'Library/ScriptAssemblies/Unity.XR.OpenXR.dll',
+        'Library/ScriptAssemblies/Unity.XR.Management.dll')
+    foreach ($assembly in @('VR', 'MR', 'Start')) {
+        $folder = 'Assets/LOBOver/Runtime/' + $assembly
+        if (!(Test-Path -LiteralPath $folder)) { continue }
+        Compile-Assembly ('LOBOver.' + $assembly) $folder $xrReferences
+        Compile-Assembly ('LOBOver.' + $assembly + '.Android') $folder $xrReferences 'UNITY_ANDROID;UNITY_6000_3_OR_NEWER'
+        $xrReferences += (Join-Path $scratch ('LOBOver.' + $assembly + '.dll'))
+    }
+    $editorReferences = $worldReferences + @((Join-Path $scratch 'LOBOver.World.dll'), 'Library/ScriptAssemblies/Unity.RenderPipelines.Core.Runtime.dll')
+    Compile-Assembly 'LOBOver.Editor' 'Assets/LOBOver/Editor' $editorReferences
+    $xrEditorReferences = $xrReferences + $editorReferences + @((Join-Path $scratch 'LOBOver.Editor.dll'),
+        'Library/ScriptAssemblies/Unity.XR.Management.Editor.dll', 'Library/ScriptAssemblies/Unity.XR.OpenXR.Editor.dll',
+        'Library/ScriptAssemblies/Unity.XR.OpenXR.Features.MetaQuestSupport.dll')
+    Compile-Assembly 'LOBOver.XR.Editor' 'Assets/LOBOver/Runtime/Start/Editor' $xrEditorReferences
+    $testReferences = $xrEditorReferences + @((Join-Path $scratch 'LOBOver.Editor.dll'), 'Library/ScriptAssemblies/UnityEngine.TestRunner.dll', 'Library/ScriptAssemblies/UnityEditor.TestRunner.dll')
+    $testReferences += (Get-ChildItem 'Library/PackageCache/com.unity.ext.nunit*/net40/unity-custom/nunit.framework.dll').FullName
+    Compile-Assembly 'LOBOver.EditModeTests' 'Assets/LOBOver/Tests/EditMode' $testReferences
+    Compile-Assembly 'LOBOver.PlayModeTests' 'Assets/LOBOver/Tests/PlayMode' $testReferences
+    Write-Output "PASS: $script:compiledCount offline assembly compilations; Unity import, tests and rendering still require the Editor."
+    $fixtureProgram = Join-Path $scratch 'VerifyFixtures.dll'
+    $fixtureResponse = Join-Path $scratch 'VerifyFixtures.rsp'
+    $fixtureConfig = Join-Path $scratch 'VerifyFixtures.runtimeconfig.json'
+    $fixtureJson = Join-Path $scratch 'Newtonsoft.Json.dll'
+    foreach ($file in @($fixtureProgram, $fixtureResponse, $fixtureConfig, $fixtureJson)) { $generated.Add($file) }
+    $fixtureArgs = @('-nologo', '-target:exe', '-langversion:9', '-nostdlib+', ('-out:"' + $fixtureProgram + '"'), ('-r:"' + (Join-Path $scratch 'LOBOver.Sim.dll') + '"'))
+    foreach ($reference in $baseReferences) { $fixtureArgs += '-r:"' + $reference + '"' }
+    $fixtureArgs += '-r:"' + (Join-Path $scratch 'LOBOver.VR.dll') + '"'
+    $fixtureArgs += '"' + (Join-Path $PSScriptRoot 'VerifyFixtures.cs.txt') + '"'
+    $fixtureArgs += '"' + (Join-Path $PSScriptRoot 'VerifyPresenter.cs.txt') + '"'
+    $fixtureArgs += '"' + (Join-Path $PSScriptRoot 'VerifyLevel1.cs.txt') + '"'
+    $fixtureArgs += '"' + (Join-Path $projectRoot 'Assets/LOBOver/Runtime/Client/DiscoveryPacket.cs') + '"'
+    $fixtureArgs += '"' + (Join-Path $projectRoot 'Assets/LOBOver/Runtime/Client/VoiceTurn.cs') + '"'
+    $fixtureArgs | Set-Content -LiteralPath $fixtureResponse -Encoding UTF8
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') (Join-Path $UnityData 'DotNetSdkRoslyn/csc.dll') ('@' + $fixtureResponse)
+    if ($LASTEXITCODE -ne 0) { throw 'Fixture verifier did not compile' }
+    Copy-Item -LiteralPath (Join-Path $UnityData 'DotNetSdkRoslyn/csc.runtimeconfig.json') -Destination $fixtureConfig
+    Copy-Item -LiteralPath $jsonDll -Destination $fixtureJson
+    & (Join-Path $UnityData 'NetCoreRuntime/dotnet.exe') $fixtureProgram
+    if ($LASTEXITCODE -ne 0) { throw 'Fixture replay failed' }
+}
+finally {
+    # Only exact outputs from this invocation are removed; never traverse another workspace.
+    foreach ($file in $generated) { if (Test-Path -LiteralPath $file) { Remove-Item -LiteralPath $file -Force } }
+    if ((Get-ChildItem -LiteralPath $scratch -Force | Measure-Object).Count -eq 0) { Remove-Item -LiteralPath $scratch }
+}
+# Rendering on the Quest with passthrough
+
+Written October 21, 2026, after two headset builds failed on compositing and look. The facts below are what every headset work order has to respect. `.claude/skills/quest-mr-rendering/SKILL.md` points the orchestrator here; work orders list this file under Read.
+
+## How passthrough reaches the eye
+
+1. The Passthrough block's `OVRPassthroughLayer` is an underlay: the compositor draws the cameras' image behind the app's eye buffer and uses the eye buffer's alpha to blend. Alpha 0 shows the room, alpha 1 shows the app, values between blend.
+2. The eye buffer uses premultiplied alpha (`OVRManager.eyeFovPremultipliedAlphaModeEnabled`, on by default). A pixel that should show the room is (0, 0, 0, 0). A half-transparent pixel is (rgb Ã— a, a). Never write colour with alpha 0 and never disable premultiplied alpha (the Real Hands block does; that is why it is out, K34).
+3. Everything that touches the alpha channel matters:
+   - The XR camera clears to Solid Color with alpha 0. A Skybox clear writes alpha 1 everywhere and hides the room.
+   - HDR off on the camera and on the Mobile render pipeline asset. The 11-11-10 HDR colour format has no alpha channel; with it the whole view goes opaque.
+   - Post-processing off on the XR camera (and no Volume with Vignette, Bloom or Tonemapping in the scene). URP's post-processing writes alpha 1 unless Alpha Processing is on in the pipeline asset; off is simpler and cheaper.
+   - Opaque shaders write alpha 1, which is correct for the full-scale site once it is fully there. Transparent shaders with `Blend SrcAlpha OneMinusSrcAlpha` leave a sensible alpha behind.
+   - MSAA resolves alpha normally. Render scale and upscaling keep alpha.
+4. Anything meant to show the room must not be drawn at all (`clip()` or not rendered); do not cover the view with a mesh that writes alpha 0, because any mistake in that mesh (position, stuck animation, culling) cuts the view into a window. The October 21 build did this with a 4 m sphere around the head and the player saw the site through a hole.
+5. The sky in the site is a dome mesh with its own shader, never the camera skybox, so it can fade in and out like the rest of the site.
+6. Turn the passthrough layer off (`enabled = false`, `hidden = true`) only when the site is fully opaque, and on again before anything starts to dissolve. While it is on, the compositor pays for it; while it is off, alpha does nothing.
+
+## Stereo and shaders
+
+- Single-pass instanced rendering. Every hand-written shader has `#pragma multi_compile_instancing`, `UNITY_VERTEX_INPUT_INSTANCE_ID`, `UNITY_VERTEX_OUTPUT_STEREO`, `UNITY_SETUP_INSTANCE_ID`, `UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO` and `UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX`, and uses URP's `Core.hlsl`, `Lighting.hlsl` and `Shadows.hlsl` transforms, never `UNITY_MATRIX_VP` by hand.
+- Lit shaders go through `UniversalFragmentPBR` (or `UniversalFragmentBlinnPhong` where cheaper) with `GetMainLight(shadowCoord)` so they receive the directional shadows and the SH ambient, and `MixFog` for the fog.
+- Global values for an effect over the whole site go through `Shader.SetGlobalFloat` and `Shader.SetGlobalVector`, read by every site shader; no per-material loops in C#.
+- Vulkan on the Quest compiles `clip()` fine. Avoid dependent texture reads in loops, `discard` in a depth prepass (there is none) and more than three texture samples per layer.
+- Shader Graph is allowed when a graph is easier to keep than HLSL, with the same stereo rules (Shader Graph handles them), alpha clip on, and the warp values as global properties (exposed off).
+
+## Budget for the Quest 3S at 72 Hz
+
+- About 300k visible triangles, 150 draw calls (static batching on for the builder's static geometry, GPU instancing on materials for repeated props).
+- One directional light with soft shadows, one cascade, 2048 shadow map, shadow distance 60 m. No point or spot lights.
+- MSAA 4x (cheap on a tile GPU). Render scale 1.0 (0.8 blurs text and distant detail). Fixed foveated rendering Low; Medium and High blur the edge of the view enough that testers call it a lens.
+- Ambient from a gradient (trilight) or a baked sky probe. Linear fog from 300 m to 2,500 m into the horizon colour; it is what gives the flat ground depth.
+- No screen-space ambient occlusion, no post-processing, no realtime reflection probes.
+- Textures 1024Â² or 2048Â², ASTC 6x6; normal maps on every ground and prop material, because flat colour without normals is what reads as a drawing.
+
+## Readable and comfortable
+
+- Text at 0.5 m: cap height at least 1.5 cm (2.5 cm for titles), TextMeshPro SDF, high contrast on an opaque panel. Buttons at least 11 by 6 cm.
+- Nothing moves the player: the world changes in place (the site root is moved before it appears; the rig and the camera are never moved). Transitions last 1 to 2 s. No vignette is needed because there is no vection.
+- A transition always finishes: a watchdog snaps it to its end state after 3 s, Back is never blocked, and each phase logs one line (`adb logcat -s Unity`) so a stuck state can be read from the device.
+
+## Seeing the real thing before a build
+
+The Editor cannot show passthrough. For every screenshot of a passthrough state, render the eye view to an ARGB32 texture and composite it over a stand-in room image (`Monitor/out/unity/room.png`, a mid-grey wall with a 20 cm grid) using the eye buffer's alpha; the result is what the compositor would show. Review those, not the raw frame. Quest Link with "Passthrough over Link" shows the real compositor in the headset but is not required.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -LiteralPath C:/Users/bryan/.agents/skills/unity-mcp-skill/SKILL.md' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 151ms:
+            var target = new RenderTexture(1440, 1440, 24, RenderTextureFormat.ARGB32);
+            var oldTarget = camera.targetTexture; var oldPosition = camera.transform.position; var oldRotation = camera.transform.rotation;
+            // Scene view and the rig's centre eye are outside the owned roots. Include
+            // hidden Editor cameras too; Scene view may explicitly render even disabled.
+            var otherCameras = Resources.FindObjectsOfTypeAll<Camera>().Where(c => c != null && c != camera && !EditorUtility.IsPersistent(c))
+                .Select(c => (camera: c, enabled: c.enabled, mask: c.cullingMask, clear: c.clearFlags)).ToArray();
+            // OVR hides these at runtime; EditMode must exclude its controller/hand
+            // variants from site statistics, restoring every enabled state afterwards.
+            var rigRenderers = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<OVRCameraRig>(true))
+                .SelectMany(r => r.GetComponentsInChildren<Renderer>(true)).Distinct().Where(r => r != null)
+                .Select(r => (renderer: r, enabled: r.enabled)).ToArray();
+            var crewShadows = world.GetComponentsInChildren<CrewRig>(true).SelectMany(c => c.GetComponentsInChildren<Renderer>(true))
+                .Select(r => (renderer: r, mode: r.shadowCastingMode)).ToArray();
+            var enabled = camera.enabled; var active = site.activeSelf; var observer = world.sky.observer;
+            var gameViewType = typeof(EditorWindow).Assembly.GetType("UnityEditor.GameView", true);
+            var gameView = Resources.FindObjectsOfTypeAll(gameViewType).Cast<EditorWindow>().FirstOrDefault();
+            var createdGameView = gameView == null; var wasMaximized = gameView != null && gameView.maximized;
+            var focusedWindow = EditorWindow.focusedWindow;
+            var maximizedWindows = Resources.FindObjectsOfTypeAll<EditorWindow>().Where(w => w != gameView && w.maximized).ToArray();
+            try
+            {
+                // SceneView can render despite a disabled camera. Hide it for the entire
+                // measured frame by maximizing Game, then restore the Editor layout below.
+                foreach (var window in maximizedWindows) window.maximized = false;
+                if (gameView == null) gameView = EditorWindow.GetWindow(gameViewType);
+                gameView.Focus(); gameView.maximized = true; gameView.Repaint();
+                site.SetActive(true);
+                foreach (var entry in otherCameras) if (entry.camera != null)
+                { entry.camera.enabled = false; entry.camera.cullingMask = 0; entry.camera.clearFlags = CameraClearFlags.Nothing; }
+                foreach (var entry in rigRenderers) if (entry.renderer != null) entry.renderer.enabled = false;
+                Debug.Log($"WO-L4 excluded Camera Rig renderers: {rigRenderers.Length} total, {rigRenderers.Count(r => r.enabled)} enabled.");
+                // Explicit rendering only: do not also submit this camera from the Game view.
+                camera.enabled = false;
+                camera.targetTexture = target;
+                var x = (float)world.Crew("pipe").StationFt * WorldUnits.MetresPerFoot;
+                camera.transform.position = new Vector3(x, 1.65f, WorldUnits.RoadZ);
+                camera.transform.rotation = Quaternion.LookRotation(new Vector3(0, -0.12f, -1));
+                world.sky.observer = camera.transform;
+                foreach (var crew in world.GetComponentsInChildren<CrewRig>(true)) crew.RefreshDistancePresentation(camera.transform);
+                yield return null;
+                for (var i = 0; i < 3; i++) { camera.Render(); yield return null; }
+                var triangles = UnityStats.triangles; var drawCalls = UnityStats.drawCalls;
+                Debug.Log($"WO-L4 preview 1440x1440: {triangles} triangles, {drawCalls} draw calls.");
+                Assert.That(gameView.maximized, Is.True, "Game view must hide SceneView for the measurement");
+                Assert.That(triangles, Is.GreaterThan(0), "No Editor render statistics; run with the Game view visible.");
+                Assert.That(drawCalls, Is.GreaterThan(0));
+                Assert.That(triangles, Is.LessThan(300000)); Assert.That(drawCalls, Is.LessThan(150));
+                camera.transform.LookAt(world.Crew("exc").transform.position + Vector3.up);
+                for (var i = 0; i < 3; i++) { camera.Render(); yield return null; }
+                Debug.Log($"WO-L4 toward excavator 1440x1440: {UnityStats.triangles} triangles, {UnityStats.drawCalls} draw calls.");
+                Assert.That(UnityStats.triangles, Is.GreaterThan(0)); Assert.That(UnityStats.triangles, Is.LessThan(300000));
+                Assert.That(UnityStats.drawCalls, Is.GreaterThan(0)); Assert.That(UnityStats.drawCalls, Is.LessThan(150));
+            }
+            finally
+            {
+                if (camera != null)
+                { camera.targetTexture = oldTarget; camera.transform.SetPositionAndRotation(oldPosition, oldRotation); camera.enabled = enabled; }
+                if (world != null && world.sky != null) world.sky.observer = observer;
+                foreach (var entry in otherCameras) if (entry.camera != null)
+                { entry.camera.enabled = entry.enabled; entry.camera.cullingMask = entry.mask; entry.camera.clearFlags = entry.clear; }
+                foreach (var entry in rigRenderers) if (entry.renderer != null) entry.renderer.enabled = entry.enabled;
+                foreach (var entry in crewShadows) if (entry.renderer != null) entry.renderer.shadowCastingMode = entry.mode;
+                if (world != null) foreach (var lod in world.GetComponentsInChildren<LODGroup>(true)) lod.ForceLOD(-1);
+                if (site != null) site.SetActive(active); Object.DestroyImmediate(target);
+                if (gameView != null)
+                {
+                    gameView.maximized = wasMaximized;
+                    if (createdGameView) gameView.Close();
+                }
+                foreach (var window in maximizedWindows) if (window != null) window.maximized = true;
+                if (focusedWindow != null) focusedWindow.Focus();
+            }
+        }
+        private static void Populate(SiteWorld world, int? displayDay = null)
+        {
+            var scenario = JObject.Parse(File.ReadAllText("Data/Scenarios/slice_texas.json"));
+            var transcript = JObject.Parse(File.ReadAllText("Data/transcripts/slice_play.json"));
+            var snapshots = (JArray)transcript["snapshots"];
+            var snapshot = displayDay.HasValue ? snapshots.OfType<JObject>().Single(s => (int)Math.Floor((double)s["t"]) + 1 == displayDay.Value)
+                : snapshots.OfType<JObject>().FirstOrDefault(s => ((JArray)s["site"]["trench"]).OfType<JObject>().Any(t => (string)t["state"] == "piped")) ?? (JObject)snapshots[1];
+            world.Configure((JObject)scenario["job"], 0); world.Apply(SiteView.From((JObject)snapshot["site"]), displayDay ?? 4);
+            foreach (var crew in WorldUnits.CrewIds) world.Crew(crew).SnapPose();
+        }
+    }
+}
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 89ms:
+---
+name: unity-mcp-orchestrator
+description: Orchestrate Unity Editor via MCP (Model Context Protocol) tools and resources. Use when working with Unity projects through MCP for Unity - creating/modifying GameObjects, editing scripts, managing scenes, running tests, or any Unity Editor automation. Provides best practices, tool schemas, and workflow patterns for effective Unity-MCP integration.
+---
+
+# Unity-MCP Operator Guide
+
+This skill helps you effectively use the Unity Editor with MCP tools and resources.
+
+## Template Notice
+
+Examples in `references/workflows.md` and `references/tools-reference.md` are reusable templates. They may be inaccurate across Unity versions, package setups (UGUI/TMP/Input System), and project-specific conventions. Please check console, compilation errors, or use screenshot after implementation.
+
+Before applying a template:
+- Validate targets/components first via resources and `find_gameobjects`.
+- Treat names, enum values, and property payloads as placeholders to adapt.
+
+## Quick Start: Resource-First Workflow
+
+**Always read relevant resources before using tools.** This prevents errors and provides the necessary context.
+
+```
+1. Check editor state     â†’ mcpforunity://editor/state
+2. Understand the scene   â†’ mcpforunity://scene/gameobject-api
+3. Find what you need     â†’ find_gameobjects or resources
+4. Take action            â†’ tools (manage_gameobject, create_script, script_apply_edits, apply_text_edits, validate_script, delete_script, get_sha, etc.)
+5. Verify results         â†’ read_console, manage_camera(action="screenshot"), resources
+```
+
+## Critical Best Practices
+
+### 1. After Writing/Editing Scripts: Wait for Compilation and Check Console
+
+```python
+# After create_script or script_apply_edits:
+# Both tools already trigger AssetDatabase.ImportAsset + RequestScriptCompilation automatically.
+# No need to call refresh_unity â€” just wait for compilation to finish, then check console.
+
+# 1. Poll editor state until compilation completes
+# Read mcpforunity://editor/state â†’ wait until is_compiling == false
+
+# 2. Check for compilation errors
+read_console(types=["error"], count=10, include_stacktrace=True)
+```
+
+**Why:** Unity must compile scripts before they're usable. `create_script` and `script_apply_edits` already trigger import and compilation automatically â€” calling `refresh_unity` afterward is redundant.
+
+### 2. Use `batch_execute` for Multiple Operations
+
+```python
+# 10-100x faster than sequential calls
+batch_execute(
+    commands=[
+        {"tool": "manage_gameobject", "params": {"action": "create", "name": "Cube1", "primitive_type": "Cube"}},
+        {"tool": "manage_gameobject", "params": {"action": "create", "name": "Cube2", "primitive_type": "Cube"}},
+        {"tool": "manage_gameobject", "params": {"action": "create", "name": "Cube3", "primitive_type": "Cube"}}
+    ],
+    parallel=True  # Hint only: Unity may still execute sequentially
+)
+```
+
+**Max 25 commands per batch by default (configurable in Unity MCP Tools window, max 100).** Use `fail_fast=True` for dependent operations.
+
+**Tip:** Also use `batch_execute` for discovery â€” batch multiple `find_gameobjects` calls instead of calling them one at a time:
+```python
+batch_execute(commands=[
+    {"tool": "find_gameobjects", "params": {"search_term": "Camera", "search_method": "by_component"}},
+    {"tool": "find_gameobjects", "params": {"search_term": "Player", "search_method": "by_tag"}},
+    {"tool": "find_gameobjects", "params": {"search_term": "GameManager", "search_method": "by_name"}}
+])
+```
+
+### 3. Use Screenshots to Verify Visual Results
+
+```python
+# Basic screenshot (saves to Assets/, returns file path only)
+manage_camera(action="screenshot")
+
+# Inline screenshot (returns base64 PNG directly to the AI)
+manage_camera(action="screenshot", include_image=True)
+
+# Use a specific camera and cap resolution for smaller payloads
+manage_camera(action="screenshot", camera="MainCamera", include_image=True, max_resolution=512)
+
+# Batch surround: captures front/back/left/right/top/bird_eye around the scene
+manage_camera(action="screenshot", batch="surround", max_resolution=256)
+
+# Batch surround centered on a specific object
+manage_camera(action="screenshot", batch="surround", view_target="Player", max_resolution=256)
+
+# Positioned screenshot: place a temp camera and capture in one call
+manage_camera(action="screenshot", view_target="Player", view_position=[0, 10, -10], max_resolution=512)
+
+# Scene View screenshot: capture what the developer sees in the editor
+manage_camera(action="screenshot", capture_source="scene_view", include_image=True)
+
+# Scene View framed on a specific object
+manage_camera(action="screenshot", capture_source="scene_view", view_target="Canvas", include_image=True)
+```
+
+**Best practices for AI scene understanding:**
+- Use `include_image=True` when you need to *see* the scene, not just save a file.
+- Use `batch="surround"` for a comprehensive overview (6 angles, one command).
+- Use `view_target`/`view_position` to capture from a specific viewpoint without needing a scene camera.
+- Use `capture_source="scene_view"` to see the editor viewport (gizmos, wireframes, grid).
+- Keep `max_resolution` at 256â€“512 to balance quality vs. token cost.
+
+```python
+# Agentic camera loop: point, shoot, analyze
+manage_gameobject(action="look_at", target="MainCamera", look_at_target="Player")
+manage_camera(action="screenshot", camera="MainCamera", include_image=True, max_resolution=512)
+# â†’ Analyze image, decide next action
+
+# Multi-view screenshot (6-angle contact sheet)
+manage_camera(action="screenshot_multiview", max_resolution=480)
+
+# Scene View for editor-level inspection (shows gizmos, debug overlays, etc.)
+manage_camera(action="screenshot", capture_source="scene_view", view_target="Player", include_image=True)
+```
+
+### 4. Check Console After Major Changes
+
+```python
+read_console(
+    action="get",
+    types=["error", "warning"],  # Focus on problems
+    count=10,
+    format="detailed"
+)
+```
+
+### 5. Always Check `editor_state` Before Complex Operations
+
+```python
+# Read mcpforunity://editor/state to check:
+# - is_compiling: Wait if true
+# - is_domain_reload_pending: Wait if true  
+# - ready_for_tools: Only proceed if true
+# - blocking_reasons: Why tools might fail
+```
+
+## Parameter Type Conventions
+
+These are common patterns, not strict guarantees. `manage_components.set_property` payload shapes can vary by component/property; if a template fails, inspect the component resource payload and adjust.
+
+### Vectors (position, rotation, scale, color)
+```python
+# Both forms accepted:
+position=[1.0, 2.0, 3.0]        # List
+position="[1.0, 2.0, 3.0]"     # JSON string
+```
+
+### Booleans
+```python
+# Both forms accepted:
+include_inactive=True           # Boolean
+include_inactive="true"         # String
+```
+
+### Colors
+```python
+# Auto-detected format:
+color=[255, 0, 0, 255]         # 0-255 range
+color=[1.0, 0.0, 0.0, 1.0]    # 0.0-1.0 normalized (auto-converted)
+```
+
+### Paths
+```python
+# Assets-relative (default):
+path="Assets/Scripts/MyScript.cs"
+
+# URI forms:
+uri="mcpforunity://path/Assets/Scripts/MyScript.cs"
+uri="file:///full/path/to/file.cs"
+```
+
+## Core Tool Categories
+
+| Category | Key Tools | Use For |
+|----------|-----------|---------|
+| **Scene** | `manage_scene`, `find_gameobjects` | Scene operations, finding objects. Multi-scene editing (additive load, close, set active, move GO between scenes), scene templates (`3d_basic`, `2d_basic`, `empty`, `default`), scene validation with `auto_repair`. For build settings, use `manage_build(action="scenes")`. |
+| **Objects** | `manage_gameobject`, `manage_components` | Creating/modifying GameObjects |
+| **Scripts** | `create_script`, `script_apply_edits`, `validate_script` | C# code management (auto-refreshes on create/edit) |
+| **Assets** | `manage_asset`, `manage_prefabs` | Asset operations. **Prefab instantiation** is done via `manage_gameobject(action="create", prefab_path="...")`, not `manage_prefabs`. |
+| **Editor** | `manage_editor`, `execute_menu_item`, `read_console` | Editor control, package deployment (`deploy_package`/`restore_package`), undo/redo (`undo`/`redo` actions) |
+| **Testing** | `run_tests`, `get_test_job` | Unity Test Framework |
+| **Batch** | `batch_execute` | Parallel/bulk operations |
+| **Camera** | `manage_camera` | Camera management (Unity Camera + Cinemachine). **Tier 1** (always available): create, target, lens, priority, list, screenshot. **Tier 2** (requires `com.unity.cinemachine`): brain, body/aim/noise pipeline, extensions, blending, force/release. 7 presets: follow, third_person, freelook, dolly, static, top_down, side_scroller. Resource: `mcpforunity://scene/cameras`. Use `ping` to check Cinemachine availability. See [tools-reference.md](references/tools-reference.md#camera-tools). |
+| **Graphics** | `manage_graphics` | Rendering and post-processing management. 33 actions across 5 groups: **Volume** (create/configure volumes and effects, URP/HDRP), **Bake** (lightmaps, light probes, reflection probes, Edit mode only), **Stats** (draw calls, batches, memory), **Pipeline** (quality levels, pipeline settings), **Features** (URP renderer features: add, remove, toggle, reorder). Resources: `mcpforunity://scene/volumes`, `mcpforunity://rendering/stats`, `mcpforunity://pipeline/renderer-features`. Use `ping` to check pipeline status. See [tools-reference.md](references/tools-reference.md#graphics-tools). |
+| **Packages** | `manage_packages` | Install, remove, search, and manage Unity packages and scoped registries. Query actions: list installed, search registry, get info, ping, poll status. Mutating actions: add/remove packages, embed for editing, add/remove scoped registries, force resolve. Validates identifiers, warns on git URLs, checks dependents before removal (`force=true` to override). See [tools-reference.md](references/tools-reference.md#package-tools). |
+| **ProBuilder** | `manage_probuilder` | 3D modeling, mesh editing, complex geometry. **When `com.unity.probuilder` is installed, prefer ProBuilder shapes over primitive GameObjects** for editable geometry, multi-material faces, or complex shapes. Supports 12 shape types, face/edge/vertex editing, smoothing, and per-face materials. See [ProBuilder Guide](references/probuilder-guide.md). |
+| **UI** | `manage_ui`, `batch_execute` with `manage_gameobject` + `manage_components` | **UI Toolkit**: Use `manage_ui` to create UXML/USS files, attach UIDocument, inspect visual trees. **uGUI (Canvas)**: Use `batch_execute` for Canvas, Panel, Button, Text, Slider, Toggle, Input Field. **Read `mcpforunity://project/info` first** to detect uGUI/TMP/Input System/UI Toolkit availability. (see [UI workflows](references/workflows.md#ui-creation-workflows)) |
+| **Docs** | `unity_reflect`, `unity_docs` | API verification and documentation lookup. **`unity_reflect`** inspects live C# APIs via reflection (requires Unity connection): `search` types across assemblies, `get_type` for member summary, `get_member` for full signatures. **`unity_docs`** fetches official docs from docs.unity3d.com (no Unity connection needed): `get_doc` (ScriptReference), `get_manual` (Manual pages), `get_package_doc` (package docs), `lookup` (parallel search all sources + project assets). **Trust hierarchy: reflection > project assets > docs.** Workflow: `unity_reflect` search -> get_type -> get_member -> `unity_docs` lookup. See [tools-reference.md](references/tools-reference.md#docs-tools). |
+
+## Common Workflows
+
+### Creating a New Script and Using It
+
+```python
+# 1. Create the script (automatically triggers import + compilation)
+create_script(
+    path="Assets/Scripts/PlayerController.cs",
+    contents="using UnityEngine;\n\npublic class PlayerController : MonoBehaviour\n{\n    void Update() { }\n}"
+)
+
+# 2. Wait for compilation to finish
+# Read mcpforunity://editor/state â†’ wait until is_compiling == false
+
+# 3. Check for compilation errors
+read_console(types=["error"], count=10)
+
+# 4. Only then attach to GameObject
+manage_gameobject(action="modify", target="Player", components_to_add=["PlayerController"])
+```
+
+### Finding and Modifying GameObjects
+
+```python
+# 1. Find by name/tag/component (returns IDs only)
+result = find_gameobjects(search_term="Enemy", search_method="by_tag", page_size=50)
+
+# 2. Get full data via resource
+# mcpforunity://scene/gameobject/{instance_id}
+
+# 3. Modify using the ID
+manage_gameobject(action="modify", target=instance_id, position=[10, 0, 0])
+```
+
+### Running and Monitoring Tests
+
+```python
+# 1. Start test run (async)
+result = run_tests(mode="EditMode", test_names=["MyTests.TestSomething"])
+job_id = result["job_id"]
+
+# 2. Poll for completion
+result = get_test_job(job_id=job_id, wait_timeout=60, include_failed_tests=True)
+```
+
+## Pagination Pattern
+
+Large queries return paginated results. Always follow `next_cursor`:
+
+```python
+cursor = 0
+all_items = []
+while True:
+    result = manage_scene(action="get_hierarchy", page_size=50, cursor=cursor)
+    all_items.extend(result["data"]["items"])
+    if not result["data"].get("next_cursor"):
+        break
+    cursor = result["data"]["next_cursor"]
+```
+
+## Multi-Instance Workflow
+
+When multiple Unity Editors are running:
+
+```python
+# 1. List instances via resource: mcpforunity://instances
+# 2. Set active instance
+set_active_instance(instance="MyProject@abc123")
+# 3. All subsequent calls route to that instance
+```
+
+## Error Recovery
+
+| Symptom | Cause | Solution |
+|---------|-------|----------|
+| Tools return "busy" | Compilation in progress | Wait, check `editor_state` |
+| "stale_file" error | File changed since SHA | Re-fetch SHA with `get_sha`, retry |
+| Connection lost | Domain reload | Wait ~5s, reconnect |
+| Commands fail silently | Wrong instance | Check `set_active_instance` |
+
+## Reference Files
+
+For detailed schemas and examples:
+
+- **[tools-reference.md](references/tools-reference.md)**: Complete tool documentation with all parameters
+- **[resources-reference.md](references/resources-reference.md)**: All available resources and their data
+- **[workflows.md](references/workflows.md)**: Extended workflow examples and patterns
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 489ms:
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:1
++ rg --files -g AGENTS.md -g '*framestats*' Assets Monitor/out/unity; r ...
++ ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+rg : The term 'rg' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:69
++ ... s -g AGENTS.md -g '*framestats*' Assets Monitor/out/unity; rg -n 'In  ...
++                                                                ~~
+    + CategoryInfo          : ObjectNotFound: (rg:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+frame 0 editorFrame=69 triangles=1031536 drawCalls=386 gvMax=True setup
+frame 1 editorFrame=70 triangles=1031536 drawCalls=386 gvMax=True 
+frame 2 editorFrame=71 triangles=1031536 drawCalls=386 gvMax=True 
+frame 3 editorFrame=71 triangles=1031536 drawCalls=386 gvMax=True 
+frame 4 editorFrame=71 triangles=1031536 drawCalls=386 gvMax=True explicit render
+frame 5 editorFrame=72 triangles=1031536 drawCalls=386 gvMax=True explicit render
+frame 6 editorFrame=72 triangles=1031536 drawCalls=386 gvMax=True explicit render
+frame 7 editorFrame=72 triangles=1031536 drawCalls=386 gvMax=True explicit render
+frame 8 editorFrame=72 triangles=1031536 drawCalls=386 gvMax=True explicit render
+frame 9 editorFrame=72 triangles=1031536 drawCalls=386 gvMax=True explicit render
+frame 10 editorFrame=72 triangles=1031536 drawCalls=386 gvMax=True camera enabled for game view
+frame 11 editorFrame=73 triangles=1031536 drawCalls=386 gvMax=True 
+frame 12 editorFrame=73 triangles=47788 drawCalls=10 gvMax=True 
+frame 13 editorFrame=73 triangles=47788 drawCalls=10 gvMax=True 
+frame 14 editorFrame=73 triangles=47788 drawCalls=10 gvMax=True 
+frame 15 editorFrame=73 triangles=47788 drawCalls=10 gvMax=True 
+frame 16 editorFrame=73 triangles=47788 drawCalls=10 gvMax=False restored
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -LiteralPath Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs | Select-Object -Skip 270 -First 91; Select-String -Path Docs/LEVEL1.md -Pattern 'In the headset' -Context 0,18; Select-String -Path Docs/DECISIONS.md -Pattern '"'^## K3[7-9]|''^## K40'"' -Context 0,8; Get-ChildItem -Path Assets/LOBOver -Filter AGENTS.md -Recurse | Select-Object FullName" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 612ms:
+                    Assert.That(android.overridden, Is.True); Assert.That(android.format, Is.EqualTo(TextureImporterFormat.ASTC_6x6));
+                }
+                finally { Object.DestroyImmediate(image); }
+            }
+        }
+        private static void AssertChannels(Color a, Color b, string context)
+        { for (var channel = 0; channel < 4; channel++) Assert.That(Mathf.Abs(a[channel] - b[channel]), Is.LessThanOrEqualTo(0.02f), context); }
+
+        [UnityTest]
+        public IEnumerator PipeStationPreviewStaysInsideQuestBudget()
+        {
+            var scene = PlaySceneBuilder.Build(false); var site = scene.GetRootGameObjects().Single(r => r.name == "[LOBOver] Site");
+            var world = site.GetComponentInChildren<SiteWorld>(true); Populate(world, 8);
+            foreach (var name in new[] { "Ground", "Horizon" })
+            {
+                var surface = site.transform.Find(name).GetComponent<Renderer>();
+                Assert.That(surface.shadowCastingMode, Is.EqualTo(UnityEngine.Rendering.ShadowCastingMode.Off));
+                Assert.That(surface.receiveShadows, Is.True);
+            }
+            var camera = scene.GetRootGameObjects().Single(r => r.name == "[LOBOver] Preview").GetComponentInChildren<Camera>();
+            var target = new RenderTexture(1440, 1440, 24, RenderTextureFormat.ARGB32);
+            var oldTarget = camera.targetTexture; var oldPosition = camera.transform.position; var oldRotation = camera.transform.rotation;
+            // Scene view and the rig's centre eye are outside the owned roots. Include
+            // hidden Editor cameras too; Scene view may explicitly render even disabled.
+            var otherCameras = Resources.FindObjectsOfTypeAll<Camera>().Where(c => c != null && c != camera && !EditorUtility.IsPersistent(c))
+                .Select(c => (camera: c, enabled: c.enabled, mask: c.cullingMask, clear: c.clearFlags)).ToArray();
+            // OVR hides these at runtime; EditMode must exclude its controller/hand
+            // variants from site statistics, restoring every enabled state afterwards.
+            var rigRenderers = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<OVRCameraRig>(true))
+                .SelectMany(r => r.GetComponentsInChildren<Renderer>(true)).Distinct().Where(r => r != null)
+                .Select(r => (renderer: r, enabled: r.enabled)).ToArray();
+            var crewShadows = world.GetComponentsInChildren<CrewRig>(true).SelectMany(c => c.GetComponentsInChildren<Renderer>(true))
+                .Select(r => (renderer: r, mode: r.shadowCastingMode)).ToArray();
+            var enabled = camera.enabled; var active = site.activeSelf; var observer = world.sky.observer;
+            var gameViewType = typeof(EditorWindow).Assembly.GetType("UnityEditor.GameView", true);
+            var gameView = Resources.FindObjectsOfTypeAll(gameViewType).Cast<EditorWindow>().FirstOrDefault();
+            var createdGameView = gameView == null; var wasMaximized = gameView != null && gameView.maximized;
+            var focusedWindow = EditorWindow.focusedWindow;
+            var maximizedWindows = Resources.FindObjectsOfTypeAll<EditorWindow>().Where(w => w != gameView && w.maximized).ToArray();
+            try
+            {
+                // SceneView can render despite a disabled camera. Hide it for the entire
+                // measured frame by maximizing Game, then restore the Editor layout below.
+                foreach (var window in maximizedWindows) window.maximized = false;
+                if (gameView == null) gameView = EditorWindow.GetWindow(gameViewType);
+                gameView.Focus(); gameView.maximized = true; gameView.Repaint();
+                site.SetActive(true);
+                foreach (var entry in otherCameras) if (entry.camera != null)
+                { entry.camera.enabled = false; entry.camera.cullingMask = 0; entry.camera.clearFlags = CameraClearFlags.Nothing; }
+                foreach (var entry in rigRenderers) if (entry.renderer != null) entry.renderer.enabled = false;
+                Debug.Log($"WO-L4 excluded Camera Rig renderers: {rigRenderers.Length} total, {rigRenderers.Count(r => r.enabled)} enabled.");
+                // Explicit rendering only: do not also submit this camera from the Game view.
+                camera.enabled = false;
+                camera.targetTexture = target;
+                var x = (float)world.Crew("pipe").StationFt * WorldUnits.MetresPerFoot;
+                camera.transform.position = new Vector3(x, 1.65f, WorldUnits.RoadZ);
+                camera.transform.rotation = Quaternion.LookRotation(new Vector3(0, -0.12f, -1));
+                world.sky.observer = camera.transform;
+                foreach (var crew in world.GetComponentsInChildren<CrewRig>(true)) crew.RefreshDistancePresentation(camera.transform);
+                yield return null;
+                for (var i = 0; i < 3; i++) { camera.Render(); yield return null; }
+                var triangles = UnityStats.triangles; var drawCalls = UnityStats.drawCalls;
+                Debug.Log($"WO-L4 preview 1440x1440: {triangles} triangles, {drawCalls} draw calls.");
+                Assert.That(gameView.maximized, Is.True, "Game view must hide SceneView for the measurement");
+                Assert.That(triangles, Is.GreaterThan(0), "No Editor render statistics; run with the Game view visible.");
+                Assert.That(drawCalls, Is.GreaterThan(0));
+                Assert.That(triangles, Is.LessThan(300000)); Assert.That(drawCalls, Is.LessThan(150));
+                camera.transform.LookAt(world.Crew("exc").transform.position + Vector3.up);
+                for (var i = 0; i < 3; i++) { camera.Render(); yield return null; }
+                Debug.Log($"WO-L4 toward excavator 1440x1440: {UnityStats.triangles} triangles, {UnityStats.drawCalls} draw calls.");
+                Assert.That(UnityStats.triangles, Is.GreaterThan(0)); Assert.That(UnityStats.triangles, Is.LessThan(300000));
+                Assert.That(UnityStats.drawCalls, Is.GreaterThan(0)); Assert.That(UnityStats.drawCalls, Is.LessThan(150));
+            }
+            finally
+            {
+                if (camera != null)
+                { camera.targetTexture = oldTarget; camera.transform.SetPositionAndRotation(oldPosition, oldRotation); camera.enabled = enabled; }
+                if (world != null && world.sky != null) world.sky.observer = observer;
+                foreach (var entry in otherCameras) if (entry.camera != null)
+                { entry.camera.enabled = entry.enabled; entry.camera.cullingMask = entry.mask; entry.camera.clearFlags = entry.clear; }
+                foreach (var entry in rigRenderers) if (entry.renderer != null) entry.renderer.enabled = entry.enabled;
+                foreach (var entry in crewShadows) if (entry.renderer != null) entry.renderer.shadowCastingMode = entry.mode;
+                if (world != null) foreach (var lod in world.GetComponentsInChildren<LODGroup>(true)) lod.ForceLOD(-1);
+                if (site != null) site.SetActive(active); Object.DestroyImmediate(target);
+                if (gameView != null)
+                {
+                    gameView.maximized = wasMaximized;
+                    if (createdGameView) gameView.Close();
+                }
+                foreach (var window in maximizedWindows) if (window != null) window.maximized = true;
+                if (focusedWindow != null) focusedWindow.Focus();
+
+> Docs\LEVEL1.md:34:## In the headset
+  Docs\LEVEL1.md:35:
+  Docs\LEVEL1.md:36:Revised later on October 21, after the first Level 1 build (WO-L2) was tested: its warp drew a 
+mask around the head that stuck as a window, the site was a flat band of colour under a flat sky with white blobs, and 
+the view read as a drawing seen through a lens. Decisions K37 to K40; work orders WO-L4 and WO-L5.
+  Docs\LEVEL1.md:37:
+  Docs\LEVEL1.md:38:- You start in your room, in full passthrough, and can see and talk to the others. Nothing is 
+drawn but a panel within arm's reach: the day and three buttons, Ray, digging; Marcus, pipe; Dana, backfill.
+  Docs\LEVEL1.md:39:- Touch a button, or point at it and pull the trigger. The site materializes around you where you 
+stand: a wave runs outward from your feet across the ground; just behind its front everything is drawn as glowing wire 
+and blueprint lines over the room, and a moment later the surfaces fill in, dirt, gravel, steel, the crews, the 
+machines, until the room is gone and the sky closes over you. About 1.5 s. You do not move; the site is built around 
+you. Going back runs the same wave inward, and the room returns.
+  Docs\LEVEL1.md:40:- The site has to look like a site: a textured ground with relief, a real trench with spoil along 
+it, bedding and pipe in the bottom, a gravel road with ruts, fences, cones and barriers, the trailer, the crews and 
+their machines, a sky with sun and clouds, shadows, and haze toward the horizon. You can look anywhere; nothing frames 
+or masks the view.
+  Docs\LEVEL1.md:41:- In the site you look and listen. Foremen talk from where they stand; when you arrive, the 
+foreman greets you or says what is going on. The only button is Back, on your left wrist.
+  Docs\LEVEL1.md:42:
+  Docs\LEVEL1.md:43:## On the PC
+  Docs\LEVEL1.md:44:
+  Docs\LEVEL1.md:45:Revised later on October 21: the first page worked but did not feel like a game (WO-L3).
+  Docs\LEVEL1.md:46:
+  Docs\LEVEL1.md:47:The Plan seat is the site office. The Line of Balance is a drafting board, inked day by day as the 
+reports come in, with the PM's planned lines dashed under it and a ruler sliding down the days. Beside it is the radio 
+console: one card per crew with its foreman, machine and speed, and a two-position switch, Go or Hold, that clunks and 
+sends a radio chirp. The PM has a face (LOB-Game's portraits) and a speech bubble when a line plays. A calendar tile 
+flips each day with a tick; when the field slows the clock pill says so and the radio hisses, and nothing on the page 
+says why. A daily report line types itself at the bottom. At the end the result is stamped on the board: the finish 
+against the promise and the idle crew-days per crew, with the actual lines over the plan; Run again keeps the previous 
+run faint underneath. Nothing on the page shows the live site, money, or a verdict.
+  Docs\LEVEL1.md:48:
+  Docs\LEVEL1.md:49:## How a run goes
+  Docs\LEVEL1.md:50:
+  Docs\LEVEL1.md:51:Push, the PM's plan:
+  Docs\LEVEL1.md:52:
+> Docs\LEVEL1.md:70:Foremen are heard only in the headset; the PM only on the Plan page. Each line plays once. An 
+exchange plays turn by turn, each from its speaker's crew, 0.3 s apart, and exchanges never overlap. The texts follow 
+`Docs/VOICE.md`: claims, not conclusions.
+  Docs\LEVEL1.md:71:
+  Docs\LEVEL1.md:72:| Id | When | Who | Text |
+  Docs\LEVEL1.md:73:| --- | --- | --- | --- |
+  Docs\LEVEL1.md:74:| `pm_open_level1` | Start | PM | Morning. Three thousand feet, three crews. Dig Day 1, pipe Day 
+2, backfill Day 4. We promised the city Day 18, so keep everybody moving. |
+  Docs\LEVEL1.md:75:| `pm_hold_level1` | Plan holds a crew | PM | You're holding a crew? We promised Day 18. I hope 
+you have a reason. |
+  Docs\LEVEL1.md:76:| `pm_end_level1` | End | PM | That's the run. Look at where the lines ended up against what we 
+promised. |
+  Docs\LEVEL1.md:77:| `marcus_collapse` | The wall falls | Marcus | Three turns, as in `VOICE.md` |
+  Docs\LEVEL1.md:78:| `arg_back_pipe_stopped` | Backfill catches a stopped pipe crew | Dana, Marcus | Four turns, as 
+in `VOICE.md` |
+  Docs\LEVEL1.md:79:| `arg_back_pipe_caught` | Backfill catches a working pipe crew | Dana, Marcus | Four turns, as in 
+`VOICE.md` |
+  Docs\LEVEL1.md:80:| `grumble_back_pipe` | Backfill catches pipe again, at most once a day | Dana, Marcus | Two 
+turns, as in `VOICE.md` |
+  Docs\LEVEL1.md:81:| `ray_working` | Site arrives at a working excavation crew | Ray | Morning, inspector. Good 
+ground today. We'll make our footage if nobody bothers us. |
+  Docs\LEVEL1.md:82:| `marcus_working` | Site arrives at a working pipe crew | Marcus | Pipe's going in. One-eighty a 
+day if the walls behave. |
+  Docs\LEVEL1.md:83:| `marcus_idle` | Site arrives at a stopped pipe crew | Marcus | Nothing to lay until that wall's 
+cleaned up. My guys are standing around. |
+  Docs\LEVEL1.md:84:| `dana_working` | Site arrives at a working backfill crew | Dana | Dirt's going in fine. Just 
+keep me fed. |
+  Docs\LEVEL1.md:85:| `dana_idle` | Site arrives at a backfill crew waiting behind pipe | Dana | We're right on 
+Marcus's heels. Nothing to fill until he lays more pipe. |
+  Docs\LEVEL1.md:86:| `foreman_held_01` to `03` | Each day backfill is held after it started | Dana | As in the slice |
+  Docs\LEVEL1.md:87:
+  Docs\LEVEL1.md:88:## Later levels (proposed; decided after Level 1 plays well)
+
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+mcp: unityMCP/list_mcp_resources started
+mcp: unityMCP/list_mcp_resources (completed)
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+mcp: unityMCP/read_mcp_resource started
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+mcp: unityMCP/read_mcp_resource started
+mcp: unityMCP/read_mcp_resource (completed)
+mcp: unityMCP/read_mcp_resource (completed)
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+mcp: unityMCP/read_mcp_resource started
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+mcp: unityMCP/read_mcp_resource (completed)
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Select-String -Path Docs/DECISIONS.md -Pattern 'K37|K38|K39|K40' -Context 0,3; Get-Content -LiteralPath Assets/LOBOver/Editor/PlaySceneBuilder.cs; Select-String -Path Assets/LOBOver/Editor/*.cs -Pattern 'StaticBatching|BatchingStatic|Preview|GameView' -Context 2,3" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 656ms:
+
+> Docs\DECISIONS.md:45:| K37 | The warp is a materialization, never a mask: the site is drawn where a wave from the 
+player's feet has passed (wire and blueprint lines first, then surfaces), the room shows wherever the site is not yet 
+drawn, and nothing covers the view; the sky closes last | Bryan, October 21, third headset test: the sphere mask read 
+as a fisheye lens and stuck as a window | `LEVEL1.md`, `XR_RENDERING.md`, WO-L5 |
+> Docs\DECISIONS.md:46:| K38 | The site must read as a real site: textured ground with relief, real trench geometry 
+with spoil and pipe, props, a sky with sun and clouds, shadows and haze, within the Quest 3S budget; every site 
+material on one shader so site-wide effects apply at once | Bryan, October 21: the assets were extremely poor, a 
+horizontal line like a drawing | WO-L4, `XR_RENDERING.md` |
+> Docs\DECISIONS.md:47:| K39 | The Plan page is the site office: a drafting board inked day by day, a radio console 
+with switches, the PM with a face and a bubble, a calendar, synthesized sound; the information rules do not change | 
+Bryan, October 21: the page worked but did not feel like a game | WO-L3 |
+> Docs\DECISIONS.md:48:| K40 | Passthrough rules are fixed in `Docs/XR_RENDERING.md` (alpha-0 clear, HDR and 
+post-processing off, dome sky, premultiplied alpha, no full-view meshes, foveation Low, render scale 1.0) and every 
+headset work order lists it under Read | Two builds failed on compositing | `XR_RENDERING.md`, 
+`.claude/skills/quest-mr-rendering/` |
+  Docs\DECISIONS.md:49:| K41 | The orchestrator does not build for the Quest; it verifies in the Editor (tests, 
+screenshots, alpha composites for passthrough states, stats) and stops with the build steps; Bryan builds with Build 
+and Run Quest and judges in the headset | Bryan, October 21: do not spend tokens on builds | 
+`ORCHESTRATOR_SHOWCASE.md` Round 5 |
+  Docs\DECISIONS.md:50:
+  Docs\DECISIONS.md:51:## Open (for Bryan; the orchestrator adds a line when a work order surfaces one)
+using System;
+using System.IO;
+using System.Linq;
+using LOBOver.Client;
+using LOBOver.Play;
+using LOBOver.World;
+using LOBOver.XR;
+using Meta.XR.BuildingBlocks;
+using TMPro;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
+
+namespace LOBOver.Editor
+{
+    public static class PlaySceneBuilder
+    {
+        public const string ScenePath = "Assets/Scenes/Play.unity"; // WO-L2 Amendment 1; Bryan owns this scene.
+        private const float FloorSize = 20; // Existing tracked-floor guard, retained from WO-S6.
+        [MenuItem("LOB Over/Build/Play Scene")]
+        public static void BuildMenu()
+        {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            Build();
+        }
+        public static Scene OpenExisting()
+        {
+            if (!File.Exists(ScenePath)) throw new FileNotFoundException("Bryan must save the Building Blocks scene at " + ScenePath);
+            var scene = SceneManager.GetSceneByPath(ScenePath);
+            if (!scene.IsValid() || !scene.isLoaded) scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            SceneManager.SetActiveScene(scene); return scene;
+        }
+        public static Scene Build(bool saveScene = true)
+        {
+            var scene = OpenExisting();
+            if (!BuildingBlocksSetup.Check(scene)) throw new InvalidOperationException("Play Scene stopped: resolve the Building Blocks check first.");
+            var replaced = scene.GetRootGameObjects().Where(r => r.name.StartsWith("[LOBOver]", StringComparison.Ordinal)).ToArray();
+            foreach (var root in replaced)
+                if (root.GetComponentInChildren<BuildingBlock>(true) != null || root.GetComponentInChildren<OVRCameraRig>(true) != null
+                    || root.GetComponentsInChildren<Transform>(true).Any(t => t.name.StartsWith("[BuildingBlock]", StringComparison.Ordinal) || t.name == "OVRCameraRig"))
+                    throw new InvalidOperationException("Play Scene stopped: protected block/rig under " + root.name + ". Nothing removed.");
+            // WO-L4 owns new copies under Art; the legacy prefab directory is outside this order.
+            var assets = SitePresentationBuilder.BuildAssets();
+            var dark = Material("PlayPanel", "Universal Render Pipeline/Unlit", new Color(0.035f, 0.045f, 0.06f, 1));
+            var buttonMaterial = Material("PlayButton", "Universal Render Pipeline/Unlit", new Color(0.18f, 0.22f, 0.28f, 1));
+            foreach (var root in replaced) Object.DestroyImmediate(root);
+            var lighting = Root("Lighting");
+            var sun = WorldDrawing.Group("Sun", lighting).AddComponent<Light>(); sun.type = LightType.Directional;
+            SitePresentationBuilder.Lighting(sun);
+            foreach (var light in scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Light>(true)).Where(l => l != sun && l.enabled))
+            {
+                if (light.GetComponentInParent<BuildingBlock>(true) != null
+                    || light.GetComponentsInParent<Transform>(true).Any(t => t.name.StartsWith("[BuildingBlock]", StringComparison.Ordinal)))
+                    throw new InvalidOperationException("WO-L4: protected Building Block light would exceed the one-light budget: " + light.name);
+                light.enabled = false; EditorUtility.SetDirty(light); PrefabUtility.RecordPrefabInstancePropertyModifications(light);
+                Debug.Log("WO-L4: disabled extra scene light " + light.name + "; the site uses one directional sun.");
+            }
+            var hub = Root("Hub");
+            var floor = WorldDrawing.Group("TrackedFloor", hub).AddComponent<BoxCollider>();
+            floor.size = new Vector3(FloorSize, 0.1f, FloorSize); floor.center = new Vector3(0, -0.05f, 0);
+            var site = Root("Site"); site.gameObject.SetActive(false);
+            var sky = SitePresentationBuilder.Build(site, assets);
+            var world = WorldDrawing.Group("SiteWorld", site).AddComponent<SiteWorld>(); world.assets = assets;
+            world.sky = sky;
+            var client = Root("Client");
+            var connection = client.gameObject.AddComponent<HostConnection>();
+            var xr = client.gameObject.AddComponent<XRRig>(); client.gameObject.AddComponent<XRRuntimeSettings>();
+            var presenter = client.gameObject.AddComponent<HostWorldPresenter>(); presenter.connection = connection; presenter.world = world;
+            var warpRoot = Root("Warp"); var warp = warpRoot.gameObject.AddComponent<WarpController>();
+            warp.connection = connection; warp.rig = xr; warp.presenter = presenter; warp.site = site; warp.hub = hub.gameObject;
+            var panel = WorldDrawing.Group("CrewPanel", hub).transform;
+            var background = WorldDrawing.Box("Background", panel, Vector3.zero, new Vector3(HubPanel.Width, 0.43f, 0.008f), dark);
+            Object.DestroyImmediate(background.GetComponent<Collider>());
+            Label("Title", panel, "LOB, Over", new Vector3(0, 0.17f, -0.008f), new Vector2(0.36f, 0.04f), HubPanel.TitleHeight, assets);
+            var status = Label("Status", panel, "Looking for the game. Start it on the PC with Play LOB Over.",
+                new Vector3(0, 0.09f, -0.008f), new Vector2(0.36f, 0.1f), HubPanel.TextHeight, assets);
+            var hubPanel = client.gameObject.AddComponent<HubPanel>(); hubPanel.connection = connection; hubPanel.rig = xr; hubPanel.panel = panel; hubPanel.status = status;
+            hubPanel.warp = warp;
+            var click = SiteAssetBuilder.Required<AudioClip>(SiteAssetBuilder.Art + "Click.wav");
+            var names = new[] { "Ray Â· digging", "Marcus Â· pipe", "Dana Â· backfill" };
+            for (var i = 0; i < names.Length; i++)
+                Button(panel, names[i], WorldUnits.CrewIds[i], new Vector3(0, -0.02f - i * 0.075f, -0.012f),
+                    new Vector2(HubPanel.ButtonWidth, HubPanel.ButtonHeight), assets, buttonMaterial, click, warp);
+            var wrist = WorldDrawing.Group("BackWrist", warpRoot);
+            var follower = wrist.AddComponent<RigAnchorFollower>(); follower.rig = xr; follower.leftWrist = true;
+            follower.positionOffset = new Vector3(0, 0.08f, 0); follower.rotationOffset = new Vector3(90, 0, 0);
+            var back = Button(wrist.transform, "Back", "", Vector3.zero, new Vector2(0.11f, 0.06f), assets, buttonMaterial, click, warp);
+            warp.wrist = wrist; wrist.SetActive(false);
+            var voice = client.gameObject.AddComponent<HostVoice>(); voice.connection = connection; voice.world = world; voice.warp = warp;
+            voice.source = WorldDrawing.Sound(WorldDrawing.Group("ForemanVoice", client), false, HostVoice.SilentMetres);
+            voice.source.minDistance = HostVoice.ClearMetres;
+            var preview = Root("Preview"); preview.gameObject.tag = "EditorOnly";
+            var camera = WorldDrawing.Group("DesktopCamera", preview).AddComponent<Camera>();
+            camera.transform.position = new Vector3(0, 1.65f, 0); camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = Color.clear; camera.allowHDR = false; camera.nearClipPlane = 0.05f; camera.farClipPlane = 6000; camera.depth = 100;
+            var desktop = preview.gameObject.AddComponent<PlayPreview>(); desktop.view = camera; desktop.rig = xr; desktop.back = back;
+            xr.editorHead = camera.transform;
+            sky.observer = camera.transform;
+            sky.rig = xr;
+            // Editor inspection shows the complete site; WarpController sets the hub state in Play.
+            Shader.SetGlobalFloat("_WarpProgress", 1);
+            Shader.SetGlobalFloat("_WarpRadius", WarpController.RestRadius);
+            Shader.SetGlobalFloat("_WarpBand", WarpController.BandMetres);
+            EditorSceneManager.MarkSceneDirty(scene);
+            if (saveScene)
+            {
+                if (!EditorSceneManager.SaveScene(scene)) throw new IOException("Could not save " + ScenePath);
+                EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log("LOB Over: Play Scene built; Sync Data before the Quest build. Start Play LOB Over on the PC.");
+            return scene;
+        }
+        private static Transform Root(string name) => new GameObject("[LOBOver] " + name).transform;
+        private static Material Material(string name, string shaderName, Color color, bool required = true)
+        {
+            var shader = Shader.Find(shaderName);
+            if (shader == null) { if (!required) return null; throw new InvalidOperationException("Missing shader " + shaderName); }
+            var path = SiteAssetBuilder.Art + name + ".mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null) { material = new Material(shader); AssetDatabase.CreateAsset(material, path); }
+            material.shader = shader;
+            if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
+            EditorUtility.SetDirty(material); return material;
+        }
+        private static TextMeshPro Label(string name, Transform parent, string value, Vector3 position, Vector2 size, float height, WorldAssets assets)
+        {
+            var label = WorldDrawing.Text(name, parent, position, size, height, assets.font);
+            // TMP uses a tenth of a world unit per font unit. Size the capital glyph, not its line box.
+            var face = assets.font.faceInfo;
+            label.fontSize = height * 10 * face.pointSize / Mathf.Max(1, face.capLine);
+            label.alignment = TextAlignmentOptions.Center; label.text = value; return label;
+        }
+        private static CrewButton Button(Transform parent, string title, string crew, Vector3 position, Vector2 size,
+            WorldAssets assets, Material material, AudioClip click, WarpController warp)
+        {
+            var obj = WorldDrawing.Group(string.IsNullOrEmpty(crew) ? "Back" : "Visit_" + crew, parent);
+            obj.transform.localPosition = position;
+            WorldDrawing.Box("Face", obj.transform, Vector3.zero, new Vector3(size.x, size.y, 0.006f), material);
+            Label("Label", obj.transform, title, new Vector3(0, 0, -0.005f), size * 0.95f, HubPanel.TextHeight, assets);
+            InteractionSurface.Button(obj, size);
+            var button = obj.AddComponent<CrewButton>(); button.warp = warp; button.crew = crew;
+            button.click = obj.AddComponent<AudioSource>(); button.click.playOnAwake = false; button.click.spatialBlend = 0; button.click.clip = click;
+            return button;
+        }
+    }
+}
+  Assets\LOBOver\Editor\BuildingBlocksSetup.cs:29:            { Debug.LogError("LOB Over: Assets/Scenes/Play.unity is 
+missing; Bryan must save his Building Blocks scene there."); return false; }
+  Assets\LOBOver\Editor\BuildingBlocksSetup.cs:30:            var scene = 
+SceneManager.GetSceneByPath(PlaySceneBuilder.ScenePath);
+> Assets\LOBOver\Editor\BuildingBlocksSetup.cs:31:            var preview = !scene.IsValid() || !scene.isLoaded;
+> Assets\LOBOver\Editor\BuildingBlocksSetup.cs:32:            if (preview) scene = 
+EditorSceneManager.OpenPreviewScene(PlaySceneBuilder.ScenePath);
+  Assets\LOBOver\Editor\BuildingBlocksSetup.cs:33:            try { return Check(scene); }
+> Assets\LOBOver\Editor\BuildingBlocksSetup.cs:34:            finally { if (preview) 
+EditorSceneManager.ClosePreviewScene(scene); }
+  Assets\LOBOver\Editor\BuildingBlocksSetup.cs:35:        }
+  Assets\LOBOver\Editor\BuildingBlocksSetup.cs:36:
+  Assets\LOBOver\Editor\BuildingBlocksSetup.cs:37:        public static List<string> Missing(Scene scene)
+  Assets\LOBOver\Editor\PlaySceneBuilder.cs:93:            voice.source = 
+WorldDrawing.Sound(WorldDrawing.Group("ForemanVoice", client), false, HostVoice.SilentMetres);
+  Assets\LOBOver\Editor\PlaySceneBuilder.cs:94:            voice.source.minDistance = HostVoice.ClearMetres;
+> Assets\LOBOver\Editor\PlaySceneBuilder.cs:95:            var preview = Root("Preview"); preview.gameObject.tag = 
+"EditorOnly";
+> Assets\LOBOver\Editor\PlaySceneBuilder.cs:96:            var camera = WorldDrawing.Group("DesktopCamera", 
+preview).AddComponent<Camera>();
+  Assets\LOBOver\Editor\PlaySceneBuilder.cs:97:            camera.transform.position = new Vector3(0, 1.65f, 0); 
+camera.clearFlags = CameraClearFlags.SolidColor;
+  Assets\LOBOver\Editor\PlaySceneBuilder.cs:98:            camera.backgroundColor = Color.clear; camera.allowHDR = 
+false; camera.nearClipPlane = 0.05f; camera.farClipPlane = 6000; camera.depth = 100;
+> Assets\LOBOver\Editor\PlaySceneBuilder.cs:99:            var desktop = 
+preview.gameObject.AddComponent<PlayPreview>(); desktop.view = camera; desktop.rig = xr; desktop.back = back;
+  Assets\LOBOver\Editor\PlaySceneBuilder.cs:100:            xr.editorHead = camera.transform;
+  Assets\LOBOver\Editor\PlaySceneBuilder.cs:101:            sky.observer = camera.transform;
+  Assets\LOBOver\Editor\PlaySceneBuilder.cs:102:            sky.rig = xr;
+  Assets\LOBOver\Editor\SiteModelBuilder.cs:85:            var group = root.AddComponent<LODGroup>();
+  Assets\LOBOver\Editor\SiteModelBuilder.cs:86:            var full = model.GetComponentsInChildren<Renderer>(true); 
+var far = distantRig.GetComponentsInChildren<Renderer>(true);
+> Assets\LOBOver\Editor\SiteModelBuilder.cs:87:            // Native Editor LOD at the preview's 60-degree FOV. 
+CrewRig forces the same
+  Assets\LOBOver\Editor\SiteModelBuilder.cs:88:            // 60 m boundary from the head at runtime, independent of 
+headset FOV/bias.
+  Assets\LOBOver\Editor\SiteModelBuilder.cs:89:            var size = Mathf.Max(target.size.x, 
+Mathf.Max(target.size.y, target.size.z));
+  Assets\LOBOver\Editor\SiteModelBuilder.cs:90:            var threshold = Mathf.Clamp01(size / (2 * 
+CrewRig.MachineDetailMetres * Mathf.Tan(30 * Mathf.Deg2Rad)));
+  Assets\LOBOver\Editor\SitePresentationBuilder.cs:170:                if (renderer.GetComponentInParent<LODGroup>() 
+!= null || renderer.transform.root != site.root) continue;
+  Assets\LOBOver\Editor\SitePresentationBuilder.cs:171:                if (!renderer.transform.IsChildOf(trailer) && 
+renderer.gameObject != ground && renderer.name != "Horizon" && renderer.name != "BeyondTrench") continue;
+> Assets\LOBOver\Editor\SitePresentationBuilder.cs:172:                
+GameObjectUtility.SetStaticEditorFlags(renderer.gameObject, StaticEditorFlags.BatchingStatic);
+  Assets\LOBOver\Editor\SitePresentationBuilder.cs:173:            }
+  Assets\LOBOver\Editor\SitePresentationBuilder.cs:174:            return sky;
+  Assets\LOBOver\Editor\SitePresentationBuilder.cs:175:        }
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:33:        }
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:34:        private static readonly string[] LegacyRoots = { 
+"ControllerPointer", "Director", "MRDiorama", "StartPanel",
+> Assets\LOBOver\Editor\SiteSceneBuilder.cs:35:            "FullScaleRoot", "VRSite", "Sun", "Global Volume", 
+"DesktopPreview" };
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:36:        private static readonly string[] OwnedRoots = { "[LOBOver] 
+Lighting", "[LOBOver] Director", "[LOBOver] Hub",
+> Assets\LOBOver\Editor\SiteSceneBuilder.cs:37:            "[LOBOver] Site", "[LOBOver] Start", "[LOBOver] Preview" };
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:38:        public static Scene Build(bool saveScene = true)
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:39:        {
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:40:            if (!File.Exists(ScenePath))
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:102:            world.truck = new GameObject("SiteTruck").transform; 
+world.truck.SetParent(world.transform, false); world.truck.localPosition = new Vector3(0, 0, WorldUnits.RoadZ);
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:103:            var truckFrame = WorldDrawing.Box("TruckFrame", 
+world.truck, new Vector3(-1, 0.55f, 0), new Vector3(2.2f, 0.3f, 2), assets.steel);
+> Assets\LOBOver\Editor\SiteSceneBuilder.cs:104:            // Preview marker only; the XR cab and its comfort 
+presentation belong to WO-S4.
+> Assets\LOBOver\Editor\SiteSceneBuilder.cs:105:            var previewPrefab = BuildPreviewPrefab();
+> Assets\LOBOver\Editor\SiteSceneBuilder.cs:106:            var preview = 
+((GameObject)PrefabUtility.InstantiatePrefab(previewPrefab)).GetComponent<DesktopPreview>(); preview.name = "[LOBOver] 
+Preview"; preview.gameObject.tag = "EditorOnly";
+> Assets\LOBOver\Editor\SiteSceneBuilder.cs:107:            preview.director = director; preview.world = world;
+> Assets\LOBOver\Editor\SiteSceneBuilder.cs:108:            preview.previewCamera.transform.position = new 
+Vector3(160, 9, 20); preview.previewCamera.transform.LookAt(new Vector3(140, -0.5f, 0));
+> Assets\LOBOver\Editor\SiteSceneBuilder.cs:109:            world.sky = BuildSky(assets, 
+preview.previewCamera.transform); world.sky.transform.SetParent(full, true);
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:110:            // Metadata appears in Edit mode without putting a 
+facilitator view in any player board.
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:111:            var source = 
+JObject.Parse(File.ReadAllText("Data/Scenarios/slice_texas.json")); jobSign.Apply((JObject)source["job"]["sign"]);
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:112:            // The XR extension has its own asmdef under the 
+WO-S4-allowed Start folder.
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:113:            var extension = 
+Type.GetType("LOBOver.Start.Editor.XRSceneSetup, LOBOver.XR.Editor", true);
+> Assets\LOBOver\Editor\SiteSceneBuilder.cs:114:            extension.GetMethod("Build").Invoke(null, new object[] { 
+world, preview, assets });
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:115:            SiteAssetBuilder.ConvertPrefabMaterials();
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:116:            foreach (var root in scene.GetRootGameObjects().Where(root 
+=> OwnedRoots.Contains(root.name)))
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:117:                SiteAssetBuilder.ConvertRendererMaterials(root);
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:145:            WorldDrawing.Box("Face", root.transform, Vector3.zero, new 
+Vector3(size.x, size.y, 0.06f), assets.steel); return root;
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:146:        }
+> Assets\LOBOver\Editor\SiteSceneBuilder.cs:147:        private static GameObject BuildPreviewPrefab()
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:148:        {
+> Assets\LOBOver\Editor\SiteSceneBuilder.cs:149:            var root = new GameObject("DesktopPreview");
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:150:            try
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:151:            {
+> Assets\LOBOver\Editor\SiteSceneBuilder.cs:152:                var preview = root.AddComponent<DesktopPreview>();
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:153:                var cameraObject = new GameObject("DesktopFlyCamera"); 
+cameraObject.transform.SetParent(root.transform, false);
+> Assets\LOBOver\Editor\SiteSceneBuilder.cs:154:                preview.previewCamera = 
+cameraObject.AddComponent<Camera>(); preview.previewCamera.nearClipPlane = 0.05f; preview.previewCamera.farClipPlane = 
+6000;
+> Assets\LOBOver\Editor\SiteSceneBuilder.cs:155:                preview.previewCamera.fieldOfView = 65; 
+cameraObject.tag = "MainCamera"; preview.previewCamera.depth = 10;
+> Assets\LOBOver\Editor\SiteSceneBuilder.cs:156:                return PrefabUtility.SaveAsPrefabAsset(root, 
+SiteAssetBuilder.Prefabs + "DesktopPreview.prefab");
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:157:            }
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:158:            finally { Object.DestroyImmediate(root); }
+  Assets\LOBOver\Editor\SiteSceneBuilder.cs:159:        }
+  Assets\LOBOver\Editor\SiteTreeBuilder.cs:58:        private static Texture2D Bake(GameObject source, Bounds bounds, 
+float span, string path)
+  Assets\LOBOver\Editor\SiteTreeBuilder.cs:59:        {
+> Assets\LOBOver\Editor\SiteTreeBuilder.cs:60:            // An isolated preview scene and unlit copies bake 
+albedo/coverage without
+  Assets\LOBOver\Editor\SiteTreeBuilder.cs:61:            // the site's lights, fog, sky, or Building Blocks entering 
+the image.
+> Assets\LOBOver\Editor\SiteTreeBuilder.cs:62:            var scene = EditorSceneManager.NewPreviewScene(); var 
+materials = new List<Material>();
+  Assets\LOBOver\Editor\SiteTreeBuilder.cs:63:            var target = RenderTexture.GetTemporary(BakeSize, BakeSize, 
+24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
+  Assets\LOBOver\Editor\SiteTreeBuilder.cs:64:            var image = new Texture2D(BakeSize, BakeSize, 
+TextureFormat.RGBA32, false);
+  Assets\LOBOver\Editor\SiteTreeBuilder.cs:65:            var previous = RenderTexture.active;
+  Assets\LOBOver\Editor\SiteTreeBuilder.cs:100:            {
+  Assets\LOBOver\Editor\SiteTreeBuilder.cs:101:                RenderTexture.active = previous; 
+RenderTexture.ReleaseTemporary(target); Object.DestroyImmediate(image);
+> Assets\LOBOver\Editor\SiteTreeBuilder.cs:102:                EditorSceneManager.ClosePreviewScene(scene);
+  Assets\LOBOver\Editor\SiteTreeBuilder.cs:103:                foreach (var material in materials) 
+Object.DestroyImmediate(material);
+  Assets\LOBOver\Editor\SiteTreeBuilder.cs:104:            }
+  Assets\LOBOver\Editor\SiteTreeBuilder.cs:105:        }
+
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+mcp: unityMCP/set_active_instance started
+mcp: unityMCP/set_active_instance (completed)
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+mcp: unityMCP/read_mcp_resource started
+mcp: unityMCP/read_mcp_resource (completed)
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+mcp: unityMCP/read_mcp_resource started
+mcp: unityMCP/read_mcp_resource (completed)
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+mcp: unityMCP/unity_reflect started
+mcp: unityMCP/unity_reflect (completed)
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+mcp: unityMCP/unity_reflect started
+codex
+Step 2 of 4: The test still renders into a texture and asserts the excavator view. I’m replacing that path with Game-view repaints, adding the backfill-view log, and keeping budget assertions only for the across-trench frame. Unity’s connection has not answered its readiness check yet.
+mcp: unityMCP/unity_reflect (completed)
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Select-String -Path Assets/Scenes/Play.unity -Pattern 'm_Name: .*Camera Rig'; Get-Content -LiteralPath Assets/LOBOver/Runtime/World/WorldUnits.cs | Select-Object -First 55; Get-Content -LiteralPath Assets/LOBOver/Editor/SitePresentationBuilder.cs | Select-Object -Skip 125 -First 50; Get-Process -Name Unity -ErrorAction SilentlyContinue | Select-Object Id,Responding,MainWindowTitle" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 209ms:
+
+Assets\Scenes\Play.unity:10793:  m_Name: '[BuildingBlock] Camera Rig'
+Get-Content : Cannot find path 'Assets/LOBOver/Runtime/World/WorldUnits.cs' because it does not exist.
+At line:2 char:79
++ ... amera Rig'; Get-Content -LiteralPath Assets/LOBOver/Runtime/World/Wor ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (Assets/LOBOver/...d/WorldUnits.cs:String) [Get-Content], ItemNotFoundEx 
+   ception
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetContentCommand
+ 
+                root.transform.localPosition = new Vector3(-1, 0.2f, 0);
+                var renderer = ps.GetComponent<ParticleSystemRenderer>(); renderer.sharedMaterial = assets.ink;
+                renderer.shadowCastingMode = ShadowCastingMode.Off; renderer.receiveShadows = false;
+                return SiteModelBuilder.SaveIfChanged(root, SiteAssetBuilder.Converted + "Play_WorkParticles.prefab");
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+        public static SiteSky Build(Transform site, WorldAssets assets)
+        {
+            var ground = SiteDetailDrawing.Mesh("Ground", site, assets.groundMesh, assets.ground);
+            var horizon = SiteDetailDrawing.Mesh("Horizon", site, assets.horizonMesh, assets.ground);
+            // WO-L4 rejection 3: these continuous surfaces receive, but need not cast.
+            foreach (var surface in new[] { ground, horizon })
+            { var renderer = surface.GetComponent<Renderer>(); renderer.shadowCastingMode = ShadowCastingMode.Off; renderer.receiveShadows = true; }
+            // Seal the corridor beyond the longest authored site without covering host-driven cells.
+            var after = SiteDetailDrawing.Mesh("BeyondTrench", site, assets.stripMesh, assets.soil, new Vector3(InitialLength, 0, 0));
+            after.transform.localScale = new Vector3((SiteGeometryBuilder.MaxX - InitialLength) / WorldUnits.CellLength, 1, 1);
+            var sky = Sky(site, assets);
+            var trailer = WorldDrawing.Group("Trailer", site).transform; trailer.localPosition = new Vector3(-16, 0, 12);
+            SiteDetailDrawing.Block("Cabin", trailer, new Vector3(0, 1.5f, 0), new Vector3(7, 3, 2.8f), assets.cabin, assets.blockMesh);
+            SiteDetailDrawing.Block("Roof", trailer, new Vector3(0, 3.08f, 0), new Vector3(7.25f, 0.16f, 3), assets.steel, assets.blockMesh);
+            SiteDetailDrawing.Block("DoorFrame", trailer, new Vector3(-1.7f, 1.15f, -1.43f), new Vector3(1.05f, 2.3f, 0.06f), assets.steel, assets.blockMesh);
+            SiteDetailDrawing.Block("Door", trailer, new Vector3(-1.7f, 1.15f, -1.47f), new Vector3(0.9f, 2.18f, 0.025f), assets.cabin, assets.blockMesh);
+            SiteDetailDrawing.Block("DoorHandle", trailer, new Vector3(-1.36f, 1.1f, -1.5f), new Vector3(0.04f, 0.18f, 0.04f), assets.steel, assets.blockMesh);
+            SiteDetailDrawing.Block("WindowFrame", trailer, new Vector3(1.35f, 1.75f, -1.44f), new Vector3(2.1f, 1.25f, 0.08f), assets.steel, assets.blockMesh);
+            SiteDetailDrawing.Block("Window", trailer, new Vector3(1.35f, 1.75f, -1.49f), new Vector3(1.94f, 1.09f, 0.02f), assets.glass, assets.blockMesh);
+            foreach (var x in new[] { -2.5f, 2.5f }) SiteDetailDrawing.Block("Support", trailer, new Vector3(x, 0.12f, 0), new Vector3(0.4f, 0.24f, 2.4f), assets.steel, assets.blockMesh);
+            foreach (var z in new[] { WorldUnits.RoadZ - 3, WorldUnits.RoadZ + 3 })
+                SiteDetailDrawing.Prop(assets.jersey, site, new Vector3(-8, 0, z));
+            if (assets.tree != null)
+            {
+                // WO-L4: fewer than thirty instances, 80..120 m on the far side, with gaps.
+                for (var i = 0; i < 24; i++)
+                {
+                    if (i % 7 == 3) continue;
+                    var tree = SiteDetailDrawing.Prop(assets.tree, site, new Vector3(-70 + i * 49, 0, -80 - i * 17 % 40));
+                    tree.transform.localPosition += Vector3.up * SiteGeometryBuilder.Height(tree.transform.localPosition.x, tree.transform.localPosition.z);
+                    tree.transform.localRotation = Quaternion.Euler(0, i * 137, 0);
+                }
+            }
+            foreach (var renderer in site.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                if (renderer.transform.IsChildOf(sky.transform)) continue;
+                // Trees remain instanced. The ground and cabin are builder-owned static geometry.
+                if (renderer.GetComponentInParent<LODGroup>() != null || renderer.transform.root != site.root) continue;
+                if (!renderer.transform.IsChildOf(trailer) && renderer.gameObject != ground && renderer.name != "Horizon" && renderer.name != "BeyondTrench") continue;
+                GameObjectUtility.SetStaticEditorFlags(renderer.gameObject, StaticEditorFlags.BatchingStatic);
+            }
+            return sky;
+        }
+
+Id              : 33628
+Responding      : True
+MainWindowTitle : 
+
+
+Id              : 39980
+Responding      : True
+MainWindowTitle : 
+
+
+Id              : 41848
+Responding      : True
+MainWindowTitle : 
+
+
+Id              : 51756
+Responding      : True
+MainWindowTitle : 
+
+
+Id              : 57788
+Responding      : True
+MainWindowTitle : 
+
+
+Id              : 79132
+Responding      : True
+MainWindowTitle : 
+
+
+Id              : 86068
+Responding      : True
+MainWindowTitle : 
+
+
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+mcp: unityMCP/read_mcp_resource started
+mcp: unityMCP/read_mcp_resource (completed)
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+apply patch
+patch: completed
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Tests\EditMode\SitePresentationTests.cs
+diff --git a/Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs b/Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs
+index d25ed2e87c521dc86448b3e6d5c6051bbf58707f..7f43c0061d46e7725a8b0c338235b3101d1af6f6
+--- a/Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs
++++ b/Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs
+@@ -288,7 +288,6 @@
+                 Assert.That(surface.receiveShadows, Is.True);
+             }
+             var camera = scene.GetRootGameObjects().Single(r => r.name == "[LOBOver] Preview").GetComponentInChildren<Camera>();
+-            var target = new RenderTexture(1440, 1440, 24, RenderTextureFormat.ARGB32);
+             var oldTarget = camera.targetTexture; var oldPosition = camera.transform.position; var oldRotation = camera.transform.rotation;
+             // Scene view and the rig's centre eye are outside the owned roots. Include
+             // hidden Editor cameras too; Scene view may explicitly render even disabled.
+@@ -296,11 +295,17 @@
+                 .Select(c => (camera: c, enabled: c.enabled, mask: c.cullingMask, clear: c.clearFlags)).ToArray();
+             // OVR hides these at runtime; EditMode must exclude its controller/hand
+             // variants from site statistics, restoring every enabled state afterwards.
+-            var rigRenderers = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<OVRCameraRig>(true))
++            var rigRenderers = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>(true))
++                .Where(t => t.name == "[BuildingBlock] Camera Rig")
+                 .SelectMany(r => r.GetComponentsInChildren<Renderer>(true)).Distinct().Where(r => r != null)
+                 .Select(r => (renderer: r, enabled: r.enabled)).ToArray();
+             var crewShadows = world.GetComponentsInChildren<CrewRig>(true).SelectMany(c => c.GetComponentsInChildren<Renderer>(true))
+                 .Select(r => (renderer: r, mode: r.shadowCastingMode)).ToArray();
++            var staticGeometry = site.GetComponentsInChildren<MeshFilter>(true)
++                .Where(f => GameObjectUtility.AreStaticEditorFlagsSet(f.gameObject, StaticEditorFlags.BatchingStatic)
++                    && f.sharedMesh != null && f.GetComponent<MeshRenderer>() != null)
++                .Select(f => (filter: f, mesh: f.sharedMesh, renderer: f.GetComponent<MeshRenderer>(),
++                    rendererState: EditorJsonUtility.ToJson(f.GetComponent<MeshRenderer>()))).ToArray();
+             var enabled = camera.enabled; var active = site.activeSelf; var observer = world.sky.observer;
+             var gameViewType = typeof(EditorWindow).Assembly.GetType("UnityEditor.GameView", true);
+             var gameView = Resources.FindObjectsOfTypeAll(gameViewType).Cast<EditorWindow>().FirstOrDefault();
+@@ -319,27 +324,32 @@
+                 { entry.camera.enabled = false; entry.camera.cullingMask = 0; entry.camera.clearFlags = CameraClearFlags.Nothing; }
+                 foreach (var entry in rigRenderers) if (entry.renderer != null) entry.renderer.enabled = false;
+                 Debug.Log($"WO-L4 excluded Camera Rig renderers: {rigRenderers.Length} total, {rigRenderers.Count(r => r.enabled)} enabled.");
+-                // Explicit rendering only: do not also submit this camera from the Game view.
+-                camera.enabled = false;
+-                camera.targetTexture = target;
++                // Amendment 3: UnityStats counts Game view frames, not Camera.Render into a texture.
++                camera.enabled = true;
++                camera.targetTexture = null;
+                 var x = (float)world.Crew("pipe").StationFt * WorldUnits.MetresPerFoot;
+                 camera.transform.position = new Vector3(x, 1.65f, WorldUnits.RoadZ);
+                 camera.transform.rotation = Quaternion.LookRotation(new Vector3(0, -0.12f, -1));
+                 world.sky.observer = camera.transform;
+                 foreach (var crew in world.GetComponentsInChildren<CrewRig>(true)) crew.RefreshDistancePresentation(camera.transform);
++                // Match the player build's batching of only the builder's static-flagged geometry.
++                StaticBatchingUtility.Combine(staticGeometry.Select(g => g.filter.gameObject).ToArray(), site);
++                yield return null;
++                gameView.Repaint();
+                 yield return null;
+-                for (var i = 0; i < 3; i++) { camera.Render(); yield return null; }
+                 var triangles = UnityStats.triangles; var drawCalls = UnityStats.drawCalls;
+-                Debug.Log($"WO-L4 preview 1440x1440: {triangles} triangles, {drawCalls} draw calls.");
++                Debug.Log($"WO-L4 across trench Game view: {triangles} triangles, {drawCalls} draw calls.");
+                 Assert.That(gameView.maximized, Is.True, "Game view must hide SceneView for the measurement");
+                 Assert.That(triangles, Is.GreaterThan(0), "No Editor render statistics; run with the Game view visible.");
+                 Assert.That(drawCalls, Is.GreaterThan(0));
+                 Assert.That(triangles, Is.LessThan(300000)); Assert.That(drawCalls, Is.LessThan(150));
+-                camera.transform.LookAt(world.Crew("exc").transform.position + Vector3.up);
+-                for (var i = 0; i < 3; i++) { camera.Render(); yield return null; }
+-                Debug.Log($"WO-L4 toward excavator 1440x1440: {UnityStats.triangles} triangles, {UnityStats.drawCalls} draw calls.");
+-                Assert.That(UnityStats.triangles, Is.GreaterThan(0)); Assert.That(UnityStats.triangles, Is.LessThan(300000));
+-                Assert.That(UnityStats.drawCalls, Is.GreaterThan(0)); Assert.That(UnityStats.drawCalls, Is.LessThan(150));
++                foreach (var view in new[] { (crew: "exc", label: "excavator"), (crew: "back", label: "backfill crew") })
++                {
++                    camera.transform.LookAt(world.Crew(view.crew).transform.position + Vector3.up);
++                    gameView.Repaint();
++                    yield return null;
++                    Debug.Log($"WO-L4 toward {view.label} Game view: {UnityStats.triangles} triangles, {UnityStats.drawCalls} draw calls.");
++                }
+             }
+             finally
+             {
+@@ -351,7 +361,16 @@
+                 foreach (var entry in rigRenderers) if (entry.renderer != null) entry.renderer.enabled = entry.enabled;
+                 foreach (var entry in crewShadows) if (entry.renderer != null) entry.renderer.shadowCastingMode = entry.mode;
+                 if (world != null) foreach (var lod in world.GetComponentsInChildren<LODGroup>(true)) lod.ForceLOD(-1);
+-                if (site != null) site.SetActive(active); Object.DestroyImmediate(target);
++                // Combining replaces meshes and renderer batch metadata; leave neither behind in EditMode.
++                var combinedMeshes = staticGeometry.Where(g => g.filter != null).Select(g => g.filter.sharedMesh)
++                    .Where(m => m != null && !EditorUtility.IsPersistent(m) && !staticGeometry.Any(g => g.mesh == m)).Distinct().ToArray();
++                foreach (var entry in staticGeometry)
++                {
++                    if (entry.filter != null) entry.filter.sharedMesh = entry.mesh;
++                    if (entry.renderer != null) EditorJsonUtility.FromJsonOverwrite(entry.rendererState, entry.renderer);
++                }
++                foreach (var mesh in combinedMeshes) Object.DestroyImmediate(mesh);
++                if (site != null) site.SetActive(active);
+                 if (gameView != null)
+                 {
+                     gameView.maximized = wasMaximized;
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'powershell -NoProfile -ExecutionPolicy Bypass -File Assets/LOBOver/Tests/CompileOffline.ps1' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 15481ms:
+SDK inputs: 18 imported assemblies; 820 installed package sources (no restore).
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Sim: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Client: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Client.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Director: 0 errors
+LOBOver.XR: 0 errors
+LOBOver.XR.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.World: 0 errors
+LOBOver.Director.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.World.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Play: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Play.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.VR: 0 errors
+LOBOver.VR.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.MR: 0 errors
+LOBOver.MR.Android: 0 errors
+LOBOver.Start: 0 errors
+LOBOver.Start.Android: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.Editor: 0 errors
+LOBOver.XR.Editor: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.EditModeTests: 0 errors
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+LOBOver.PlayModeTests: 0 errors
+PASS: 21 offline assembly compilations; Unity import, tests and rendering still require the Editor.
+warning CS1701: Assuming assembly reference 'netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' used by 'Newtonsoft.Json' matches identity 'netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' of 'netstandard', you may need to supply runtime policy
+PASS: Level 1 discovery parser; 1 valid packet, 6 invalid packets.
+PASS: Level 1 wire voice turns preserve speaker/clip order and reject paths outside the scenario.
+PASS: wrong-stretch F3 stays uninspected by presenter; genuine Site inspect marks it.
+PASS: 20835 presenter queries preserve complete state and Drain across all three stages; all 9 targets match inspect replies; 4 fake-input checks pass.
+Argument at t=4.20: pipe 520.2 arguing; back 272.5 arguing; exc 869 stopped; ev_p1.
+PASS: all Site fields at days 1, 4, 5, 9, 16 match recorded JSON; t=4.20 argument matches Amendment 1 (positions within 1 ft).
+
+hook: PreToolUse
+hook: PostToolUse
+hook: PreToolUse
+hook: PostToolUse
+hook: PreToolUse
+hook: PostToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+mcp: unityMCP/read_mcp_resource started
+mcp: unityMCP/read_mcp_resource (completed)
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "git diff --check; git diff --stat; Get-ChildItem -LiteralPath Assets/LOBOver/Runtime/World -Filter '*.cs' | Select-String -Pattern 'CrewIds|const string.*back'" in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 212ms:
+ .../Tests/EditMode/SitePresentationTests.cs        | 45 +++++++++++++++-------
+ 1 file changed, 32 insertions(+), 13 deletions(-)
+
+Assets\LOBOver\Runtime\World\PlanPanel.cs:41:            for (var i = 0; i < WorldUnits.CrewIds.Length; i++)
+Assets\LOBOver\Runtime\World\PlanPanel.cs:43:                var id = WorldUnits.CrewIds[i];
+Assets\LOBOver\Runtime\World\PlanPanel.cs:55:            foreach (var id in WorldUnits.CrewIds)
+Assets\LOBOver\Runtime\World\SiteWorld.cs:82:            var arguing = WorldUnits.CrewIds.Select(id => 
+crews[id]).Where(crew => crew.Status == "arguing").ToArray();
+Assets\LOBOver\Runtime\World\SiteWorld.cs:130:            foreach (var id in WorldUnits.CrewIds)
+Assets\LOBOver\Runtime\World\TrailerBoard.cs:25:            for (var i = 0; i < WorldUnits.CrewIds.Length; i++)
+Assets\LOBOver\Runtime\World\TrailerBoard.cs:27:                var id = WorldUnits.CrewIds[i]; points[id] = new 
+List<Vector3>();
+Assets\LOBOver\Runtime\World\WorldAssets.cs:36:        public static readonly string[] CrewIds = { "exc", "pipe", 
+"back" };
+
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+Step 2 of 4 done: Only the named test changed. Offline compilation passed for all 21 assemblies, and the fixture checks passed. Unity is responding again; I’m checking the live test next.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+mcp: unityMCP/refresh_unity started
+hook: PermissionRequest
+hook: PermissionRequest
+hook: PermissionRequest Completed
+hook: PermissionRequest Completed
+mcp: unityMCP/refresh_unity (failed)
+MCP tool call requires approval, but approval policy is never
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+mcp: unityMCP/read_console started
+mcp: unityMCP/read_console (completed)
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+mcp: unityMCP/run_tests started
+hook: PermissionRequest
+hook: PermissionRequest
+hook: PermissionRequest Completed
+hook: PermissionRequest Completed
+mcp: unityMCP/run_tests (failed)
+MCP tool call requires approval, but approval policy is never
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'git status --short; git diff --check; git diff -- Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs; Get-Item -LiteralPath Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs,Library/ScriptAssemblies/LOBOver.EditModeTests.dll | Select-Object FullName,LastWriteTime' in C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER
+ succeeded in 227ms:
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\bryan/.config/git/ignore': Permission denied
+ M Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs
+?? .agents/
+?? Docs/WORK_ORDERS/logs/WO-L4.20261022-015349.log
+diff --git a/Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs b/Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs
+index d25ed2e..7f43c00 100644
+--- a/Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs
++++ b/Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs
+@@ -288,7 +288,6 @@ namespace LOBOver.Tests.Editor
+                 Assert.That(surface.receiveShadows, Is.True);
+             }
+             var camera = scene.GetRootGameObjects().Single(r => r.name == "[LOBOver] Preview").GetComponentInChildren<Camera>();
+-            var target = new RenderTexture(1440, 1440, 24, RenderTextureFormat.ARGB32);
+             var oldTarget = camera.targetTexture; var oldPosition = camera.transform.position; var oldRotation = camera.transform.rotation;
+             // Scene view and the rig's centre eye are outside the owned roots. Include
+             // hidden Editor cameras too; Scene view may explicitly render even disabled.
+@@ -296,11 +295,17 @@ namespace LOBOver.Tests.Editor
+                 .Select(c => (camera: c, enabled: c.enabled, mask: c.cullingMask, clear: c.clearFlags)).ToArray();
+             // OVR hides these at runtime; EditMode must exclude its controller/hand
+             // variants from site statistics, restoring every enabled state afterwards.
+-            var rigRenderers = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<OVRCameraRig>(true))
++            var rigRenderers = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>(true))
++                .Where(t => t.name == "[BuildingBlock] Camera Rig")
+                 .SelectMany(r => r.GetComponentsInChildren<Renderer>(true)).Distinct().Where(r => r != null)
+                 .Select(r => (renderer: r, enabled: r.enabled)).ToArray();
+             var crewShadows = world.GetComponentsInChildren<CrewRig>(true).SelectMany(c => c.GetComponentsInChildren<Renderer>(true))
+                 .Select(r => (renderer: r, mode: r.shadowCastingMode)).ToArray();
++            var staticGeometry = site.GetComponentsInChildren<MeshFilter>(true)
++                .Where(f => GameObjectUtility.AreStaticEditorFlagsSet(f.gameObject, StaticEditorFlags.BatchingStatic)
++                    && f.sharedMesh != null && f.GetComponent<MeshRenderer>() != null)
++                .Select(f => (filter: f, mesh: f.sharedMesh, renderer: f.GetComponent<MeshRenderer>(),
++                    rendererState: EditorJsonUtility.ToJson(f.GetComponent<MeshRenderer>()))).ToArray();
+             var enabled = camera.enabled; var active = site.activeSelf; var observer = world.sky.observer;
+             var gameViewType = typeof(EditorWindow).Assembly.GetType("UnityEditor.GameView", true);
+             var gameView = Resources.FindObjectsOfTypeAll(gameViewType).Cast<EditorWindow>().FirstOrDefault();
+@@ -319,27 +324,32 @@ namespace LOBOver.Tests.Editor
+                 { entry.camera.enabled = false; entry.camera.cullingMask = 0; entry.camera.clearFlags = CameraClearFlags.Nothing; }
+                 foreach (var entry in rigRenderers) if (entry.renderer != null) entry.renderer.enabled = false;
+                 Debug.Log($"WO-L4 excluded Camera Rig renderers: {rigRenderers.Length} total, {rigRenderers.Count(r => r.enabled)} enabled.");
+-                // Explicit rendering only: do not also submit this camera from the Game view.
+-                camera.enabled = false;
+-                camera.targetTexture = target;
++                // Amendment 3: UnityStats counts Game view frames, not Camera.Render into a texture.
++                camera.enabled = true;
++                camera.targetTexture = null;
+                 var x = (float)world.Crew("pipe").StationFt * WorldUnits.MetresPerFoot;
+                 camera.transform.position = new Vector3(x, 1.65f, WorldUnits.RoadZ);
+                 camera.transform.rotation = Quaternion.LookRotation(new Vector3(0, -0.12f, -1));
+                 world.sky.observer = camera.transform;
+                 foreach (var crew in world.GetComponentsInChildren<CrewRig>(true)) crew.RefreshDistancePresentation(camera.transform);
++                // Match the player build's batching of only the builder's static-flagged geometry.
++                StaticBatchingUtility.Combine(staticGeometry.Select(g => g.filter.gameObject).ToArray(), site);
++                yield return null;
++                gameView.Repaint();
+                 yield return null;
+-                for (var i = 0; i < 3; i++) { camera.Render(); yield return null; }
+                 var triangles = UnityStats.triangles; var drawCalls = UnityStats.drawCalls;
+-                Debug.Log($"WO-L4 preview 1440x1440: {triangles} triangles, {drawCalls} draw calls.");
++                Debug.Log($"WO-L4 across trench Game view: {triangles} triangles, {drawCalls} draw calls.");
+                 Assert.That(gameView.maximized, Is.True, "Game view must hide SceneView for the measurement");
+                 Assert.That(triangles, Is.GreaterThan(0), "No Editor render statistics; run with the Game view visible.");
+                 Assert.That(drawCalls, Is.GreaterThan(0));
+                 Assert.That(triangles, Is.LessThan(300000)); Assert.That(drawCalls, Is.LessThan(150));
+-                camera.transform.LookAt(world.Crew("exc").transform.position + Vector3.up);
+-                for (var i = 0; i < 3; i++) { camera.Render(); yield return null; }
+-                Debug.Log($"WO-L4 toward excavator 1440x1440: {UnityStats.triangles} triangles, {UnityStats.drawCalls} draw calls.");
+-                Assert.That(UnityStats.triangles, Is.GreaterThan(0)); Assert.That(UnityStats.triangles, Is.LessThan(300000));
+-                Assert.That(UnityStats.drawCalls, Is.GreaterThan(0)); Assert.That(UnityStats.drawCalls, Is.LessThan(150));
++                foreach (var view in new[] { (crew: "exc", label: "excavator"), (crew: "back", label: "backfill crew") })
++                {
++                    camera.transform.LookAt(world.Crew(view.crew).transform.position + Vector3.up);
++                    gameView.Repaint();
++                    yield return null;
++                    Debug.Log($"WO-L4 toward {view.label} Game view: {UnityStats.triangles} triangles, {UnityStats.drawCalls} draw calls.");
++                }
+             }
+             finally
+             {
+@@ -351,7 +361,16 @@ namespace LOBOver.Tests.Editor
+                 foreach (var entry in rigRenderers) if (entry.renderer != null) entry.renderer.enabled = entry.enabled;
+                 foreach (var entry in crewShadows) if (entry.renderer != null) entry.renderer.shadowCastingMode = entry.mode;
+                 if (world != null) foreach (var lod in world.GetComponentsInChildren<LODGroup>(true)) lod.ForceLOD(-1);
+-                if (site != null) site.SetActive(active); Object.DestroyImmediate(target);
++                // Combining replaces meshes and renderer batch metadata; leave neither behind in EditMode.
++                var combinedMeshes = staticGeometry.Where(g => g.filter != null).Select(g => g.filter.sharedMesh)
++                    .Where(m => m != null && !EditorUtility.IsPersistent(m) && !staticGeometry.Any(g => g.mesh == m)).Distinct().ToArray();
++                foreach (var entry in staticGeometry)
++                {
++                    if (entry.filter != null) entry.filter.sharedMesh = entry.mesh;
++                    if (entry.renderer != null) EditorJsonUtility.FromJsonOverwrite(entry.rendererState, entry.renderer);
++                }
++                foreach (var mesh in combinedMeshes) Object.DestroyImmediate(mesh);
++                if (site != null) site.SetActive(active);
+                 if (gameView != null)
+                 {
+                     gameView.maximized = wasMaximized;
+
+FullName                                                                                                               
+--------                                                                                                               
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Assets\LOBOver\Tests\EditMode\SitePresentatio...
+C:\Users\bryan\Documents\TAMU\02-Research\Creative Care\Unity\LOB-OVER\Library\ScriptAssemblies\LOBOver.EditModeTest...
+
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+Step 3 of 4 done: Offline compilation, fixture checks, and the scope check passed. Live Unity verification is blocked.
+
+The tools rejected both Unity refresh and test execution: “MCP tool call requires approval, but approval policy is never.” I’m stopping here as instructed; the orchestrator can start the named test in Unity Test Runner in under two minutes.
+codex
+Step 3 of 4 done; live Unity verification blocked.
+
+Unity refresh and test execution were rejected: “MCP tool call requires approval, but approval policy is never.”
+
+```text
+STATUS: BLOCKED
+WO: WO-L4
+CHANGED:
+  - Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs (modified)
+    Only PipeStationPreviewStaysInsideQuestBudget: Game-view measurement,
+    camera/rig isolation and restoration, static batching, across-trench
+    assertions, and both along-trench logs.
+TESTS:
+  - powershell -NoProfile -ExecutionPolicy Bypass -File Assets/LOBOver/Tests/CompileOffline.ps1
+    -> PASS: 21 offline assembly compilations; fixture checks passed.
+  - git diff --check -> PASS; no output.
+  - git status --short -> Only permitted file changed; ignored .agents/ and dispatch log.
+  - Unity run_tests: PipeStationPreviewStaysInsideQuestBudget
+    -> BLOCKED by approval policy; no live budget measurements obtained.
+NOTES:
+  - Offline compiler emitted CS1701 reference warnings; zero errors.
+  - Step 4 remains: live Unity verification.
+  - Next action (under 2 minutes): orchestrator starts the named EditMode
+    test in Unity Test Runner and captures its three measurement logs.
+```
+hook: Stop
+hook: Stop
+hook: Stop Completed
+hook: Stop Completed
+tokens used
+74,143
+Step 3 of 4 done; live Unity verification blocked.
+
+Unity refresh and test execution were rejected: “MCP tool call requires approval, but approval policy is never.”
+
+```text
+STATUS: BLOCKED
+WO: WO-L4
+CHANGED:
+  - Assets/LOBOver/Tests/EditMode/SitePresentationTests.cs (modified)
+    Only PipeStationPreviewStaysInsideQuestBudget: Game-view measurement,
+    camera/rig isolation and restoration, static batching, across-trench
+    assertions, and both along-trench logs.
+TESTS:
+  - powershell -NoProfile -ExecutionPolicy Bypass -File Assets/LOBOver/Tests/CompileOffline.ps1
+    -> PASS: 21 offline assembly compilations; fixture checks passed.
+  - git diff --check -> PASS; no output.
+  - git status --short -> Only permitted file changed; ignored .agents/ and dispatch log.
+  - Unity run_tests: PipeStationPreviewStaysInsideQuestBudget
+    -> BLOCKED by approval policy; no live budget measurements obtained.
+NOTES:
+  - Offline compiler emitted CS1701 reference warnings; zero errors.
+  - Step 4 remains: live Unity verification.
+  - Next action (under 2 minutes): orchestrator starts the named EditMode
+    test in Unity Test Runner and captures its three measurement logs.
+```
+
+=== codex exit code: 0
+=== finished 20261022-015821
