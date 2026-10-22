@@ -11,7 +11,7 @@ $pagesUrl = 'https://tamu-game-lab.github.io/lob-over/'
 function Assert-Exit([string] $message) { if ($LASTEXITCODE -ne 0) { throw $message } }
 
 # 1. Build the static site.
-& npm.cmd --prefix (Join-Path $repoRoot 'Monitor') run showcase
+& node (Join-Path $repoRoot 'Showcase/build.mjs')
 Assert-Exit 'Showcase build failed.'
 if (-not (Test-Path -LiteralPath (Join-Path $distRoot 'index.html'))) { throw "No build at $distRoot" }
 

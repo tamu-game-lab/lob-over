@@ -16,13 +16,15 @@ main{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;
 .pm{display:flex;align-items:end;position:relative;flex:1;min-height:145px;margin-top:9px;border-top:1px solid #72807a;padding-top:7px;gap:8px}.portrait-frame{align-self:stretch;position:relative;width:39%;flex-shrink:0;overflow:hidden;background:radial-gradient(ellipse at bottom,#79897e80,transparent 70%)}#pm-portrait{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:185%;height:112%;object-fit:contain;object-position:center bottom}.pm-message{align-self:center;flex:1;min-width:0;padding-right:4px}.pm-label{color:#bdc8bf;font-size:10px;letter-spacing:.13em;text-transform:uppercase;margin-bottom:9px}.pm-label strong{display:block;color:#f0ead8;font:600 18px var(--display);letter-spacing:0;text-transform:none}#pm-bubble{position:relative;color:#35413a;background:#f4ecd9;padding:12px 14px;border-radius:4px;box-shadow:0 3px 0 #14212666;font-size:clamp(12px,.95vw,16px);line-height:1.45}#pm-bubble:before{content:"";position:absolute;left:-8px;bottom:15px;border-top:8px solid transparent;border-bottom:8px solid transparent;border-right:9px solid #f4ecd9}#feedback{position:absolute;left:15px;right:15px;bottom:9px;font-size:12px;background:#263638;color:#f1e2cb}#feedback:empty{display:none}
 .reports{min-height:0;display:flex;gap:17px;background:#d7d0bb;border:1px solid #a5a88e;border-radius:3px;padding:12px 16px;box-shadow:0 3px 5px #111b1e66}.reports-heading{width:110px;flex-shrink:0;align-self:center}.reports h2{font-size:18px;line-height:1.15}.reports-heading p{font-size:10px;margin-top:6px;color:#626959}#reports{display:flex;gap:10px;flex:1;min-width:0;align-items:stretch;overflow:hidden;list-style:none;padding:0;margin:0}.report{flex:1;min-width:0;padding:8px 10px;background:#f7f0df;border-left:1px dashed #9f9d83;box-shadow:1px 2px 3px #797c6229;font-size:11px;line-height:1.55}.report-day{font:600 14px var(--display);display:block;border-bottom:1px solid #d8d7bf;margin-bottom:4px;padding-bottom:3px}.report-crew{display:block;white-space:nowrap}.report-crew:before{content:"";display:inline-block;width:4px;height:9px;background:var(--crew);margin-right:5px}.report-separator{display:none}.report-empty{font-size:12px;align-self:center;color:#717460}.report-new{outline:1px solid #a5a88e}
 @media(min-width:1650px){body{grid-template-rows:105px minmax(0,1fr) 160px;gap:24px;padding:0 30px 24px}header{gap:30px}h1{font-size:32px}h1 small{font-size:13px}.connection{min-width:210px}.clock{font-size:14px}.site{font-size:13px}.console{padding:22px}.console-heading{margin-bottom:16px}#crews{gap:14px}.crew-card{padding:16px;grid-template-columns:minmax(0,1fr) 160px}.crew-name{font-size:22px}.foreman{font-size:15px}.crew-meta{font-size:14px}.order-state{font-size:12px}.crew-switch{font-size:15px}.pm{min-height:210px}.report{font-size:14px;padding:10px 14px}.report-day{font-size:17px}.reports-heading{width:145px}.reports h2{font-size:22px}.legend{font-size:12px}.board{padding:24px}.eyebrow{font-size:12px}}
+body.browser-host{grid-template-rows:26px 86px minmax(0,1fr) 134px;gap:10px}#browser-banner{align-self:center;text-align:center;color:#eee8d7;font-size:12px}#browser-room{position:relative;font-size:12px;color:#eee8d7}#browser-room summary{cursor:pointer;list-style:none;border:1px solid #83918e;border-radius:4px;padding:8px}#room-code{font-family:monospace;letter-spacing:.08em}.room-panel{position:absolute;right:0;top:42px;z-index:5;width:230px;padding:16px;background:#29383c;border:1px solid #83918e;border-radius:4px;text-align:center;box-shadow:0 4px 12px #101a1d99}.room-panel canvas{display:block;width:196px;height:196px;margin-bottom:10px}.room-panel a{display:block;margin-bottom:8px}#room-status{font-size:11px}@media(min-width:1650px){body.browser-host{grid-template-rows:26px 105px minmax(0,1fr) 160px;gap:18px}}
 </style></head>
 <body>
+<p id="browser-banner" hidden>The headset joins only a game started with Play LOB Over on a PC or Mac</p>
 <header>
   <div class="brand"><h1>LOB, Over <small>Level 1 · Texas water main</small></h1></div>
   <div class="calendar" id="calendar" aria-label="Day 1"><span>DAY</span><strong id="day">1</strong></div>
   <div class="connection"><div class="clock" id="clock" data-speed="paused" role="status">Paused</div><div class="site"><svg class="radio-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14v13H5zM8 8V2m3 10h5m-5 4h5M2 4v4m20-4v4"/></svg><span id="site-status">Waiting for the headset</span></div></div>
-  <div class="header-actions"><a href="/level1/rules.pdf" target="_blank" rel="noopener">Rules page ↗</a><button class="mute" id="mute" aria-pressed="false" aria-label="Mute all sound">♪ Mute</button><button class="main-button" id="start" disabled>Start</button></div>
+  <div class="header-actions"><details id="browser-room" hidden><summary>Site room <b id="room-code">…</b></summary><div class="room-panel"><canvas id="room-qr" role="img" aria-label="Scan to open the Site seat"></canvas><a id="room-link" target="_blank" rel="noopener">Open Site by room code</a><p id="room-status" role="status">Connecting to room server</p></div></details><a href="level1/rules.pdf" target="_blank" rel="noopener">Rules page ↗</a><button class="mute" id="mute" aria-pressed="false" aria-label="Mute all sound">♪ Mute</button><button class="main-button" id="start" disabled>Start</button></div>
 </header>
 <main>
   <section class="board" aria-labelledby="board-title"><div class="eyebrow">Site office / Line of balance</div><h2 id="board-title">The PM's plan: promised Day 18</h2>
@@ -39,6 +41,8 @@ main{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;
 <script>
 'use strict';
 const $=id=>document.getElementById(id), CREWS=['exc','pipe','back'];
+const browserHost=new URLSearchParams(location.search).get('host')==='browser';
+if(browserHost){document.body.classList.add('browser-host');$('browser-banner').hidden=false;$('browser-room').hidden=false;$('site-status').textContent='Waiting for the Site browser';}
 // WO-L3: shared crew inks and presentation timings; none affect the host clock.
 const COLORS={exc:'#E0A800',pipe:'#2E86C1',back:'#D35400'};
 const TAPE_MS=3000, WORRIED_MS=4000, TYPE_MS=600, COUNT_MS=1000, REPORT_LIMIT=5;
@@ -51,9 +55,7 @@ let state, result, sequence=0, mirror=false, starting=false, connected=true, has
 let chartKey='', gridKey='', drawn={}, lastTotals={}, lastReportDay=0, voiceText='', worried=false, worriedTimer, countFrame;
 const heldSince={}, pending=new Map(), switching=new Map(), tapeTimers=new Map(), typing=new Map();
 const audio=LobOfficeAudio.create(text=>{voiceText=text;$('pm-bubble').textContent=text;$('pm-bubble').hidden=!text;portrait();});
-const socket=LobTransport.connect();
-socket.onopen=()=>socket.send(JSON.stringify({t:'hello',v:1,seat:'plan',client:'web'}));
-socket.onclose=()=>{connected=false;starting=false;switching.clear();$('feedback').textContent='Connection to the game closed.';if(state)render();};
+let socket;
 function send(t,action,fields={},onAck,crew){
   if(socket.readyState!==WebSocket.OPEN)return false;
   const id='l1-'+(++sequence);pending.set(id,{onAck,crew});
@@ -130,7 +132,7 @@ function render(){
     $('calendar').classList.remove('flip');void $('calendar').offsetWidth;$('calendar').classList.add('flip');audio.sound('tick');
   }
   $('clock').textContent=state.speed==='slow'?'Field is slow today':state.speed==='paused'?'Paused':'Running';$('clock').dataset.speed=state.speed;
-  $('site-status').textContent=v.siteClient==='quest'?'Headset connected':v.siteClient==='web'?'Site connected in a browser':'Waiting for the headset';
+  $('site-status').textContent=v.siteClient==='quest'?'Headset connected':v.siteClient==='web'?'Site connected in a browser':browserHost?'Waiting for the Site browser':'Waiting for the headset';
   $('actual-label').textContent=result?'Actual work':'Reported through yesterday';
   $('start').textContent=result?'Run again':'Start';$('start').disabled=!connected||mirror||starting||(!result&&state.speed!=='paused');
   $('board-title').textContent=hasStarted?'Texas water main · Crew reports':`The PM's plan: promised Day ${v.promisedDay}`;
@@ -181,6 +183,10 @@ function showResult(message){
   function count(now){const progress=Math.min(1,(now-start)/COUNT_MS);for(const id of CREWS)$('idle-'+id).textContent=Number((result.idleDays[id]*progress).toFixed(2));if(progress<1)countFrame=requestAnimationFrame(count);}
   countFrame=requestAnimationFrame(count);render();
 }
+async function connect(){
+socket=browserHost?await (await import('./lib/level1-browser.js')).connectLevel1():LobTransport.connect();
+socket.onopen=()=>socket.send(JSON.stringify({t:'hello',v:1,seat:'plan',client:'web'}));
+socket.onclose=()=>{connected=false;starting=false;switching.clear();$('feedback').textContent='Connection to the game closed.';if(state)render();};
 socket.onmessage=event=>{
   const message=JSON.parse(event.data);
   if(message.t==='welcome'){mirror=message.mirror;acceptState(message.state);}
@@ -198,4 +204,6 @@ socket.onmessage=event=>{
   else if(message.t==='report')report(message);
   else if(message.t==='result')showResult(message);
 };
+}
+connect().catch(error=>{connected=false;$('feedback').textContent='Game unavailable: '+error.message;$('start').disabled=true;});
 </script></body></html>

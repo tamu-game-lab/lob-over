@@ -5,17 +5,19 @@ import { once } from 'node:events';
 import { mkdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
-import { build } from '../src/showcase/build.js';
+import { build } from '../../Showcase/build.mjs';
+import { localRooms } from './local-rooms.js';
+import { level1Browser } from './level1-browser.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const output = fileURLToPath(new URL('../out/e2e/showcase/', import.meta.url));
 const base = 'http://localhost:7340/lob-over/';
 const slice = JSON.parse(await readFile(new URL('../../Data/Scenarios/slice_texas.json', import.meta.url), 'utf8'));
 const collapseTitle = slice.events.find(event => event.type === 'P1').card.title;
-test('Showcase: static Pages subpath, local seats, autoplan, result and phone room', { timeout: 90_000 }, async t => {
+test('Showcase: static Pages subpath, local seats, autoplan, result and phone room', { timeout: 120_000 }, async t => {
   await build(); await mkdir(output, { recursive: true });
   const server = spawn(process.execPath, ['Monitor/src/showcase/serve.js'], { cwd: root, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
-  let browser, stderr = '';
+  let browser, rooms, stderr = '';
   const originalCwd = process.cwd();
   server.stderr.on('data', data => { stderr += data; });
   try {
@@ -25,8 +27,10 @@ test('Showcase: static Pages subpath, local seats, autoplan, result and phone ro
     });
     // Chromium's Windows WebRTC subprocess writes debug.log in its working directory.
     process.chdir(output);
+    rooms = await localRooms();
     browser = await chromium.launch({ headless: true, args: ['--log-file=' + output + 'chromium.log'] });
     const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    await rooms.configure(context);
     const errors = [], failedLocal = [];
     context.on('page', page => {
       page.on('pageerror', error => errors.push(error.message));
@@ -34,7 +38,8 @@ test('Showcase: static Pages subpath, local seats, autoplan, result and phone ro
     });
     const landing = await context.newPage(); await landing.goto(base + 'index.html');
     assert.equal(await landing.title(), 'LOB, Over');
-    assert.equal(await landing.locator('nav a').count(), 5);
+    assert.equal(await landing.locator('nav a').count(), 6);
+    assert.equal(await landing.getByRole('link', { name: 'Level 1, no headset' }).getAttribute('href'), 'play.html?host=browser');
     await landing.screenshot({ path: output + 'landing.png' });
     const howto = await context.newPage(); await howto.goto(base + 'howto.html');
     assert.equal(await howto.evaluate(() => document.documentElement.scrollHeight <= innerHeight), true);
@@ -82,14 +87,9 @@ test('Showcase: static Pages subpath, local seats, autoplan, result and phone ro
     t.diagnostic(`Local slice finished at t=${final.finishDay}; ${transcript.snapshots.length} snapshots; screenshots: ${output}`);
     // A real second browser context has neither the local channel session nor localStorage.
     await t.test('PeerJS room receives a filtered Site state in a second context', async roomTest => {
-      try { await host.waitForFunction(() => document.getElementById('room-status').dataset.ready !== undefined, null, { timeout: 15_000 }); }
-      catch { roomTest.skip('PeerJS public server unreachable: signaling did not open within 15 seconds'); return; }
-      if (await host.locator('#room-status').getAttribute('data-ready') !== 'true') {
-        const status = await host.locator('#room-status').innerText();
-        assert.match(status, /server|network|socket|disconnected/i, 'Only unavailable public signaling may be skipped');
-        roomTest.skip('PeerJS public server unreachable: ' + status); return;
-      }
+      await host.waitForFunction(() => document.getElementById('room-status').dataset.ready === 'true', null, { timeout: 15_000 });
       const remote = await browser.newContext({ viewport: { width: 390, height: 844 } });
+      await rooms.configure(remote);
       const phone = await remote.newPage();
       await phone.goto(base + 'site.html?room=' + await host.locator('#room-code').innerText());
       await phone.waitForFunction(() => typeof state !== 'undefined' && !!state, null, { timeout: 20_000 });
@@ -125,8 +125,12 @@ test('Showcase: static Pages subpath, local seats, autoplan, result and phone ro
     await rules.close();
     for (const page of [landing, plan, site]) assert.doesNotMatch(await page.locator('body').innerText(), /well done|good job|should have|right choice|correct answer|behind schedule|ahead of schedule/i);
     assert.deepEqual(errors, []); assert.deepEqual(failedLocal, []); assert.equal(stderr, '');
+    await t.test('Level 1 browser host with a Site room in a second context', async levelTest => {
+      await level1Browser(browser, base, output, rooms, levelTest);
+    });
   } finally {
     await browser?.close();
+    await rooms?.close();
     process.chdir(originalCwd);
     if (server.exitCode === null) { const exited = once(server, 'exit'); server.kill(); await exited; }
   }

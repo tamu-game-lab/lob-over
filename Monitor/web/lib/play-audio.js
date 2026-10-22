@@ -70,7 +70,7 @@ window.LobOfficeAudio = (() => {
       toggleMute() { muted = !muted; if (master) master.gain.value = muted ? 0 : .35; if (current) current.muted = muted; return muted; },
       play(message, stage) {
         const turns = message.turns ?? (message.lines ?? []).flatMap(line => line.turns ?? [{ ...line, clip: line.id + '.wav' }]);
-        for (const turn of turns) queue.push({ url: `/Voice/${encodeURIComponent(stage)}/${encodeURIComponent(turn.clip)}`, text: turn.text ?? '' });
+        for (const turn of turns) queue.push({ url: `Voice/${encodeURIComponent(stage)}/${encodeURIComponent(turn.clip)}`, text: turn.text ?? '' });
         next();
       },
       reset() { generation++; current?.pause(); current = null; clearTimeout(timer); queue = []; playing = false; onVoice(''); },

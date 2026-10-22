@@ -23,7 +23,7 @@ window.LobVoice = (() => {
   return {
     play(message, stage) {
       for (const turn of message.turns ?? []) queue.push({
-        url: `/Voice/${encodeURIComponent(stage)}/${encodeURIComponent(turn.clip)}`,
+        url: `Voice/${encodeURIComponent(stage)}/${encodeURIComponent(turn.clip)}`,
       });
       next();
     },
