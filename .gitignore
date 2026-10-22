@@ -92,3 +92,7 @@ Data/transcripts/*.tmp
 /Assets/TerrainSampleAssets.meta
 /Assets/AllSkyFree/
 /Assets/AllSkyFree.meta
+
+# Relay (WO-L9): installed packages and wrangler state
+Relay/node_modules/
+Relay/.wrangler/
