@@ -131,7 +131,7 @@ namespace LOBOver.World
             { var crew = Instantiate(assets.crewPrefab, generated); crew.Initialize(id, assets); crews[id] = crew; }
         }
         private GameObject BoardBox(string name, Transform parent, Vector3 position, Vector3 size, Material material)
-            => assets.detailedSite ? SiteDetailDrawing.Block(name, parent, position, size, material)
+            => assets.detailedSite ? SiteDetailDrawing.Block(name, parent, position, size, material, assets.blockMesh)
                 : WorldDrawing.Box(name, parent, position, size, material);
     }
 }

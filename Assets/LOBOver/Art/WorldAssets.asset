@@ -85,6 +85,7 @@ MonoBehaviour:
   stripMesh: {fileID: 0}
   slumpMesh: {fileID: 0}
   windrowMesh: {fileID: 0}
+  blockMesh: {fileID: 0}
   wind: {fileID: 8300000, guid: 75052b4f159ab394097c924cbb1f6fa7, type: 3}
   rainfall: {fileID: 8300000, guid: 994dd2122e1909644a1591c5f8885157, type: 3}
   excavation: {fileID: 8300000, guid: c8b4d91c1c4434a48b9e3f1a46f507a4, type: 3}

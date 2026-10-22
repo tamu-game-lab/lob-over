@@ -15,27 +15,28 @@ namespace LOBOver.Play
         public HostWorldPresenter presenter;
         public Transform site;
         public GameObject hub, wrist;
-        public Renderer sphere;
-        public Material dissolveMaterial, fallbackMaterial;
         public bool Busy { get; private set; }
         public bool InSite { get; private set; }
+        public float Progress { get; private set; }
+        public Vector3 Origin { get; private set; }
         public double SelectedStation { get; private set; }
-        // WO-L2: one-second dissolve; fallback totals 0.3 seconds.
-        public const float DissolveSeconds = 1, FadeSeconds = 0.3f, SphereDiameter = 4;
-        private Material effect;
-        private bool dissolve;
+        public event System.Action Changed;
+        // WO-L5 items 1 and 4: metres and unscaled seconds. Quadratic ease-out for the front.
+        public const float InSeconds = 1.5f, OutSeconds = 1.2f, WatchdogSeconds = 3;
+        public const float WaveMetres = 160, BandMetres = 6, RestRadius = 1e6f;
+        private Coroutine transition;
+        private bool entering;
+        private double transitionStarted;
         private readonly Dictionary<Animator, float> animatorSpeeds = new Dictionary<Animator, float>();
         private readonly List<ParticleSystem> particles = new List<ParticleSystem>();
+        private readonly List<ParticleSystemRenderer> particleRenderers = new List<ParticleSystemRenderer>();
         private readonly List<CrewRig> crews = new List<CrewRig>();
         private void Start()
         {
             rig.Resolve();
             site.gameObject.SetActive(false); wrist.SetActive(false); hub.SetActive(true);
             SetPassthrough(true);
-            dissolve = dissolveMaterial != null && dissolveMaterial.shader != null && dissolveMaterial.shader.isSupported;
-            var material = dissolve ? dissolveMaterial : fallbackMaterial;
-            if (material != null) { effect = new Material(material); sphere.sharedMaterial = effect; }
-            sphere.gameObject.SetActive(false);
+            ApplyProgress(0);
         }
         public bool Visit(string crewId)
         {
@@ -43,7 +44,6 @@ namespace LOBOver.Play
             var crew = connection.View?.crews.FirstOrDefault(c => c.id == crewId);
             if (crew == null) return false;
             SelectedStation = crew.stationFt;
-            Busy = true;
             presenter.Present();
             var forward = Vector3.ProjectOnPlane(pose.rotation * Vector3.forward, Vector3.up).normalized;
             if (forward.sqrMagnitude < 0.1f) forward = Vector3.forward;
@@ -52,7 +52,7 @@ namespace LOBOver.Play
             var feet = new Vector3(pose.position.x, 0, pose.position.z);
             var road = new Vector3((float)SelectedStation * WorldUnits.MetresPerFoot, 0, WorldUnits.RoadZ);
             site.position = feet - site.rotation * road;
-            StartCoroutine(Transition(true));
+            BeginTransition(true);
             _ = SendArrival(SelectedStation);
             return true;
         }
@@ -67,6 +67,13 @@ namespace LOBOver.Play
         private bool arrivalPending;
         private void Update()
         {
+            // Separate from the coroutine so StopAllCoroutines cannot strand the player.
+            if (Busy && Time.realtimeSinceStartupAsDouble - transitionStarted >= WatchdogSeconds)
+            {
+                LogPhase("watchdog");
+                if (transition != null) StopCoroutine(transition);
+                FinishTransition();
+            }
             if (!arrivalPending) return;
             if (!connection.Connected) { arrivalPending = false; return; }
             var truck = connection.View?.truck;
@@ -75,64 +82,84 @@ namespace LOBOver.Play
         }
         public bool Back()
         {
-            if (Busy || !InSite) return false;
-            Busy = true; StartCoroutine(Transition(false)); return true;
+            // Repeated Back is harmless and never restarts the watchdog's clock.
+            if (Busy && !entering) return true;
+            if (!Busy && !InSite) return true;
+            BeginTransition(false); return true;
         }
-        private IEnumerator Transition(bool entering)
+        private void BeginTransition(bool toSite)
         {
+            if (transition != null) StopCoroutine(transition);
+            var alreadyFrozen = Busy;
+            entering = toSite; Busy = true;
+            transitionStarted = Time.realtimeSinceStartupAsDouble;
             presenter.Frozen = true;
-            if (dissolve && effect != null)
+            SetPassthrough(true);
+            ApplyProgress(Progress);
+            site.gameObject.SetActive(true);
+            wrist.SetActive(true);
+            if (!alreadyFrozen) FreezeWorld(entering);
+            LogPhase(entering ? "in start" : "out start");
+            Changed?.Invoke();
+            transition = StartCoroutine(Transition());
+        }
+        private IEnumerator Transition()
+        {
+            var from = Progress;
+            var target = entering ? 1f : 0f;
+            // Reversal keeps the same progress speed, starting exactly where Back was pressed.
+            var duration = (entering ? InSeconds : OutSeconds) * Mathf.Abs(target - from);
+            while (Time.realtimeSinceStartupAsDouble - transitionStarted < duration)
             {
-                effect.SetFloat("_Progress", entering ? 0 : 1);
-                sphere.gameObject.SetActive(true); FollowHead();
-                SetPassthrough(true);
-                site.gameObject.SetActive(true);
-                FreezeWorld(entering);
-                var elapsed = 0f;
-                while (elapsed < DissolveSeconds)
-                {
-                    effect.SetFloat("_Progress", entering ? elapsed / DissolveSeconds : 1 - elapsed / DissolveSeconds);
-                    yield return null; elapsed += Time.unscaledDeltaTime;
-                }
+                ApplyProgress(Mathf.Lerp(from, target, (float)(Time.realtimeSinceStartupAsDouble - transitionStarted) / duration));
+                yield return null;
             }
-            else
-            {
-                // Built-in serialized fallback reference survives shader stripping.
-                if (effect == null) { Busy = false; presenter.Frozen = false; yield break; }
-                sphere.gameObject.SetActive(true); FollowHead();
-                FreezeWorld(entering);
-                yield return Fade(0, 1);
-                site.gameObject.SetActive(entering); SetPassthrough(!entering);
-                yield return Fade(1, 0);
-            }
+            FinishTransition();
+        }
+        private void FinishTransition()
+        {
+            ApplyProgress(entering ? 1 : 0);
             InSite = entering;
             SetPassthrough(!entering);
             site.gameObject.SetActive(entering); hub.SetActive(!entering); wrist.SetActive(entering);
-            sphere.gameObject.SetActive(false);
             ThawWorld(); presenter.Frozen = false; presenter.Present(); Busy = false;
+            transition = null;
+            LogPhase(entering ? "in done" : "out done");
+            Changed?.Invoke();
         }
-        private IEnumerator Fade(float from, float to)
+        public static float RadiusAt(float progress)
         {
-            var elapsed = 0f;
-            while (elapsed < FadeSeconds / 2)
-            {
-                effect.SetFloat("_Opacity", Mathf.Lerp(from, to, elapsed / (FadeSeconds / 2)));
-                yield return null; elapsed += Time.unscaledDeltaTime;
-            }
-            effect.SetFloat("_Opacity", to);
+            var p = Mathf.Clamp01(progress);
+            return p >= 1 ? RestRadius : WaveMetres * (1 - (1 - p) * (1 - p));
         }
-        private void LateUpdate() { if (Busy) FollowHead(); }
-        private void FollowHead()
+        private void ApplyProgress(float value)
         {
-            if (rig.ViewEye == null) return;
-            sphere.transform.position = rig.ViewEye.position;
-            sphere.transform.rotation = Quaternion.identity;
-            if (dissolve && effect != null)
-            {
-                effect.SetFloat("_Bottom", rig.ViewEye.position.y - SphereDiameter / 2);
-                effect.SetFloat("_Span", SphereDiameter);
-            }
+            Progress = Mathf.Clamp01(value);
+            if (rig.TryHeadPose(out var pose)) Origin = new Vector3(pose.position.x, site.position.y, pose.position.z);
+            Shader.SetGlobalFloat("_WarpProgress", Progress);
+            Shader.SetGlobalVector("_WarpOrigin", Origin);
+            Shader.SetGlobalFloat("_WarpRadius", RadiusAt(Progress));
+            Shader.SetGlobalFloat("_WarpBand", BandMetres);
         }
+        private void LogPhase(string phase) => Debug.Log("LOBOver Warp: " + phase + " progress=" + Progress.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture));
+#if UNITY_EDITOR
+        // Synchronous preview capture restores this value before the next runtime frame.
+        private bool previewFrozen, previewPresenterWasFrozen;
+        public void PreviewProgress(float value)
+        {
+            if (Busy) throw new System.InvalidOperationException("Wait for the warp before stepping preview progress.");
+            if (value < 1 && !previewFrozen)
+            {
+                previewPresenterWasFrozen = presenter.Frozen; presenter.Frozen = true;
+                FreezeWorld(false); previewFrozen = true;
+            }
+            else if (value >= 1 && previewFrozen)
+            {
+                ThawWorld(); presenter.Frozen = previewPresenterWasFrozen; previewFrozen = false;
+            }
+            ApplyProgress(value);
+        }
+#endif
         private void FreezeWorld(bool snap)
         {
             foreach (var crew in site.GetComponentsInChildren<CrewRig>(true))
@@ -141,19 +168,29 @@ namespace LOBOver.Play
             { animatorSpeeds[animator] = animator.speed; animator.speed = 0; }
             foreach (var particle in site.GetComponentsInChildren<ParticleSystem>(true))
                 if (particle.isPlaying) { particles.Add(particle); particle.Pause(); }
+            // Particles use URP's particle shader, so keep them absent until the material wave ends.
+            foreach (var renderer in site.GetComponentsInChildren<ParticleSystemRenderer>(true))
+                if (renderer.enabled) { particleRenderers.Add(renderer); renderer.enabled = false; }
         }
         private void ThawWorld()
         {
             foreach (var crew in crews) if (crew != null) crew.enabled = true;
             foreach (var pair in animatorSpeeds) if (pair.Key != null) pair.Key.speed = pair.Value;
             foreach (var particle in particles) if (particle != null && particle.gameObject.activeInHierarchy) particle.Play();
-            crews.Clear(); animatorSpeeds.Clear(); particles.Clear();
+            foreach (var renderer in particleRenderers) if (renderer != null) renderer.enabled = true;
+            crews.Clear(); animatorSpeeds.Clear(); particles.Clear(); particleRenderers.Clear();
         }
         private void SetPassthrough(bool value)
         {
             if (rig.Passthrough == null) return;
             rig.Passthrough.enabled = value; rig.Passthrough.hidden = !value;
         }
-        private void OnDestroy() { if (effect != null) Destroy(effect); }
+        private void OnDestroy()
+        {
+            ThawWorld();
+            if (presenter != null) presenter.Frozen = false;
+            Shader.SetGlobalFloat("_WarpProgress", 1);
+            Shader.SetGlobalFloat("_WarpRadius", RestRadius);
+        }
     }
 }

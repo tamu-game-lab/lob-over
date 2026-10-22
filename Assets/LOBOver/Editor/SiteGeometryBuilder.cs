@@ -201,13 +201,27 @@ namespace LOBOver.Editor
             b.Triangle(0, 2, 1); b.Triangle(steps * 3, steps * 3 + 1, steps * 3 + 2);
             return Save("CollapsedWedge", b.Mesh());
         }
+        public static Mesh Block()
+        {
+            var primitive = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            try
+            {
+                var mesh = UnityEngine.Object.Instantiate(primitive.GetComponent<MeshFilter>().sharedMesh);
+                mesh.colors = Enumerable.Repeat(Color.white, mesh.vertexCount).ToArray();
+                BakeBarycentrics(mesh); return Save("SiteBlock", mesh);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(primitive); }
+        }
         public static Mesh Save(string name, Mesh mesh)
         {
             var path = SiteAssetBuilder.Art + "Generated/" + name + ".asset"; mesh.name = name;
             var old = AssetDatabase.LoadAssetAtPath<Mesh>(path);
             if (old == null) { AssetDatabase.CreateAsset(mesh, path); return mesh; }
+            var oldBarycentrics = new List<Vector4>(); var barycentrics = new List<Vector4>();
+            old.GetUVs(2, oldBarycentrics); mesh.GetUVs(2, barycentrics);
             if (!old.vertices.SequenceEqual(mesh.vertices) || !old.triangles.SequenceEqual(mesh.triangles) || !old.colors.SequenceEqual(mesh.colors)
-                || !old.uv.SequenceEqual(mesh.uv) || !old.normals.SequenceEqual(mesh.normals) || !old.tangents.SequenceEqual(mesh.tangents))
+                || !old.uv.SequenceEqual(mesh.uv) || !old.normals.SequenceEqual(mesh.normals) || !old.tangents.SequenceEqual(mesh.tangents)
+                || !oldBarycentrics.SequenceEqual(barycentrics))
             { EditorUtility.CopySerialized(mesh, old); EditorUtility.SetDirty(old); }
             UnityEngine.Object.DestroyImmediate(mesh); return old;
         }
@@ -240,8 +254,30 @@ namespace LOBOver.Editor
                 var mesh = new Mesh { indexFormat = vertices.Count > 65535 ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16 };
                 mesh.SetVertices(vertices); mesh.SetColors(colors); mesh.SetTriangles(indices, 0);
                 mesh.SetUVs(0, uvs);
-                mesh.RecalculateNormals(); mesh.RecalculateTangents(); mesh.RecalculateBounds(); return mesh;
+                mesh.RecalculateNormals(); mesh.RecalculateTangents(); mesh.RecalculateBounds();
+                BakeBarycentrics(mesh); return mesh;
             }
+        }
+        public static void BakeBarycentrics(Mesh mesh)
+        {
+            // WO-L5: split corners only after smoothing so the normal-lit surface stays unchanged.
+            var indices = mesh.triangles; var positions = mesh.vertices; var normals = mesh.normals;
+            var tangents = mesh.tangents; var colors = mesh.colors; var uvs = mesh.uv;
+            var corners = new Vector3[indices.Length]; var cornerNormals = new Vector3[indices.Length];
+            var cornerTangents = new Vector4[indices.Length]; var cornerColors = new Color[indices.Length];
+            var cornerUVs = new Vector2[indices.Length]; var barycentrics = new List<Vector4>(indices.Length);
+            var axes = new[] { new Vector4(1, 0, 0, 1), new Vector4(0, 1, 0, 1), new Vector4(0, 0, 1, 1) };
+            for (var i = 0; i < indices.Length; i++)
+            {
+                var source = indices[i]; corners[i] = positions[source]; cornerNormals[i] = normals[source];
+                cornerTangents[i] = tangents[source]; cornerColors[i] = colors[source]; cornerUVs[i] = uvs[source];
+                barycentrics.Add(axes[i % 3]); indices[i] = i;
+            }
+            mesh.Clear();
+            mesh.indexFormat = indices.Length > 65535 ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
+            mesh.vertices = corners; mesh.normals = cornerNormals; mesh.tangents = cornerTangents;
+            mesh.colors = cornerColors; mesh.uv = cornerUVs; mesh.SetUVs(2, barycentrics); mesh.triangles = indices;
+            mesh.RecalculateBounds();
         }
     }
 }

@@ -26,10 +26,12 @@ namespace LOBOver.Tests
         private readonly List<JObject> sent = new List<JObject>();
         private readonly HashSet<string> received = new HashSet<string>();
         private AudioClip testClip;
+        private readonly List<string> warpLogs = new List<string>();
         [UnitySetUp]
         public IEnumerator Setup()
         {
 #if UNITY_EDITOR
+            Application.logMessageReceived += RecordWarpLog;
             var root = Directory.GetParent(Application.dataPath).FullName;
             Assert.That(File.Exists(Path.Combine(root, "Data/Scenarios/level1_texas.json")), Is.True, "WO-L1 scenario must land before the integration test runs");
             // Local Node host only; no browser, package restore, transcript output, or discovery broadcast.
@@ -73,6 +75,18 @@ namespace LOBOver.Tests
             if (poke) button.GetComponent<PokeInteractable>().PublishPointerEvent(evt);
             else button.GetComponent<RayInteractable>().PublishPointerEvent(evt);
         }
+        private void RecordWarpLog(string message, string stack, LogType type)
+        { if (message.StartsWith("LOBOver Warp: ", StringComparison.Ordinal)) warpLogs.Add(message); }
+        private void AssertGlobals()
+        {
+            Assert.That(Shader.GetGlobalFloat("_WarpProgress"), Is.EqualTo(warp.Progress).Within(0.00001));
+            var expected = warp.Progress >= 1 ? 1e6f : 160 * (1 - (1 - warp.Progress) * (1 - warp.Progress));
+            Assert.That(Shader.GetGlobalFloat("_WarpRadius"), Is.EqualTo(expected).Within(0.001));
+            Assert.That(Shader.GetGlobalFloat("_WarpBand"), Is.EqualTo(6));
+            Vector3 origin = Shader.GetGlobalVector("_WarpOrigin");
+            Assert.That(origin, Is.EqualTo(warp.Origin));
+            Assert.That(origin.y, Is.EqualTo(warp.site.position.y).Within(0.00001));
+        }
         [UnityTest]
         public IEnumerator MarcusThenBackPreservesRigAndUsesOneMoveTo()
         {
@@ -92,14 +106,23 @@ namespace LOBOver.Tests
             }
             var marcus = hub.panel.GetComponentsInChildren<CrewButton>().Single(b => b.crew == "pipe");
             yield return Until(() => marcus.Available, 3);
+            Assert.That(warp.Progress, Is.Zero);
+            var started = Time.realtimeSinceStartupAsDouble;
             Press(marcus);
             var fixedPosition = warp.site.position; var fixedRotation = warp.site.rotation;
             var dissolveDeadline = Time.realtimeSinceStartup + 3;
             while (warp.Busy && Time.realtimeSinceStartup < dissolveDeadline)
             {
+                AssertGlobals();
+                Assert.That(warp.rig.Passthrough.enabled, Is.True); Assert.That(warp.rig.Passthrough.hidden, Is.False);
+                Assert.That(marcus.Available, Is.False); Assert.That(warp.presenter.Frozen, Is.True);
+                Assert.That(warp.wrist.GetComponentInChildren<CrewButton>().Available, Is.True);
+                foreach (var animator in warp.site.GetComponentsInChildren<Animator>(true)) Assert.That(animator.speed, Is.Zero);
                 Assert.That(warp.site.position, Is.EqualTo(fixedPosition)); Assert.That(warp.site.rotation, Is.EqualTo(fixedRotation));
                 yield return null;
             }
+            Assert.That(Time.realtimeSinceStartupAsDouble - started, Is.InRange(1.4, 1.6));
+            Assert.That(warp.Progress, Is.EqualTo(1)); AssertGlobals();
             Assert.That(warp.Busy, Is.False, "Warp did not finish within three seconds");
             Assert.That(warp.InSite, Is.True); Assert.That(warp.site.gameObject.activeSelf, Is.True);
             Assert.That(rig.Passthrough.enabled, Is.False); Assert.That(rig.CameraRig.transform.position, Is.EqualTo(rootPosition));
@@ -112,6 +135,9 @@ namespace LOBOver.Tests
             var back = warp.wrist.GetComponentInChildren<CrewButton>();
             yield return Until(() => back.Available, 3); Press(back, true);
             yield return Until(() => !warp.Busy, 3);
+            Assert.That(warp.Progress, Is.Zero); AssertGlobals();
+            CollectionAssert.AreEqual(new[] { "in start", "in done", "out start", "out done" },
+                warpLogs.Select(line => line.Substring("LOBOver Warp: ".Length).Split(new[] { " progress=" }, StringSplitOptions.None)[0]).ToArray());
             Assert.That(warp.InSite, Is.False); Assert.That(warp.site.gameObject.activeSelf, Is.False);
             Assert.That(warp.hub.activeInHierarchy, Is.True); Assert.That(rig.Passthrough.enabled, Is.True);
             Assert.That(hub.panel.position, Is.EqualTo(panelPosition));
@@ -120,6 +146,78 @@ namespace LOBOver.Tests
             Assert.That(sent.Count(m => (string)m["action"] == "moveTo"), Is.EqualTo(2), "One moveTo per press, including after Back");
             Assert.That(sent.Count(m => (string)m["action"] == "mount"), Is.EqualTo(1));
             Assert.That(received.Contains("nack"), Is.False);
+        }
+        [UnityTest]
+        public IEnumerator BackHalfwayReversesWithoutAProgressJump()
+        {
+            Assert.That(warp.Visit("pipe"), Is.True);
+            yield return Until(() => warp.Progress >= 0.5f, 1.1f);
+            Assert.That(warp.Progress, Is.LessThan(0.6f));
+            var progress = warp.Progress;
+            var back = warp.wrist.GetComponentInChildren<CrewButton>();
+            Assert.That(back.Available, Is.True); Press(back, true);
+            Assert.That(warp.Progress, Is.EqualTo(progress).Within(0.001));
+            while (warp.Busy)
+            {
+                Assert.That(warp.Progress, Is.LessThanOrEqualTo(progress)); progress = warp.Progress;
+                Assert.That(warp.rig.Passthrough.enabled, Is.True); AssertGlobals(); yield return null;
+            }
+            Assert.That(warp.Progress, Is.Zero); Assert.That(warp.InSite, Is.False);
+            Assert.That(warp.site.gameObject.activeSelf, Is.False); Assert.That(warp.hub.activeSelf, Is.True);
+            Assert.That(warp.rig.Passthrough.enabled, Is.True); Assert.That(warp.rig.Passthrough.hidden, Is.False);
+            Assert.That(warp.presenter.Frozen, Is.False);
+            Assert.That(warpLogs.Any(line => line.Contains("in done")), Is.False);
+        }
+        [UnityTest]
+        public IEnumerator WatchdogFinishesStoppedCoroutinesInEitherDirection()
+        {
+            Assert.That(warp.Visit("pipe"), Is.True);
+            var started = Time.realtimeSinceStartupAsDouble;
+            warp.StopAllCoroutines();
+            yield return Until(() => !warp.Busy, 3.1f);
+            Assert.That(Time.realtimeSinceStartupAsDouble - started, Is.InRange(2.9, 3.1));
+            Assert.That(warp.InSite, Is.True); Assert.That(warp.Progress, Is.EqualTo(1));
+            Assert.That(warp.rig.Passthrough.enabled, Is.False); Assert.That(warp.presenter.Frozen, Is.False);
+            Assert.That(warp.Back(), Is.True); started = Time.realtimeSinceStartupAsDouble;
+            warp.StopAllCoroutines();
+            yield return Until(() => !warp.Busy, 3.1f);
+            Assert.That(Time.realtimeSinceStartupAsDouble - started, Is.InRange(2.9, 3.1));
+            Assert.That(warp.site.gameObject.activeSelf, Is.False); Assert.That(warp.Progress, Is.Zero);
+            Assert.That(warp.rig.Passthrough.enabled, Is.True); Assert.That(warp.presenter.Frozen, Is.False);
+            Assert.That(warpLogs.Count(line => line.Contains("watchdog")), Is.EqualTo(2));
+        }
+        [UnityTest]
+        public IEnumerator MidWaveHasRoomOverheadAndOpaqueGroundThenFullCoverage()
+        {
+#if UNITY_EDITOR
+            Assert.That(warp.Visit("pipe"), Is.True);
+            yield return Until(() => !warp.Busy, 2);
+            var preview = Object.FindFirstObjectByType<PlayPreview>();
+            var wristVisible = warp.wrist.activeSelf; warp.wrist.SetActive(false);
+            try
+            {
+                warp.PreviewProgress(0.45f);
+                var frame = preview.CaptureFrame();
+                try
+                {
+                    var pixels = frame.GetPixels(); var size = frame.width;
+                    Assert.That(pixels.Skip(size * size / 2).Count(c => c.a == 0), Is.GreaterThan(0), "Room must remain overhead");
+                    var bottom = Enumerable.Range(0, size / 4).SelectMany(y => Enumerable.Range(size * 2 / 5, size / 5).Select(x => pixels[y * size + x]));
+                    Assert.That(bottom.Count(c => c.a == 1), Is.GreaterThan(0), "Filled ground must cover bottom centre");
+                }
+                finally { Object.DestroyImmediate(frame); }
+                warp.PreviewProgress(1);
+                frame = preview.CaptureFrame();
+                try { Assert.That(frame.GetPixels().Min(c => c.a), Is.EqualTo(1), "At progress 1 no room remains"); }
+                finally { Object.DestroyImmediate(frame); }
+                preview.WriteWarpFrames(warp);
+                foreach (var label in new[] { "0.2", "0.45", "0.7", "0.9", "1.0" })
+                    Assert.That(File.Exists("Monitor/out/unity/warp-" + label + ".png"), Is.True);
+            }
+            finally { warp.PreviewProgress(1); warp.wrist.SetActive(wristVisible); }
+#else
+            yield break;
+#endif
         }
         [UnityTest]
         public IEnumerator TwoTurnExchangesPlayInOrderWithoutOverlap()
@@ -147,6 +245,7 @@ namespace LOBOver.Tests
         [TearDown]
         public void Cleanup()
         {
+            Application.logMessageReceived -= RecordWarpLog; warpLogs.Clear();
             HostConnection.TestEndpointOverride = null;
             SceneManager.sceneLoaded -= SetTestEndpoint;
             if (connection != null) connection.enabled = false;

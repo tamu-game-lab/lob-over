@@ -5,7 +5,8 @@ Shader "Hidden/LOBOver/CubemapSunProbe"
     {
         Pass
         {
-            Cull Off ZWrite Off ZTest Always
+            // This Editor readback has no depth attachment.
+            Cull Off ZWrite Off ZTest Off
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment Frag

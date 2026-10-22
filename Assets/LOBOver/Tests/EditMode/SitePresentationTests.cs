@@ -94,7 +94,9 @@ namespace LOBOver.Tests.Editor
             Assert.That(a.spoilSurface.GetTexture("_BumpMap"), Is.Not.Null);
             Assert.That(a.spoilSurface.GetTexture("_OcclusionMap"), Is.Not.Null);
             Assert.That(a.cellPrefab.debugStateChanges, Is.False);
-            Assert.That(a.cellPrefab.stationText.fontSharedMaterial.shader.name, Is.EqualTo("TextMeshPro/Mobile/Distance Field"));
+            Assert.That(a.cellPrefab.stationText.fontSharedMaterial.shader.name, Is.EqualTo("LOBOver/SiteLit"));
+            Assert.That(a.cellPrefab.stationText.fontSharedMaterial.IsKeywordEnabled("_SITE_TEXT"), Is.True);
+            Assert.That(a.cellPrefab.stationText.fontSharedMaterial.GetTexture("_MainTex"), Is.EqualTo(a.font.atlasTexture));
             Assert.That(a.cellPrefab.stationText.fontSharedMaterial.mainTexture, Is.EqualTo(a.font.atlasTexture));
             // Rejection 3: maps come from tileable terrain layers, never the trench UV atlas.
             foreach (var material in new[] { a.trench, a.wetSoil, a.bedding })

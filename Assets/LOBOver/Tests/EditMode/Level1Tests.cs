@@ -63,7 +63,7 @@ namespace LOBOver.Tests.Editor
         [Test]
         public void WarpShadersImportWithoutErrors()
         {
-            foreach (var path in new[] { "Warp", "WarpFade", "PlaySky" })
+            foreach (var path in new[] { "SiteLit", "SiteSky" })
             {
                 var shader = AssetDatabase.LoadAssetAtPath<Shader>("Assets/LOBOver/Art/" + path + ".shader");
                 Assert.That(shader, Is.Not.Null);

@@ -54,12 +54,16 @@ namespace LOBOver.Editor
             PackOcclusion(assets.spoilSurface);
             assets.ink = Particle("Dust", new Color(0.65f, 0.54f, 0.40f, 0.4f));
             assets.rain = Particle("Rain", new Color(0.6f, 0.67f, 0.7f, 0.3f));
-            assets.siteText = Get(Folder + "SiteLettering.mat", "TextMeshPro/Mobile/Distance Field");
+            assets.siteText = Get(Folder + "SiteLettering.mat", "LOBOver/SiteLit");
             var letteringShader = assets.siteText.shader;
-            // Lettering needs the font's SDF parameters as well as its atlas, not a surface shader.
+            // WO-L5: the SDF branch preserves lettering and participates in the same global wave.
             EditorUtility.CopySerialized(assets.font.material, assets.siteText);
             assets.siteText.name = "SiteLettering"; assets.siteText.shader = letteringShader;
             assets.siteText.SetColor("_FaceColor", new Color(0.96f, 0.95f, 0.88f));
+            assets.siteText.EnableKeyword("_SITE_TEXT"); assets.siteText.SetFloat("_SiteText", 1);
+            assets.siteText.SetTexture("_BaseMap", assets.font.atlasTexture);
+            assets.siteText.SetFloat("_Cull", 0);
+            assets.siteText.renderQueue = (int)RenderQueue.Transparent;
             EditorUtility.SetDirty(assets.siteText);
             assets.skyMaterial = SitePresentationBuilder.SkyMaterial();
             // Keep the established converted material identities usable by old prefab references.

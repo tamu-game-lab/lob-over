@@ -12,9 +12,10 @@ namespace LOBOver.World
             var root = WorldDrawing.Group(name, parent); root.transform.localPosition = position;
             root.AddComponent<MeshFilter>().sharedMesh = mesh; root.AddComponent<MeshRenderer>().sharedMaterial = material; return root;
         }
-        public static GameObject Block(string name, Transform parent, Vector3 position, Vector3 size, Material material)
+        public static GameObject Block(string name, Transform parent, Vector3 position, Vector3 size, Material material, Mesh mesh = null)
         {
             var obj = WorldDrawing.Box(name, parent, position, size, material);
+            if (mesh != null) obj.GetComponent<MeshFilter>().sharedMesh = mesh;
             var collider = obj.GetComponent<Collider>(); collider.enabled = false;
             if (Application.isPlaying) Object.Destroy(collider); else Object.DestroyImmediate(collider);
             return obj;
@@ -22,10 +23,10 @@ namespace LOBOver.World
         public static Transform Stake(Transform parent, WorldAssets assets, out TextMeshPro text)
         {
             var root = WorldDrawing.Group("StationStake", parent).transform; root.localPosition = new Vector3(0, 0, 1.2f);
-            Block("WoodenLath", root, Vector3.up * StakeHeight / 2, new Vector3(StakeWidth, StakeHeight, 0.025f), assets.timber);
-            var flag = Block("PinkFlagging", root, new Vector3(0.07f, 1.12f, 0), new Vector3(0.18f, 0.05f, 0.003f), assets.flagging);
+            Block("WoodenLath", root, Vector3.up * StakeHeight / 2, new Vector3(StakeWidth, StakeHeight, 0.025f), assets.timber, assets.blockMesh);
+            var flag = Block("PinkFlagging", root, new Vector3(0.07f, 1.12f, 0), new Vector3(0.18f, 0.05f, 0.003f), assets.flagging, assets.blockMesh);
             flag.transform.localRotation = Quaternion.Euler(0, 20, -12);
-            Block("StationSign", root, new Vector3(0, 0.9f, 0), new Vector3(0.34f, 0.12f, 0.018f), assets.steel);
+            Block("StationSign", root, new Vector3(0, 0.9f, 0), new Vector3(0.34f, 0.12f, 0.018f), assets.steel, assets.blockMesh);
             text = WorldDrawing.Text("Station", root, new Vector3(0, 0.9f, 0.012f), new Vector2(0.31f, 0.1f), LetterHeight, assets.font);
             text.transform.localRotation = Quaternion.Euler(0, 180, 0); text.alignment = TextAlignmentOptions.Center;
             text.fontSize = LetterHeight * 10 * assets.font.faceInfo.pointSize / Mathf.Max(1, assets.font.faceInfo.capLine);
@@ -52,7 +53,7 @@ namespace LOBOver.World
             cell.wetBand = WorldDrawing.Group("SeepBand", root);
             foreach (var side in new[] { -1, 1 })
                 Block("WetLowerWall", cell.wetBand.transform, new Vector3(WorldUnits.CellLength / 2, -depth + 0.25f, side * 0.54f),
-                    new Vector3(WorldUnits.CellLength, 0.5f, 0.005f), a.wetSoil);
+                    new Vector3(WorldUnits.CellLength, 0.5f, 0.005f), a.wetSoil, a.blockMesh);
             cell.water = Mesh("StandingWater", root, a.stripMesh, a.waterSurface, Vector3.down * (depth - WaterHeight));
             cell.slump = Mesh("SlumpedWall", root, a.slumpMesh, a.trench);
             Mesh("LooseCollapseMaterial", cell.slump.transform, a.windrowMesh, a.spoilSurface,
@@ -61,16 +62,16 @@ namespace LOBOver.World
             cell.collapseProps = WorldDrawing.Group("CollapseProps", root);
             Prop(a.barrier, cell.collapseProps.transform, new Vector3(WorldUnits.CellLength / 2, 0, 2.1f));
             foreach (var x in new[] { 1f, WorldUnits.CellLength - 1 }) Prop(a.cone, cell.collapseProps.transform, new Vector3(x, 0, 2.2f));
-            cell.box = Protection(root, "TrenchBox", a.steel); cell.shoring = Protection(root, "Shoring", a.timber);
+            cell.box = Protection(root, "TrenchBox", a.steel, a.blockMesh); cell.shoring = Protection(root, "Shoring", a.timber, a.blockMesh);
             cell.stake = Stake(root, a, out cell.stationText);
             foreach (var obj in new[] { cell.floor, cell.walls, cell.pipes, cell.wetBand, cell.water, cell.slump, cell.box, cell.shoring, cell.spoilWindrow, cell.collapseProps }) obj.SetActive(false);
         }
-        private static GameObject Protection(Transform parent, string name, Material material)
+        private static GameObject Protection(Transform parent, string name, Material material, Mesh mesh)
         {
             var root = WorldDrawing.Group(name, parent);
             foreach (var side in new[] { -1, 1 }) Block("Panel", root.transform, new Vector3(WorldUnits.CellLength / 2, -0.9f, side * 0.5f),
-                new Vector3(WorldUnits.CellLength, 1.7f, 0.06f), material);
-            for (var i = 0; i < 3; i++) Block("Strut", root.transform, new Vector3((i + 0.5f) * WorldUnits.CellLength / 3, -0.3f, 0), new Vector3(0.1f, 0.1f, 1), material);
+                new Vector3(WorldUnits.CellLength, 1.7f, 0.06f), material, mesh);
+            for (var i = 0; i < 3; i++) Block("Strut", root.transform, new Vector3((i + 0.5f) * WorldUnits.CellLength / 3, -0.3f, 0), new Vector3(0.1f, 0.1f, 1), material, mesh);
             return root;
         }
         public static GameObject Prop(GameObject prefab, Transform parent, Vector3 position)

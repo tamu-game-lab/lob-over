@@ -26,6 +26,7 @@ Shader "LOBOver/SiteLit"
         _AlphaMap ("Separate foliage opacity", 2D) = "white" {}
         _UseAlphaMap ("Separate opacity present", Float) = 0
         [Enum(UnityEngine.Rendering.CullMode)] _Cull ("Cull", Float) = 2
+        [Toggle(_SITE_TEXT)] _SiteText ("Site SDF lettering", Float) = 0
         // TMP needs these properties to retain its atlas UVs and glyph padding.
         [HideInInspector] _MainTex ("Font Atlas", 2D) = "white" {}
         [HideInInspector] _FaceColor ("Face", Color) = (1,1,1,1)
@@ -51,24 +52,29 @@ Shader "LOBOver/SiteLit"
         TEXTURE2D(_MetallicGlossMap); SAMPLER(sampler_MetallicGlossMap);
         TEXTURE2D(_OcclusionMap); SAMPLER(sampler_OcclusionMap);
         TEXTURE2D(_AlphaMap); SAMPLER(sampler_AlphaMap);
+        TEXTURE2D(_MainTex); SAMPLER(sampler_MainTex);
         TEXTURE2D(_GravelMap); TEXTURE2D(_GravelNormal); TEXTURE2D(_GravelMask);
         TEXTURE2D(_GrassMap); TEXTURE2D(_GrassNormal); TEXTURE2D(_GrassMask);
         CBUFFER_START(UnityPerMaterial)
             float4 _BaseMap_ST, _BumpMap_ST, _MetallicGlossMap_ST, _OcclusionMap_ST; half4 _BaseColor, _FaceColor;
             float _BumpScale, _Metallic, _Smoothness, _OcclusionStrength, _OcclusionFromMask, _TileMetres;
-            float _World, _AlphaClip, _Cutoff, _UseAlphaMap, _Cull;
+            float _World, _AlphaClip, _Cutoff, _UseAlphaMap, _Cull, _SiteText;
             float _FaceDilate, _OutlineWidth, _OutlineSoftness, _GradientScale, _WeightNormal, _WeightBold, _ScaleRatioA, _ScaleX, _ScaleY;
         CBUFFER_END
+        // WO-L5: globals, deliberately absent from Properties/UnityPerMaterial.
+        float _WarpProgress, _WarpRadius, _WarpBand;
+        float3 _WarpOrigin;
         struct Attributes
         {
             float4 positionOS : POSITION; float3 normalOS : NORMAL; float4 tangentOS : TANGENT;
-            float2 uv : TEXCOORD0; half4 color : COLOR; UNITY_VERTEX_INPUT_INSTANCE_ID
+            float2 uv : TEXCOORD0; float4 barycentric : TEXCOORD2; half4 color : COLOR; UNITY_VERTEX_INPUT_INSTANCE_ID
         };
         struct Varyings
         {
             float4 positionCS : SV_POSITION; float3 positionWS : TEXCOORD0;
             half3 normalWS : TEXCOORD1; half4 tangentWS : TEXCOORD2;
             float2 uv : TEXCOORD3; half4 color : COLOR; half fog : TEXCOORD4;
+            float4 barycentric : TEXCOORD5;
             UNITY_VERTEX_INPUT_INSTANCE_ID UNITY_VERTEX_OUTPUT_STEREO
         };
         void Cutout(float2 uv, half alpha)
@@ -86,6 +92,7 @@ Shader "LOBOver/SiteLit"
             output.positionCS=p.positionCS; output.positionWS=p.positionWS; output.normalWS=n.normalWS;
             output.tangentWS=half4(n.tangentWS,input.tangentOS.w*GetOddNegativeScale());
             output.uv=input.uv; output.color=input.color;
+            output.barycentric=input.barycentric;
             output.fog=ComputeFogFactor(p.positionCS.z); return output;
         }
         // Stochastic triplanar: one projection is selected with the triplanar weights.
@@ -118,9 +125,42 @@ Shader "LOBOver/SiteLit"
             float2 tile=pick<weights.x?a:(pick<weights.x+weights.y?b:c);
             return uv+float2(GroundHash(tile),GroundHash(tile+float2(19,47)))*57;
         }
+        void WarpClip(float3 positionWS)
+        {
+            if (_WarpProgress<=0) clip(-1);
+            if (distance(positionWS,_WarpOrigin)>_WarpRadius+_WarpBand) clip(-1);
+        }
+        half BlueprintLines(Varyings input, half3 normalWS)
+        {
+            // WO-L5: 1.5 screen pixels on baked triangle edges; w identifies builder UV3.
+            const float LinePixels=1.5;
+            float3 baryPixels=input.barycentric.xyz/max(fwidth(input.barycentric.xyz),0.00001);
+            half wire=1-smoothstep(LinePixels-0.5,LinePixels+0.5,min(baryPixels.x,min(baryPixels.y,baryPixels.z)));
+            // Imported meshes keep their UVs: a 0.5 m triplanar grid and Fresnel rim.
+            const float GridMetres=0.5;
+            float3 grid=input.positionWS/GridMetres;
+            float3 edge=abs(frac(grid-0.5)-0.5)/max(fwidth(grid),0.00001);
+            half3 lines=1-smoothstep(LinePixels-0.5,LinePixels+0.5,edge);
+            half3 weights=pow(abs(normalWS),4); weights/=max(dot(weights,1),0.00001);
+            half projected=dot(half3(max(lines.y,lines.z),max(lines.x,lines.z),max(lines.x,lines.y)),weights);
+            half rim=pow(1-saturate(abs(dot(normalWS,GetWorldSpaceNormalizeViewDir(input.positionWS)))),3);
+            return input.barycentric.w>0.5 ? wire : max(projected,rim);
+        }
         half4 Frag(Varyings input) : SV_Target
         {
             UNITY_SETUP_INSTANCE_ID(input); UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+            WarpClip(input.positionWS);
+            #if defined(_SITE_TEXT)
+                // Keep TMP's SDF atlas and face parameters while clipping lettering with its sign.
+                half sdf=SAMPLE_TEXTURE2D(_MainTex,sampler_MainTex,input.uv).a;
+                half threshold=0.5-(_FaceDilate+_WeightNormal/4)*_ScaleRatioA*0.5;
+                half coverage=saturate((sdf-threshold)/max(fwidth(sdf),0.0001)+0.5);
+                clip(coverage-0.001);
+                half fill=saturate((_WarpRadius-distance(input.positionWS,_WarpOrigin))/max(_WarpBand*0.5,0.00001));
+                half4 face=_FaceColor*input.color;
+                half4 letter=lerp(half4(57.0/255.0,198.0/255.0,1,1),half4(face.rgb*face.a,face.a),fill);
+                return letter*coverage;
+            #endif
             half3 n=normalize(input.normalWS), t=normalize(input.tangentWS.xyz), b=cross(n,t)*input.tangentWS.w;
             float2 uv=TRANSFORM_TEX(input.uv,_BaseMap);
             float2 normalUV=TRANSFORM_TEX(input.uv,_BumpMap), maskUV=TRANSFORM_TEX(input.uv,_MetallicGlossMap), occlusionUV=TRANSFORM_TEX(input.uv,_OcclusionMap);
@@ -165,13 +205,21 @@ Shader "LOBOver/SiteLit"
             data.bakedGI=SampleSH(data.normalWS); data.shadowMask=half4(1,1,1,1);
             data.normalizedScreenSpaceUV=GetNormalizedScreenSpaceUV(input.positionCS);
             half4 color=UniversalFragmentPBR(data,surface);
-            color.rgb=MixFog(color.rgb,input.fog); color.a=1; return color;
+            // WO-L5: fog contributes with the sky, which closes from progress 0.6 to 1.
+            half skyAlpha=saturate((_WarpProgress-0.6)/0.4);
+            color.rgb=lerp(color.rgb,MixFog(color.rgb,input.fog),skyAlpha); color.a=1;
+            if (_WarpProgress>=1) return color;
+            half lines=BlueprintLines(input,n);
+            // WO-L5 gives the base in premultiplied units; cyan (#39C6FF) lines have alpha 1.
+            half4 blueprint=lerp(half4(0.02,0.04,0.06,0.25),half4(57.0/255.0,198.0/255.0,1,1),lines);
+            half filled=saturate((_WarpRadius-distance(input.positionWS,_WarpOrigin))/max(_WarpBand*0.5,0.00001));
+            return lerp(blueprint,color,filled);
         }
         ENDHLSL
         Pass
         {
             Name "ForwardLit" Tags { "LightMode"="UniversalForward" }
-            Cull [_Cull] ZWrite On
+            Cull [_Cull] ZWrite On Blend One OneMinusSrcAlpha
             HLSLPROGRAM
             #pragma target 3.5
             #pragma vertex Vert
@@ -184,6 +232,7 @@ Shader "LOBOver/SiteLit"
             #pragma shader_feature_local _Splat
             #pragma shader_feature_local _ALPHATEST_ON
             #pragma shader_feature_local _METALLICSPECGLOSSMAP
+            #pragma shader_feature_local _SITE_TEXT
             ENDHLSL
         }
         Pass
@@ -196,6 +245,7 @@ Shader "LOBOver/SiteLit"
             #pragma fragment ShadowFrag
             #pragma multi_compile_instancing
             #pragma shader_feature_local _ALPHATEST_ON
+            #pragma shader_feature_local _SITE_TEXT
             float3 _LightDirection;
             Varyings ShadowVert(Attributes input)
             {
@@ -211,6 +261,10 @@ Shader "LOBOver/SiteLit"
             half4 ShadowFrag(Varyings input) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(input); UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                WarpClip(input.positionWS);
+                #if defined(_SITE_TEXT)
+                    clip(SAMPLE_TEXTURE2D(_MainTex,sampler_MainTex,input.uv).a-0.5);
+                #endif
                 float2 uv=TRANSFORM_TEX(input.uv,_BaseMap);
                 Cutout(uv,SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,uv).a*_BaseColor.a); return 0;
             }

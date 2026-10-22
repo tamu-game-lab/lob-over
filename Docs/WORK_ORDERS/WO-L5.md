@@ -32,3 +32,7 @@ Touching a crew button in the hub builds the site around the player: a wave runs
 ## Out of scope
 
 The table model, the standee, stake-to-stake warps, Stop work, the Plan page.
+
+## Amendment 1 (orchestrator, 2026-10-22 01:30, answer to BLOCKED)
+
+Item 7, the source scan: `Assets/LOBOver/Runtime/VR/ComfortFade.cs` and `Assets/LOBOver/Art/ComfortFade.shader` (the legacy Site.unity inspector seat's eye-locked mask, compiled only under `UNITY_EDITOR || !UNITY_ANDROID`, never in `Play.unity`) are exempt from the scan; the scan covers the warp path and everything the builder puts into `Play.unity`. Leave the legacy files untouched (stake-to-stake travel is out of scope).

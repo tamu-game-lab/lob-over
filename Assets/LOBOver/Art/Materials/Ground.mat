@@ -90,6 +90,7 @@ Material:
     - _ScaleRatioA: 1
     - _ScaleX: 1
     - _ScaleY: 1
+    - _SiteText: 0
     - _Smoothness: 0.4
     - _Splat: 1
     - _TileMetres: 1

@@ -46,8 +46,6 @@ namespace LOBOver.Editor
             var assets = SitePresentationBuilder.BuildAssets();
             var dark = Material("PlayPanel", "Universal Render Pipeline/Unlit", new Color(0.035f, 0.045f, 0.06f, 1));
             var buttonMaterial = Material("PlayButton", "Universal Render Pipeline/Unlit", new Color(0.18f, 0.22f, 0.28f, 1));
-            var warpMaterial = Material("Warp", "LOBOver/Warp", Color.white, false);
-            var fadeMaterial = Material("WarpFade", "LOBOver/WarpFade", Color.black);
             foreach (var root in replaced) Object.DestroyImmediate(root);
             var lighting = Root("Lighting");
             var sun = WorldDrawing.Group("Sun", lighting).AddComponent<Light>(); sun.type = LightType.Directional;
@@ -73,11 +71,6 @@ namespace LOBOver.Editor
             var presenter = client.gameObject.AddComponent<HostWorldPresenter>(); presenter.connection = connection; presenter.world = world;
             var warpRoot = Root("Warp"); var warp = warpRoot.gameObject.AddComponent<WarpController>();
             warp.connection = connection; warp.rig = xr; warp.presenter = presenter; warp.site = site; warp.hub = hub.gameObject;
-            warp.dissolveMaterial = warpMaterial; warp.fallbackMaterial = fadeMaterial;
-            var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere); sphere.name = "WarpSphere"; sphere.transform.SetParent(warpRoot, false);
-            Object.DestroyImmediate(sphere.GetComponent<Collider>()); sphere.transform.localScale = Vector3.one * WarpController.SphereDiameter;
-            warp.sphere = sphere.GetComponent<Renderer>(); warp.sphere.sharedMaterial = warpMaterial ?? fadeMaterial;
-            warp.sphere.shadowCastingMode = ShadowCastingMode.Off; warp.sphere.receiveShadows = false; sphere.SetActive(false);
             var panel = WorldDrawing.Group("CrewPanel", hub).transform;
             var background = WorldDrawing.Box("Background", panel, Vector3.zero, new Vector3(HubPanel.Width, 0.43f, 0.008f), dark);
             Object.DestroyImmediate(background.GetComponent<Collider>());
@@ -85,6 +78,7 @@ namespace LOBOver.Editor
             var status = Label("Status", panel, "Looking for the game. Start it on the PC with Play LOB Over.",
                 new Vector3(0, 0.09f, -0.008f), new Vector2(0.36f, 0.1f), HubPanel.TextHeight, assets);
             var hubPanel = client.gameObject.AddComponent<HubPanel>(); hubPanel.connection = connection; hubPanel.rig = xr; hubPanel.panel = panel; hubPanel.status = status;
+            hubPanel.warp = warp;
             var click = SiteAssetBuilder.Required<AudioClip>(SiteAssetBuilder.Art + "Click.wav");
             var names = new[] { "Ray · digging", "Marcus · pipe", "Dana · backfill" };
             for (var i = 0; i < names.Length; i++)
@@ -106,6 +100,10 @@ namespace LOBOver.Editor
             xr.editorHead = camera.transform;
             sky.observer = camera.transform;
             sky.rig = xr;
+            // Editor inspection shows the complete site; WarpController sets the hub state in Play.
+            Shader.SetGlobalFloat("_WarpProgress", 1);
+            Shader.SetGlobalFloat("_WarpRadius", WarpController.RestRadius);
+            Shader.SetGlobalFloat("_WarpBand", WarpController.BandMetres);
             EditorSceneManager.MarkSceneDirty(scene);
             if (saveScene)
             {

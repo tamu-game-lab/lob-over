@@ -89,6 +89,7 @@ namespace LOBOver.Editor
             assets.groundMesh = SiteGeometryBuilder.Ground(); assets.horizonMesh = SiteGeometryBuilder.HorizonMesh();
             assets.stripMesh = SiteGeometryBuilder.Strip(); assets.wallNearMesh = SiteGeometryBuilder.Wall(1); assets.wallFarMesh = SiteGeometryBuilder.Wall(-1);
             assets.slumpMesh = SiteGeometryBuilder.Collapse(); assets.windrowMesh = SiteGeometryBuilder.Windrow();
+            assets.blockMesh = SiteGeometryBuilder.Block();
             assets.cellPrefab = Cell(assets); assets.crewPrefab = Crew(); assets.particles = Dust(assets);
             EditorUtility.SetDirty(assets); AssetDatabase.SaveAssets(); return assets;
         }
@@ -141,14 +142,14 @@ namespace LOBOver.Editor
             after.transform.localScale = new Vector3((SiteGeometryBuilder.MaxX - InitialLength) / WorldUnits.CellLength, 1, 1);
             var sky = Sky(site, assets);
             var trailer = WorldDrawing.Group("Trailer", site).transform; trailer.localPosition = new Vector3(-16, 0, 12);
-            SiteDetailDrawing.Block("Cabin", trailer, new Vector3(0, 1.5f, 0), new Vector3(7, 3, 2.8f), assets.cabin);
-            SiteDetailDrawing.Block("Roof", trailer, new Vector3(0, 3.08f, 0), new Vector3(7.25f, 0.16f, 3), assets.steel);
-            SiteDetailDrawing.Block("DoorFrame", trailer, new Vector3(-1.7f, 1.15f, -1.43f), new Vector3(1.05f, 2.3f, 0.06f), assets.steel);
-            SiteDetailDrawing.Block("Door", trailer, new Vector3(-1.7f, 1.15f, -1.47f), new Vector3(0.9f, 2.18f, 0.025f), assets.cabin);
-            SiteDetailDrawing.Block("DoorHandle", trailer, new Vector3(-1.36f, 1.1f, -1.5f), new Vector3(0.04f, 0.18f, 0.04f), assets.steel);
-            SiteDetailDrawing.Block("WindowFrame", trailer, new Vector3(1.35f, 1.75f, -1.44f), new Vector3(2.1f, 1.25f, 0.08f), assets.steel);
-            SiteDetailDrawing.Block("Window", trailer, new Vector3(1.35f, 1.75f, -1.49f), new Vector3(1.94f, 1.09f, 0.02f), assets.glass);
-            foreach (var x in new[] { -2.5f, 2.5f }) SiteDetailDrawing.Block("Support", trailer, new Vector3(x, 0.12f, 0), new Vector3(0.4f, 0.24f, 2.4f), assets.steel);
+            SiteDetailDrawing.Block("Cabin", trailer, new Vector3(0, 1.5f, 0), new Vector3(7, 3, 2.8f), assets.cabin, assets.blockMesh);
+            SiteDetailDrawing.Block("Roof", trailer, new Vector3(0, 3.08f, 0), new Vector3(7.25f, 0.16f, 3), assets.steel, assets.blockMesh);
+            SiteDetailDrawing.Block("DoorFrame", trailer, new Vector3(-1.7f, 1.15f, -1.43f), new Vector3(1.05f, 2.3f, 0.06f), assets.steel, assets.blockMesh);
+            SiteDetailDrawing.Block("Door", trailer, new Vector3(-1.7f, 1.15f, -1.47f), new Vector3(0.9f, 2.18f, 0.025f), assets.cabin, assets.blockMesh);
+            SiteDetailDrawing.Block("DoorHandle", trailer, new Vector3(-1.36f, 1.1f, -1.5f), new Vector3(0.04f, 0.18f, 0.04f), assets.steel, assets.blockMesh);
+            SiteDetailDrawing.Block("WindowFrame", trailer, new Vector3(1.35f, 1.75f, -1.44f), new Vector3(2.1f, 1.25f, 0.08f), assets.steel, assets.blockMesh);
+            SiteDetailDrawing.Block("Window", trailer, new Vector3(1.35f, 1.75f, -1.49f), new Vector3(1.94f, 1.09f, 0.02f), assets.glass, assets.blockMesh);
+            foreach (var x in new[] { -2.5f, 2.5f }) SiteDetailDrawing.Block("Support", trailer, new Vector3(x, 0.12f, 0), new Vector3(0.4f, 0.24f, 2.4f), assets.steel, assets.blockMesh);
             foreach (var z in new[] { WorldUnits.RoadZ - 3, WorldUnits.RoadZ + 3 })
                 SiteDetailDrawing.Prop(assets.jersey, site, new Vector3(-8, 0, z));
             if (assets.tree != null)

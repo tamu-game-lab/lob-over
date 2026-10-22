@@ -12,6 +12,7 @@ namespace LOBOver.Play
     {
         public HostConnection connection;
         public XRRig rig;
+        public WarpController warp;
         public Transform panel;
         public TextMeshPro status;
         public bool Placed { get; private set; }
@@ -25,6 +26,7 @@ namespace LOBOver.Play
         private void OnEnable()
         {
             connection.Changed += Refresh;
+            if (warp != null) warp.Changed += Refresh;
             SubsystemManager.GetSubsystems(inputs);
             foreach (var input in inputs) input.trackingOriginUpdated += TrackingOriginUpdated;
             placementPending = !Placed;
@@ -48,6 +50,7 @@ namespace LOBOver.Play
         private void OnDisable()
         {
             connection.Changed -= Refresh;
+            if (warp != null) warp.Changed -= Refresh;
             foreach (var input in inputs) input.trackingOriginUpdated -= TrackingOriginUpdated;
             if (display != null) display.RecenteredPose -= Recenter;
             display = null;
@@ -65,7 +68,8 @@ namespace LOBOver.Play
         }
         private void Refresh()
         {
-            status.text = !connection.Connected ? "Looking for the game. Start it on the PC with Play LOB Over."
+            status.text = warp != null && warp.Busy ? "Warping..."
+                : !connection.Connected ? "Looking for the game. Start it on the PC with Play LOB Over."
                 : !connection.Started ? "Connected to " + connection.Hostname + ". Waiting for Plan to press Start."
                 : "Day " + connection.DisplayDay;
         }

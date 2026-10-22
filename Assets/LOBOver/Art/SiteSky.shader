@@ -15,7 +15,7 @@ Shader "LOBOver/SiteSky"
         Tags { "RenderPipeline"="UniversalPipeline" "Queue"="Background" "RenderType"="Opaque" }
         Pass
         {
-            Cull Front ZWrite Off ZTest LEqual
+            Cull Front ZWrite Off ZTest LEqual Blend One OneMinusSrcAlpha
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment Frag
@@ -30,6 +30,7 @@ Shader "LOBOver/SiteSky"
             CBUFFER_END
             // Weather is shared by the dome and all site surfaces, including future materialization.
             float _SiteRain, _SiteCloudBank;
+            float _WarpProgress;
             struct Attributes { float4 positionOS : POSITION; UNITY_VERTEX_INPUT_INSTANCE_ID };
             struct Varyings { float4 positionCS : SV_POSITION; float3 direction : TEXCOORD0; UNITY_VERTEX_OUTPUT_STEREO };
             float Hash(float2 p) { return frac(sin(dot(p,float2(127.1,311.7)))*43758.5453); }
@@ -49,6 +50,9 @@ Shader "LOBOver/SiteSky"
             half4 Frag(Varyings input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                // WO-L5: leave the room overhead until progress 0.6, then close the sky last.
+                half alpha=saturate((_WarpProgress-0.6)/0.4);
+                if (alpha<=0) clip(-1);
                 float3 d=normalize(input.direction);
                 half3 col=lerp(_Horizon.rgb,_Zenith.rgb,pow(saturate(d.y),0.45));
                 if (_UseCube>0.5)
@@ -71,7 +75,7 @@ Shader "LOBOver/SiteSky"
                 float bank=smoothstep(0.25,0.8,-d.z)*(1-smoothstep(0.12,0.42,d.y));
                 col=lerp(col,half3(0.36,0.40,0.44),saturate(_SiteCloudBank*bank*0.7+_SiteRain*0.45));
                 col=lerp(col,_Horizon.rgb,pow(1-saturate(abs(d.y)*3),4)*0.7);
-                return half4(col,1);
+                return half4(col*alpha,alpha);
             }
             ENDHLSL
         }

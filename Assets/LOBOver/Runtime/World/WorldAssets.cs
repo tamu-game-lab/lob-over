@@ -21,7 +21,7 @@ namespace LOBOver.World
         public bool detailedSite;
         public GameObject pipe, fence, jersey, tree;
         public Material ground, road, trench, bedding, spoilSurface, wetSoil, waterSurface, backfill, flagging, siteText, cabin, glass, skyMaterial;
-        public Mesh groundMesh, horizonMesh, wallNearMesh, wallFarMesh, stripMesh, slumpMesh, windrowMesh;
+        public Mesh groundMesh, horizonMesh, wallNearMesh, wallFarMesh, stripMesh, slumpMesh, windrowMesh, blockMesh;
         public AudioClip wind, rainfall, excavation, dozer, idle, conflict, collapse, pipeSetdown;
         public MachineAsset Machine(string crew, string plate) => Array.Find(machines,
             item => item.crew == crew && string.Equals(item.plate, plate, StringComparison.OrdinalIgnoreCase));
