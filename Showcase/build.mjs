@@ -8,6 +8,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 // WO-L6 adds Level 1 to the existing stages without changing their build inputs.
 export async function build() {
   await buildShowcase();
+  await cp(resolve(root, 'Data/relay.json'), resolve(dist, 'Data/relay.json'));
   for (const name of ['play.html', 'img']) {
     await cp(resolve(root, 'Monitor/web', name), resolve(dist, name), { recursive: true });
   }

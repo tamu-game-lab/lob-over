@@ -119,6 +119,55 @@
       channel.close(); peer?.destroy();
     } };
   }
+  // Relayed seats use the same core attachment contract as PeerJS connections.
+  function relayHost(core, { url, roomCode, onStatus }) {
+    const endpoint = new URL(url);
+    if (!['http:', 'https:'].includes(endpoint.protocol)) throw new Error('Invalid relay URL');
+    endpoint.protocol = endpoint.protocol === 'https:' ? 'wss:' : 'ws:';
+    endpoint.pathname = '/host/' + roomCode;
+    endpoint.search = '';
+    const socket = new WebSocket(endpoint), clients = new Map();
+    let closed = false;
+    // A silent connection attempt must not leave the page saying connecting forever.
+    const timeout = setTimeout(() => { onStatus('Relay: unavailable'); socket.close(); }, 5000);
+    function remove(id) {
+      const client = clients.get(id);
+      if (!client) return;
+      clients.delete(id); client.closed?.();
+    }
+    socket.onopen = () => { clearTimeout(timeout); onStatus('Relay: connected'); };
+    socket.onerror = () => onStatus('Relay: unavailable');
+    socket.onclose = () => {
+      clearTimeout(timeout);
+      for (const id of clients.keys()) remove(id);
+      if (!closed) onStatus('Relay: unavailable');
+    };
+    socket.onmessage = ({ data }) => {
+      let message;
+      try { message = JSON.parse(data); } catch { return; }
+      if (message?.t !== 'relay' || typeof message.from !== 'string') return;
+      const id = message.from;
+      if (message.event === 'leave') { remove(id); return; }
+      let client = clients.get(id);
+      if (!client) {
+        client = {
+          send(data) {
+            if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ t: 'relay', to: id, data }));
+          },
+          onMessage(callback) { this.receive = callback; },
+          onClose(callback) { this.closed = callback; },
+          close() { remove(id); },
+        };
+        clients.set(id, client); core.attach(client);
+      }
+      if ('data' in message) client.receive(message.data);
+    };
+    return { close() {
+      closed = true; clearTimeout(timeout);
+      for (const id of clients.keys()) remove(id);
+      socket.close();
+    } };
+  }
   // The facilitator has the same message interface even though it owns the core.
   function direct(core) {
     const socket = new Socket();
@@ -131,5 +180,5 @@
     setTimeout(() => socket.opened(), 0);
     return socket;
   }
-  globalThis.LobTransport = { connect, host, direct };
+  globalThis.LobTransport = { connect, host, relayHost, direct };
 })();

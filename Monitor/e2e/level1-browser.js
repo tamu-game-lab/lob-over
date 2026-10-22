@@ -7,6 +7,7 @@ export async function level1Browser(browser, base, output, rooms, t) {
   try {
     for (const context of [planContext, siteContext]) {
       await rooms.configure(context);
+      await context.route('**/Data/relay.json', route => route.abort());
       context.on('page', page => {
         page.on('pageerror', error => errors.push(error.message));
         page.on('response', response => {
@@ -25,8 +26,8 @@ export async function level1Browser(browser, base, output, rooms, t) {
     await plan.waitForFunction(() => !!state && document.querySelector('#room-status').dataset.ready === 'true');
     assert.equal(await plan.evaluate(() => state.stage), 'level1_texas');
     assert.equal(await plan.locator('#clock').innerText(), 'Paused');
-    assert.equal(await plan.locator('#browser-banner').innerText(), 'The headset joins only a game started with Play LOB Over on a PC or Mac');
-    assert.equal(await plan.locator('#site-status').innerText(), 'Waiting for the Site browser');
+    await plan.waitForFunction(() => document.querySelector('#relay-status').textContent === 'Relay: unavailable');
+    assert.equal(await plan.locator('#site-status').innerText(), 'Waiting for headset or Site browser');
     assert.equal(await plan.locator('#pm-portrait').evaluate(img => img.complete && img.naturalWidth > 0), true);
     const room = await plan.locator('#room-code').innerText();
     assert.match(room, /^[A-HJ-NP-Z2-9]{6}$/);

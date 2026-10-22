@@ -6,13 +6,26 @@ Three-seat cooperative spin-off of LOB-Game. A VR field inspector (Site), a web 
 
 This folder is everything the orchestrator (Claude Code, Fable 5.1) and the implementer (Codex, Astra) need to start. Its contents go into the root of the new Unity project, beside `Assets/`. Setup is `Docs/SETUP_CHECKLIST.md`; the launch is section D there.
 
+## Playing by link
+
+This path requires the deployed relay and a headset build with WO-L9's room list; deployment and the headset work are still pending.
+
+1. Open [LOB, Over](https://tamu-game-lab.github.io/lob-over/) on a Mac, PC or phone and choose Level 1. Keep the Plan tab open; it shows the room code and "Relay: connected".
+2. Put on the headset and open LOB, Over. Both devices need internet; they can use different networks.
+3. Touch the matching room on the headset's hub panel. The Plan page shows "Headset connected".
+4. Give Rules the printed page linked from Plan, then press Start on Plan.
+
+The laptop needs no installation or launcher for this path. For an offline room, `Play LOB Over.cmd` on Windows and `Play LOB Over.command` on Mac still run the local host.
+
+Relay deployment: Bryan runs `npx wrangler login` once with a free Cloudflare account, then the orchestrator runs `cd Relay && npm ci && npx wrangler deploy`. On Windows PowerShell, use `npm.cmd` and `npx.cmd` and run each command on its own line. Record the deployed HTTPS URL in `Data/relay.json` as `{"relay":"https://<worker>.workers.dev"}`, commit it, republish the showcase and run Unity's Sync Data before building the headset. [Relay setup and design](Relay/README.md) has the commands and local checks.
+
 ## Presenting from a Mac
 
 1. Install Node.js 20 or newer from https://nodejs.org, then clone with git: `git clone https://github.com/tamu-game-lab/lob-over.git`. A downloaded zip carries Gatekeeper's quarantine. If the launcher will not open, right-click > Open, or run `bash "Play LOB Over.command"` in Terminal from the repository folder.
 2. Double-click `Play LOB Over.command`. It installs dependencies on the first run, starts Level 1 and opens the Plan page. Allow node through the macOS firewall prompt. Leave Terminal open; press Ctrl-C there to end the game.
 3. Put the Mac and headset on the same network. When the venue's Wi-Fi blocks discovery, use a phone hotspot or the USB cable. For the cable, install adb with `brew install android-platform-tools`, connect the headset and allow USB debugging, then run the launcher.
 
-For a phone or second laptop as Site, open [Level 1, no headset](https://tamu-game-lab.github.io/lob-over/play.html?host=browser), share the Site room code or QR, and press Start. Keep the Plan tab open. The headset joins only a game started with Play LOB Over on a PC or Mac.
+For a phone or second laptop as Site, open [Level 1, no headset](https://tamu-game-lab.github.io/lob-over/play.html?host=browser), share the Site room code or QR, and press Start. Keep the Plan tab open. The phone's PeerJS connection can coexist with the headset's relay connection.
 
 To build the complete showcase locally, run `node Showcase/build.mjs`. The publishing script uses this build too.
 
