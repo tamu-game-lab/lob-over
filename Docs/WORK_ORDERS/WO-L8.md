@@ -34,3 +34,14 @@ One warp, one site, everything in view. From the hub a single button builds the 
 ## Out of scope
 
 Stop work, flags, confirmations, the table model, stake-to-stake warps, the Plan page.
+
+## Amendment 1 (October 22, K50, after rounds 0 to 2)
+
+Bryan's rulings, which replace the matching numbers above:
+
+- The trench runs across 7 m in front of the player (item 2 said 6 m); the machines stand on the far bank at real size, the near edge of each machine within 3 m of the far trench edge.
+- The crew slot cap is 18 m instead of 30 m (item 2), so the excavator stays at the edge of the view; the formula is otherwise unchanged.
+- The far-bank check, in the builder, at runtime and in the tests, measures the lowest 1.5 m of each machine's bounds (tracks, wheels, body), never the boom.
+- Workers keep their imported meshes: no mesh reduction on skinned meshes (the fence batching may stay).
+- The small excavator is scaled to 2.8 m to the cab roof within 10 percent like the other variants.
+- The Day-5 "in front" check of the PlayMode test is within 65 degrees of the facing direction (rejection 1).
