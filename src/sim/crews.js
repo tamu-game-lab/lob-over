@@ -12,7 +12,10 @@ export function refreshCrews(s) {
       c.stop = s.pendingStops[id];
       delete s.pendingStops[id];
     }
-    if (c.hold?.untilT != null && s.t >= c.hold.untilT - EPS) c.hold = null;
+    if (c.hold?.untilT != null && s.t >= c.hold.untilT - EPS) {
+      if (c.startDelayed) { c.startDay = s.t + 1; c.startDelayed = false; }
+      c.hold = null;
+    }
     if (c.remobT != null && s.t >= c.remobT - EPS) {
       c.demobilized = false;
       c.demobBillingEndsT = null;
@@ -27,7 +30,7 @@ export function refreshCrews(s) {
     c.status = c.demobilized ? 'demobilized' : c.arguing ? 'arguing'
       : stopped ? 'stopped' : held ? 'held' : 'working';
     c.mult = 1;
-    if (s.t < c.startDay - 1 - EPS || c.finishT != null) { c.mult = 0; c.status = 'idle'; }
+    if (s.t < c.startDay - 1 - EPS || c.finishT != null || c.startDelayed) { c.mult = 0; c.status = 'idle'; }
     if (c.demobilized || c.arguing || stopped || held || c.lentAway || c.rate === 0) c.mult = 0;
     if (!s.pure) {
       c.mult *= rainMultiplier(s, id);
@@ -43,7 +46,7 @@ export function refreshCrews(s) {
 export function moveCrews(s, dt) {
   for (const id of CREW_IDS) {
     const c = s.crews[id];
-    if (s.t < c.startDay - 1 - EPS || c.finishT != null) continue;
+    if (s.t < c.startDay - 1 - EPS || c.finishT != null || c.startDelayed) continue;
     const leader = LEADER[id] && s.crews[LEADER[id]];
     let limit = Math.min(s.scenario.job.lengthFt, leader?.pos ?? s.scenario.job.lengthFt);
     let desired = c.pos + c.rate * c.mult * dt;
@@ -75,7 +78,7 @@ export function moveCrews(s, dt) {
 export function updateMood(s, dt) {
   for (const id of CREW_IDS) {
     const c = s.crews[id];
-    if (s.t < c.startDay - 1 - EPS) continue;
+    if (s.t < c.startDay - 1 - EPS || c.startDelayed) continue;
     const held = c.status === 'held' || c.status === 'stopped';
     const waiting = held || c.idleReason === 'leader';
     c.waitDays = waiting ? c.waitDays + dt : 0;

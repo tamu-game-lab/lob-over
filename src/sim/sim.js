@@ -1,5 +1,6 @@
 import { makeRng } from '../common/rng.js';
-import { CREW_IDS, DT, EPS, copy, draftState, emit, voice } from './common.js';
+import { CREW_IDS, DT, EPS, copy, draftState, emit, voice, refreshEventSpeed } from './common.js';
+import { arrivalVoices } from './voices.js';
 import { refreshCrews, moveCrews, updateMood } from './crews.js';
 import { detectConflicts, resolveConflicts, validateConflictCommit } from './conflict.js';
 import { updateEvents } from './events.js';
@@ -48,7 +49,9 @@ function initialState(scenario, catalog, pure) {
 
 function recordActual(s) {
   for (const id of CREW_IDS) {
-    if (s.actualLines[id].at(-1).t !== s.t) s.actualLines[id].push({ t: s.t, ft: s.crews[id].pos });
+    // Level 1's result ends each actual line when that crew finishes the job.
+    const t = s.scenario.rules.planControlsClock ? s.crews[id].finishT ?? s.t : s.t;
+    if (s.actualLines[id].at(-1).t !== t) s.actualLines[id].push({ t, ft: s.crews[id].pos });
   }
 }
 
@@ -102,6 +105,8 @@ export function tickState(state, dt) {
   if (!s.pure) {
     updateTruck(s); updateOrders(s); updateHoldPoints(s); updateEvents(s);
     refreshCrews(s);
+    arrivalVoices(s);
+    refreshEventSpeed(s);
   }
   if (Math.floor(s.t + EPS) > Math.floor(state.t + EPS)) {
     recordActual(s);
@@ -137,6 +142,7 @@ function commit(state, ops) {
   refreshCrews(s);
   s.changeLog.push({ day: s.t, ops: copy(ops), ...(ops.length ? {} : { note: 'no change' }) });
   if (s.speed === 'paused') s.pausedSpeed = 'full'; else s.speed = 'full';
+  refreshEventSpeed(s);
   finish(s);
   return { state: s };
 }
@@ -158,6 +164,7 @@ export function createSim(scenario, catalog, { pure = false } = {}) {
   let state = initialState(source, fleet, pure);
   return {
     get t() { return state.t; }, get speed() { return state.speed; },
+    get clock() { return source.time; },
     get done() { return state.done; }, get result() { return copy(state.result); },
     tick(dt = DT) {
       if (!Number.isFinite(dt) || dt <= 0) throw new RangeError('dt must be positive');
@@ -170,7 +177,8 @@ export function createSim(scenario, catalog, { pure = false } = {}) {
     },
     apply(seat, cmd) {
       if (!cmd || typeof cmd !== 'object') return { ok: false, reason: 'invalid command' };
-      if (seat === 'facilitator') {
+      if (seat === 'facilitator' || seat === 'plan' && source.rules.planControlsClock
+        && cmd.t === 'ctrl' && ['start', 'reset'].includes(cmd.action)) {
         if (cmd.action === 'load' && cmd.stage !== source.id) return { ok: false, reason: 'stage not loaded' };
         if (cmd.action === 'reset' || cmd.action === 'load') state = initialState(source, fleet, pure);
         else if (cmd.action === 'pause') {
@@ -195,6 +203,7 @@ export function createSim(scenario, catalog, { pure = false } = {}) {
       } else if (seat === 'site') {
         const draft = draftState(state), reason = applySite(draft, cmd);
         if (reason) return { ok: false, reason };
+        arrivalVoices(draft);
         state = draft;
       } else return { ok: false, reason: 'action unavailable for seat' };
       return { ok: true, appliedDay: state.t };

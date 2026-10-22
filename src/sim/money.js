@@ -1,6 +1,6 @@
 import { CREW_IDS, EPS } from './common.js';
 
-export const billing = (s, c) => s.t >= c.startDay - 1 - EPS && (c.finishT == null || c.finishT > s.t + EPS)
+export const billing = (s, c) => !c.startDelayed && s.t >= c.startDay - 1 - EPS && (c.finishT == null || c.finishT > s.t + EPS)
   && !(c.demobBillingEndsT != null && s.t >= c.demobBillingEndsT - EPS);
 
 export function accrue(s, dt) {

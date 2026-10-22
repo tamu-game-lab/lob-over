@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LOB, Over · Level 1 · Texas water main</title>
+<link rel="preload" as="image" href="img/clipboard_Final.png">
+<link rel="preload" as="image" href="img/explaining_Final.png">
+<link rel="preload" as="image" href="img/worriedSurprise.png">
+<style>
+:root{font:14px/1.4 "Segoe UI",Arial,sans-serif;color:#293431;background:#242e31;--paper:#f4ecd9;--ink:#293431;--orange:#f18b43;--exc:#E0A800;--pipe:#2E86C1;--back:#D35400;--display:"Bahnschrift","Arial Narrow",sans-serif}
+*{box-sizing:border-box}body{margin:0;height:100dvh;display:grid;grid-template-rows:86px minmax(0,1fr) 134px;gap:16px;padding:0 22px 18px;background:radial-gradient(ellipse at 15% 0,#445052,transparent 65%),#242e31}button,a{-webkit-tap-highlight-color:transparent}button{font:inherit;cursor:pointer}button:disabled{cursor:default;opacity:.5}button:focus-visible,a:focus-visible{outline:3px solid #f7bc79;outline-offset:4px}[hidden]{display:none!important}
+header{display:flex;align-items:center;gap:20px;color:#f4ecd9;border-bottom:1px solid #687173}h1,h2,p{margin:0}h1,h2,.display{font-family:var(--display);font-weight:600}h1{font-size:26px;letter-spacing:.03em;line-height:1.1}h1 small{display:block;font:11px "Segoe UI",sans-serif;font-weight:600;letter-spacing:.16em;text-transform:uppercase;margin-top:7px;color:#c0c8c5}.brand{margin-right:auto}.calendar{width:58px;flex-shrink:0;text-align:center;background:var(--paper);border-radius:3px;box-shadow:0 3px 0 #111b1e;transform-origin:50% 20%;color:var(--ink)}.calendar span{display:block;background:#c96832;color:#fff7e7;font-size:9px;font-weight:700;letter-spacing:.2em;padding:2px}.calendar strong{display:block;font:600 30px/1.2 var(--display);font-variant-numeric:tabular-nums}.calendar.flip{animation:calendar-flip 320ms ease-out}@keyframes calendar-flip{0%{transform:perspective(160px) rotateX(-45deg)}100%{transform:perspective(160px) rotateX(0)}}
+.connection{min-width:180px}.clock{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:30px;border:1px solid #86918e;font-size:12px;background:#172326}.clock:before{content:"";width:6px;height:6px;border:1px solid #e0d6c1;border-radius:50%}.clock[data-speed="slow"]{color:#ffc38f;border-color:#c68149}.clock[data-speed="full"]:before{background:#e0d6c1}.site{display:flex;align-items:center;gap:7px;color:#c5ceca;font-size:11px;margin-top:6px}.radio-icon{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.5}.header-actions{display:flex;align-items:center;gap:13px}.header-actions a{color:#e5e1d4;font-size:12px;text-underline-offset:4px}.main-button{background:var(--orange);border:1px solid #f6ad6c;border-bottom:3px solid #a3512b;border-radius:4px;padding:11px 24px;color:#242e31;font-family:var(--display);font-size:17px;font-weight:700;min-width:121px}.main-button:hover:enabled{background:#ffa25c}.mute{width:74px;padding:8px 6px;border:1px solid #83918e;color:#eee6d3;border-radius:4px;background:#29383c;font-size:12px}.mute[aria-pressed="true"]{background:#4b5658}
+main{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;min-height:0}.board{min-width:0;min-height:0;position:relative;display:flex;flex-direction:column;background:var(--paper);background-image:radial-gradient(#80745418 .65px,transparent .65px);background-size:5px 5px;border:9px solid #a18b64;border-radius:3px;box-shadow:0 4px 12px #101a1d66,inset 0 0 0 1px #716648;padding:17px 17px 10px}.board:before,.board:after{position:absolute;top:-12px;width:42px;height:20px;content:"";background:linear-gradient(90deg,#939a91,#c9cec1 48%,#7a867f);border:1px solid #525e57;border-radius:3px;box-shadow:0 2px 3px #28333066}.board:before{left:25%}.board:after{right:25%}.eyebrow{text-transform:uppercase;letter-spacing:.19em;font-size:10px;font-weight:700;color:#6c715f}.board h2{font-size:clamp(20px,1.7vw,30px);margin:3px 0 8px}.legend{display:flex;gap:14px;align-items:center;font-size:10px;color:#626959;flex-wrap:wrap}.legend span{display:inline-flex;align-items:center;gap:5px}.legend i{width:21px;border-top:2px solid #626959}.legend .dashed{border-top-style:dashed}.legend .faint{opacity:.25}.chart-wrap{flex:1;min-height:0;position:relative;margin-top:8px}#chart{width:100%;height:100%;display:block;overflow:visible}#chart text{font:13px "Segoe UI",sans-serif;fill:#626959}#chart .zone-label{font-size:12px;letter-spacing:2px}#chart .day-label{font-size:12px}#ruler{transition:transform 400ms cubic-bezier(.2,.7,.3,1)}.ink-segment{animation:ink 400ms cubic-bezier(.22,.65,.35,1) both;stroke-dasharray:1;stroke-dashoffset:1}@keyframes ink{to{stroke-dashoffset:0}}
+.stamp{position:absolute;top:22%;left:9%;right:9%;z-index:2;transform:rotate(-4deg);border:3px double #3f5148;background:#f4ecd9f5;padding:17px;text-align:center;box-shadow:3px 5px 0 #29343116;animation:stamp 300ms cubic-bezier(.2,.8,.3,1) both}.stamp #finish{font:600 clamp(18px,1.5vw,28px)/1.3 var(--display)}.stamp .eyebrow{margin-bottom:7px}.stamp #idle{display:flex;justify-content:center;gap:17px;margin-top:12px;padding-top:10px;border-top:1px solid #a4a78e;font-size:11px}.idle-count{display:block;font:600 23px var(--display);font-variant-numeric:tabular-nums}.idle-crew{border-top:3px solid var(--crew);padding-top:6px;min-width:85px}@keyframes stamp{from{opacity:0;transform:rotate(-4deg) scale(1.6)}to{opacity:1;transform:rotate(-4deg) scale(1)}}
+.console{min-height:0;display:flex;flex-direction:column;padding:15px;background:linear-gradient(125deg,#344449,#202e32);border:1px solid #637174;border-radius:7px;box-shadow:inset 0 0 0 4px #243337,0 4px 12px #101a1d66;color:#eee8d7}.console-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 3px}.console h2{font-size:16px;letter-spacing:.14em;text-transform:uppercase}.console-heading span{font-size:9px;letter-spacing:.17em;color:#b1bcb8}#crews{display:grid;gap:8px}.crew-card{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 143px;gap:12px;align-items:center;border:1px solid #65716e;border-left:6px solid var(--crew);border-radius:3px;padding:10px 12px;background:linear-gradient(105deg,#405055,#334247);box-shadow:0 2px 2px #101a1d55}.crew-name{font:600 17px/1.2 var(--display);color:var(--crew)}.foreman{font-size:12px;color:#f5efdf;margin-left:8px;font-weight:400}.crew-meta{font-size:11px;color:#c4ceca;margin-top:5px;white-space:nowrap}.crew-meta strong{font-weight:500;color:#fff2dc}.crew-switch{display:flex;position:relative;width:100%;padding:4px;border:1px solid #111e21;border-bottom:2px solid #70807d;border-radius:5px;background:#132126;color:#c1c8c2;box-shadow:inset 0 3px 4px #0008;font:600 12px var(--display)}.crew-switch:before{content:"";position:absolute;left:4px;top:4px;bottom:4px;width:calc(50% - 4px);background:linear-gradient(#ffc382,#df813b);border:1px solid #f8b77a;border-radius:3px;box-shadow:0 2px 3px #0007;transition:transform 120ms ease-out}.crew-switch[aria-checked="true"]:before{transform:translateX(100%)}.crew-switch span{width:50%;z-index:1;padding:7px 0}.crew-switch[aria-checked="false"] .go,.crew-switch[aria-checked="true"] .hold{color:#2b312e}.order-state{display:flex;justify-content:center;align-items:center;gap:5px;font-size:10px;margin-top:6px;min-height:14px;white-space:nowrap}.lamp{width:6px;height:6px;border-radius:50%;background:#a8b4af;box-shadow:0 0 4px #a8b4af66}.crew-card[data-held="true"] .lamp{background:#f9aa5e;box-shadow:0 0 5px #f9aa5e99}.refusal{position:absolute;z-index:3;left:3px;right:3px;top:34%;transform:rotate(-2deg);background:#ad4036;color:#fff3df;font-size:12px;padding:7px;text-align:center;box-shadow:0 2px 4px #0005;pointer-events:none}
+.pm{display:flex;align-items:end;position:relative;flex:1;min-height:145px;margin-top:9px;border-top:1px solid #72807a;padding-top:7px;gap:8px}.portrait-frame{align-self:stretch;position:relative;width:39%;flex-shrink:0;overflow:hidden;background:radial-gradient(ellipse at bottom,#79897e80,transparent 70%)}#pm-portrait{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:185%;height:112%;object-fit:contain;object-position:center bottom}.pm-message{align-self:center;flex:1;min-width:0;padding-right:4px}.pm-label{color:#bdc8bf;font-size:10px;letter-spacing:.13em;text-transform:uppercase;margin-bottom:9px}.pm-label strong{display:block;color:#f0ead8;font:600 18px var(--display);letter-spacing:0;text-transform:none}#pm-bubble{position:relative;color:#35413a;background:#f4ecd9;padding:12px 14px;border-radius:4px;box-shadow:0 3px 0 #14212666;font-size:clamp(12px,.95vw,16px);line-height:1.45}#pm-bubble:before{content:"";position:absolute;left:-8px;bottom:15px;border-top:8px solid transparent;border-bottom:8px solid transparent;border-right:9px solid #f4ecd9}#feedback{position:absolute;left:15px;right:15px;bottom:9px;font-size:12px;background:#263638;color:#f1e2cb}#feedback:empty{display:none}
+.reports{min-height:0;display:flex;gap:17px;background:#d7d0bb;border:1px solid #a5a88e;border-radius:3px;padding:12px 16px;box-shadow:0 3px 5px #111b1e66}.reports-heading{width:110px;flex-shrink:0;align-self:center}.reports h2{font-size:18px;line-height:1.15}.reports-heading p{font-size:10px;margin-top:6px;color:#626959}#reports{display:flex;gap:10px;flex:1;min-width:0;align-items:stretch;overflow:hidden;list-style:none;padding:0;margin:0}.report{flex:1;min-width:0;padding:8px 10px;background:#f7f0df;border-left:1px dashed #9f9d83;box-shadow:1px 2px 3px #797c6229;font-size:11px;line-height:1.55}.report-day{font:600 14px var(--display);display:block;border-bottom:1px solid #d8d7bf;margin-bottom:4px;padding-bottom:3px}.report-crew{display:block;white-space:nowrap}.report-crew:before{content:"";display:inline-block;width:4px;height:9px;background:var(--crew);margin-right:5px}.report-separator{display:none}.report-empty{font-size:12px;align-self:center;color:#717460}.report-new{outline:1px solid #a5a88e}
+@media(min-width:1650px){body{grid-template-rows:105px minmax(0,1fr) 160px;gap:24px;padding:0 30px 24px}header{gap:30px}h1{font-size:32px}h1 small{font-size:13px}.connection{min-width:210px}.clock{font-size:14px}.site{font-size:13px}.console{padding:22px}.console-heading{margin-bottom:16px}#crews{gap:14px}.crew-card{padding:16px;grid-template-columns:minmax(0,1fr) 160px}.crew-name{font-size:22px}.foreman{font-size:15px}.crew-meta{font-size:14px}.order-state{font-size:12px}.crew-switch{font-size:15px}.pm{min-height:210px}.report{font-size:14px;padding:10px 14px}.report-day{font-size:17px}.reports-heading{width:145px}.reports h2{font-size:22px}.legend{font-size:12px}.board{padding:24px}.eyebrow{font-size:12px}}
+body.browser-host{grid-template-rows:26px 86px minmax(0,1fr) 134px;gap:10px}#browser-banner{align-self:center;text-align:center;color:#eee8d7;font-size:12px}#browser-room{position:relative;font-size:12px;color:#eee8d7}#browser-room summary{cursor:pointer;list-style:none;border:1px solid #83918e;border-radius:4px;padding:8px}#room-code{font-family:monospace;letter-spacing:.08em}.room-panel{position:absolute;right:0;top:42px;z-index:5;width:230px;padding:16px;background:#29383c;border:1px solid #83918e;border-radius:4px;text-align:center;box-shadow:0 4px 12px #101a1d99}.room-panel canvas{display:block;width:196px;height:196px;margin-bottom:10px}.room-panel a{display:block;margin-bottom:8px}#room-status{font-size:11px}@media(min-width:1650px){body.browser-host{grid-template-rows:26px 105px minmax(0,1fr) 160px;gap:18px}}
+</style></head>
+<body>
+<p id="browser-banner" hidden>The headset joins only a game started with Play LOB Over on a PC or Mac</p>
+<header>
+  <div class="brand"><h1>LOB, Over <small>Level 1 · Texas water main</small></h1></div>
+  <div class="calendar" id="calendar" aria-label="Day 1"><span>DAY</span><strong id="day">1</strong></div>
+  <div class="connection"><div class="clock" id="clock" data-speed="paused" role="status">Paused</div><div class="site"><svg class="radio-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14v13H5zM8 8V2m3 10h5m-5 4h5M2 4v4m20-4v4"/></svg><span id="site-status">Waiting for the headset</span></div></div>
+  <div class="header-actions"><details id="browser-room" hidden><summary>Site room <b id="room-code">…</b></summary><div class="room-panel"><canvas id="room-qr" role="img" aria-label="Scan to open the Site seat"></canvas><a id="room-link" target="_blank" rel="noopener">Open Site by room code</a><p id="room-status" role="status">Connecting to room server</p></div></details><a href="level1/rules.pdf" target="_blank" rel="noopener">Rules page ↗</a><button class="mute" id="mute" aria-pressed="false" aria-label="Mute all sound">♪ Mute</button><button class="main-button" id="start" disabled>Start</button></div>
+</header>
+<main>
+  <section class="board" aria-labelledby="board-title"><div class="eyebrow">Site office / Line of balance</div><h2 id="board-title">The PM's plan: promised Day 18</h2>
+    <div class="legend"><span><i class="dashed"></i>PM's plan</span><span><i></i><span id="actual-label">Reported through yesterday</span></span><span id="previous-label" hidden><i class="faint"></i>Previous run · 25%</span></div>
+    <div class="chart-wrap"><svg id="chart" viewBox="0 0 1000 590" role="img" aria-label="Days across from Day 1 at the left, stations up from 0+00 to 30+00"><g id="grid"></g><g id="previous-lines"></g><g id="planned-lines"></g><g id="reported-lines"></g><g id="ruler" hidden><rect x="-5" y="38" width="10" height="486" fill="#8c7958" fill-opacity=".18"/><path d="M0 38V524" stroke="#71634a" stroke-width="1.4"/><text id="today-label" x="0" y="28" text-anchor="middle">Today</text></g></svg></div>
+    <div class="stamp" id="result" hidden><div class="eyebrow">Run record</div><div id="finish"></div><div class="eyebrow" style="margin-top:12px">Idle crew-days</div><div id="idle"></div></div>
+  </section>
+  <aside class="console" aria-labelledby="console-title"><div class="console-heading"><h2 id="console-title">Crew radio</h2><span>PLAN / TRANSMIT</span></div><div id="crews"></div>
+    <section class="pm" aria-label="Project manager"><div class="portrait-frame"><img id="pm-portrait" src="img/clipboard_Final.png" alt="The project manager holding a clipboard"></div><div class="pm-message"><div class="pm-label">From the site office<strong>The PM</strong></div><p id="pm-bubble" role="status" hidden></p></div><p id="feedback" role="status"></p></section>
+  </aside>
+</main>
+<section class="reports" aria-labelledby="reports-title"><div class="reports-heading"><div class="eyebrow">Incoming</div><h2 id="reports-title">Daily reports</h2><p>Latest at the right →</p></div><ol id="reports" aria-live="polite"><li class="report-empty">Awaiting the first daily report.</li></ol></section>
+<script src="lib/transport.js"></script><script src="lib/play-audio.js"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id), CREWS=['exc','pipe','back'];
+const browserHost=new URLSearchParams(location.search).get('host')==='browser';
+if(browserHost){document.body.classList.add('browser-host');$('browser-banner').hidden=false;$('browser-room').hidden=false;$('site-status').textContent='Waiting for the Site browser';}
+// WO-L3: shared crew inks and presentation timings; none affect the host clock.
+const COLORS={exc:'#E0A800',pipe:'#2E86C1',back:'#D35400'};
+const TAPE_MS=3000, WORRIED_MS=4000, TYPE_MS=600, COUNT_MS=1000, REPORT_LIMIT=5;
+// Docs/LEVEL1.md, The job: all three crews use one Standard machine.
+const MACHINE='Standard', REPORT_NAMES={exc:'Excavation',pipe:'Pipe',back:'Backfill'};
+const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const station=ft=>Math.floor(ft/100)+'+'+String(Math.round(ft%100)).padStart(2,'0');
+const number=value=>Math.round(value).toLocaleString('en-US');
+let state, result, sequence=0, mirror=false, starting=false, connected=true, hasStarted=false;
+let chartKey='', gridKey='', drawn={}, lastTotals={}, lastReportDay=0, voiceText='', worried=false, worriedTimer, countFrame;
+const heldSince={}, pending=new Map(), switching=new Map(), tapeTimers=new Map(), typing=new Map();
+const audio=LobOfficeAudio.create(text=>{voiceText=text;$('pm-bubble').textContent=text;$('pm-bubble').hidden=!text;portrait();});
+let socket;
+function send(t,action,fields={},onAck,crew){
+  if(socket.readyState!==WebSocket.OPEN)return false;
+  const id='l1-'+(++sequence);pending.set(id,{onAck,crew});
+  socket.send(JSON.stringify({t,v:1,id,seat:'plan',action,...fields}));return true;
+}
+function portrait(){
+  const name=worried?'worriedSurprise.png':voiceText?'explaining_Final.png':'clipboard_Final.png';
+  const img=$('pm-portrait');if(!img.src.endsWith(name))img.src='img/'+name;
+  img.alt=worried?'The project manager looking worried':voiceText?'The project manager speaking':'The project manager holding a clipboard';
+}
+$('mute').onclick=()=>{const muted=audio.toggleMute();$('mute').setAttribute('aria-pressed',String(muted));$('mute').setAttribute('aria-label',muted?'Unmute all sound':'Mute all sound');$('mute').textContent=muted?'♪ Muted':'♪ Mute';};
+$('start').onclick=()=>{
+  audio.sound('click');starting=true;$('start').disabled=true;$('feedback').textContent='';
+  if(result)send('ctrl','reset',{},()=>send('ctrl','start'));
+  else send('ctrl','start');
+};
+$('crews').onclick=event=>{
+  const button=event.target.closest('[data-crew]'),crew=button?.dataset.crew;
+  if(!crew||mirror||result||!connected||switching.has(crew))return;
+  switching.set(crew,!state.view.held[crew]);renderCrews();audio.sound('switch');
+  if(!send('cmd','commit',{ops:[{op:state.view.held[crew]?'resume':'hold',crew}]},null,crew)){switching.delete(crew);renderCrews();}
+};
+function makeCrews(){
+  $('crews').innerHTML=state.view.crews.map(c=>`<article class="crew-card" id="crew-${c.id}" style="--crew:${COLORS[c.id]}"><div><div class="crew-name">${esc(c.name)}<span class="foreman">${esc(c.foreman)}</span></div><div class="crew-meta">${MACHINE} · <strong>${c.rate} ft / day</strong> · Start Day ${c.startDay}</div></div><div><button type="button" role="switch" class="crew-switch" data-crew="${c.id}" aria-label="Hold ${esc(c.name)}" aria-checked="false"><span class="go">GO</span><span class="hold">HOLD</span></button><div class="order-state"><i class="lamp" aria-hidden="true"></i><span id="order-${c.id}">Go</span></div></div><div class="refusal" id="refusal-${c.id}" role="status" hidden></div></article>`).join('');
+}
+function renderCrews(){
+  for(const c of state.view.crews){
+    const held=state.view.held[c.id],button=document.querySelector(`[data-crew="${c.id}"]`);
+    if(held&&heldSince[c.id]===undefined)heldSince[c.id]=state.displayDay;
+    if(!held)delete heldSince[c.id];
+    button.setAttribute('aria-checked',String(switching.get(c.id)??held));
+    button.disabled=mirror||!!result||!connected||switching.has(c.id);
+    $('crew-'+c.id).dataset.held=String(held);
+    $('order-'+c.id).textContent=held?'Holding since Day '+heldSince[c.id]:'Go';
+  }
+}
+function drawChart(){
+  const v=state.view,length=v.project.job.lengthFt,previous=result?result.previousRun?.lines.actual:v.previousRun;
+  const actual=result?.lines.actual??v.reportedLines,planned=result?.lines.planned??v.plannedPolylines;
+  const all=[...Object.values(actual).flat(),...Object.values(previous??{}).flat()];
+  const maxDay=Math.max(v.promisedDay+3,state.displayDay,...all.map(p=>Math.ceil(p.t+1)));
+  const x=t=>65+t/(maxDay-1)*850,y=ft=>524-ft/length*486;
+  const nextGrid=JSON.stringify([length,maxDay,v.project.job.zones]);
+  if(gridKey!==nextGrid){
+    let grid=v.project.job.zones.map((z,i)=>`<rect class="zone-band" x="65" y="${y(z.toFt)}" width="850" height="${y(z.fromFt)-y(z.toFt)}" fill="${i%2?'#b3bea5':'#bda47b'}" opacity=".12"/><text class="zone-label" x="928" y="${y((z.fromFt+z.toFt)/2)+4}">ZONE ${z.id}</text>`).join('');
+    for(let ft=0;ft<=length;ft+=v.project.job.stationEveryFt){
+      const major=ft%500===0;grid+=`<line x1="65" x2="915" y1="${y(ft)}" y2="${y(ft)}" stroke="#7f8870" stroke-opacity="${major?.3:.12}"/>`;
+      if(major)grid+=`<text class="station-label" x="53" y="${y(ft)+4}" text-anchor="end">${station(ft)}</text>`;
+    }
+    for(let day=1;day<=maxDay;day++)grid+=`<line x1="${x(day-1)}" x2="${x(day-1)}" y1="38" y2="524" stroke="#7f8870" stroke-opacity=".2"/><text class="day-label" x="${x(day-1)}" y="549" text-anchor="middle">${day}</text>`;
+    grid+=`<text x="490" y="578" text-anchor="middle">Day</text><path d="M${x(v.promisedDay-1)} 38V524" stroke="#776c52" stroke-dasharray="3 5"/>`;
+    $('grid').innerHTML=grid;gridKey=nextGrid;
+  }
+  const nextKey=JSON.stringify([nextGrid,planned,actual,previous]);
+  if(chartKey!==nextKey){
+    const line=(id,points,kind,opacity=1,extra='')=>points?.length>1?`<polyline data-line="${id}" data-kind="${kind}" points="${points.map(p=>`${x(p.t)},${y(p.ft)}`).join(' ')}" fill="none" stroke="${COLORS[id]}" stroke-width="${kind==='plan'?2.5:3.5}" stroke-linecap="round" stroke-linejoin="round" ${kind==='plan'?'stroke-dasharray="9 7"':''} opacity="${opacity}" ${extra}/>`:'';
+    $('previous-lines').innerHTML=CREWS.map(id=>line(id,previous?.[id],'previous',.25)).join('');
+    $('planned-lines').innerHTML=CREWS.map(id=>line(id,planned[id],'plan')).join('');
+    $('reported-lines').innerHTML=CREWS.map(id=>{
+      const points=actual[id],old=drawn[id]??[],extendsOld=old.length&&points.length>old.length&&old.every((p,i)=>p.t===points[i].t&&p.ft===points[i].ft);
+      if(!result&&extendsOld)return line(id,old,'actual')+line(id,points.slice(old.length-1),'segment',1,'class="ink-segment" pathLength="1"');
+      return line(id,points,'actual');
+    }).join('');
+    chartKey=nextKey;drawn=structuredClone(actual);
+  }
+  $('previous-label').hidden=!previous;$('ruler').toggleAttribute('hidden',!hasStarted);
+  $('ruler').style.transform=`translateX(${x(state.displayDay-1)}px)`;
+  $('today-label').textContent='Day '+state.displayDay;
+}
+function render(){
+  const v=state.view,day=Number.isFinite(result?.finishDay)?Math.floor(result.finishDay+1e-6)+1:state.displayDay;
+  if($('day').textContent!==String(day)){
+    $('day').textContent=day;$('calendar').setAttribute('aria-label','Day '+day);
+    $('calendar').classList.remove('flip');void $('calendar').offsetWidth;$('calendar').classList.add('flip');audio.sound('tick');
+  }
+  $('clock').textContent=state.speed==='slow'?'Field is slow today':state.speed==='paused'?'Paused':'Running';$('clock').dataset.speed=state.speed;
+  $('site-status').textContent=v.siteClient==='quest'?'Headset connected':v.siteClient==='web'?'Site connected in a browser':browserHost?'Waiting for the Site browser':'Waiting for the headset';
+  $('actual-label').textContent=result?'Actual work':'Reported through yesterday';
+  $('start').textContent=result?'Run again':'Start';$('start').disabled=!connected||mirror||starting||(!result&&state.speed!=='paused');
+  $('board-title').textContent=hasStarted?'Texas water main · Crew reports':`The PM's plan: promised Day ${v.promisedDay}`;
+  renderCrews();drawChart();
+}
+function resetPresentation(){
+  result=null;hasStarted=false;drawn={};chartKey='';lastTotals={};lastReportDay=0;
+  for(const crew of CREWS)delete heldSince[crew];
+  pending.clear();switching.clear();for(const timer of tapeTimers.values())clearTimeout(timer);tapeTimers.clear();
+  for(const frame of typing.values())cancelAnimationFrame(frame);typing.clear();
+  clearTimeout(worriedTimer);cancelAnimationFrame(countFrame);worried=false;audio.reset();
+  $('result').hidden=true;$('feedback').textContent='';$('reports').innerHTML='<li class="report-empty">Awaiting the first daily report.</li>';
+}
+function acceptState(message){
+  const newRun=state?.runId!==message.runId,wasSlow=state?.speed==='slow';
+  if(newRun)resetPresentation();
+  state=message;if(newRun)makeCrews();
+  if(state.speed!=='paused'){starting=false;hasStarted=true;}
+  if(state.speed==='slow'&&!wasSlow){
+    worried=true;portrait();audio.sound('hiss');clearTimeout(worriedTimer);
+    worriedTimer=setTimeout(()=>{worried=false;portrait();},WORRIED_MS);
+  }
+  render();
+}
+function report(message){
+  if(message.day<=lastReportDay)return;
+  const pieces=[`Day ${message.day}`,...CREWS.map(id=>`${REPORT_NAMES[id]} +${number(message.feetByCrew[id]-(lastTotals[id]??0))} ft (${number(message.feetByCrew[id])})`)];
+  lastTotals={...message.feetByCrew};lastReportDay=message.day;
+  $('reports').querySelector('.report-empty')?.remove();$('reports').querySelector('.report-new')?.classList.remove('report-new');
+  const item=document.createElement('li');item.className='report report-new';item.dataset.day=message.day;
+  pieces.forEach((text,i)=>{const span=document.createElement('span');span.className=i?'report-crew':'report-day';if(i)span.style.setProperty('--crew',COLORS[CREWS[i-1]]);item.append(span);if(i<pieces.length-1){const separator=document.createElement('span');separator.className='report-separator';separator.textContent=' · ';item.append(separator);}});
+  $('reports').append(item);
+  while($('reports').children.length>REPORT_LIMIT){const oldest=$('reports').firstElementChild;cancelAnimationFrame(typing.get(oldest));typing.delete(oldest);oldest.remove();}
+  const spans=[...item.querySelectorAll('.report-day,.report-crew')],total=pieces.join('').length,start=performance.now();let lastClick=-1;
+  function type(now){
+    let remaining=Math.floor(Math.min(1,(now-start)/TYPE_MS)*total);
+    spans.forEach((span,i)=>{span.textContent=pieces[i].slice(0,Math.max(0,remaining));remaining-=pieces[i].length;});
+    const click=Math.floor((now-start)/75);if(click!==lastClick){audio.sound('teletype');lastClick=click;}
+    if(now-start<TYPE_MS)typing.set(item,requestAnimationFrame(type));else typing.delete(item);
+  }
+  typing.set(item,requestAnimationFrame(type));
+}
+function showResult(message){
+  result=message;starting=false;$('result').hidden=false;
+  $('finish').textContent=Number.isFinite(result.finishDay)?`Finished Day ${Math.floor(result.finishDay+1e-6)+1} · Promised Day ${result.promisedDay}`:`Run ended · Promised Day ${result.promisedDay}`;
+  $('idle').innerHTML=state.view.crews.map(c=>`<div class="idle-crew" style="--crew:${COLORS[c.id]}">${esc(c.name)}<strong class="idle-count" id="idle-${c.id}">0</strong></div>`).join('');
+  cancelAnimationFrame(countFrame);const start=performance.now();
+  function count(now){const progress=Math.min(1,(now-start)/COUNT_MS);for(const id of CREWS)$('idle-'+id).textContent=Number((result.idleDays[id]*progress).toFixed(2));if(progress<1)countFrame=requestAnimationFrame(count);}
+  countFrame=requestAnimationFrame(count);render();
+}
+async function connect(){
+socket=browserHost?await (await import('./lib/level1-browser.js')).connectLevel1():LobTransport.connect();
+socket.onopen=()=>socket.send(JSON.stringify({t:'hello',v:1,seat:'plan',client:'web'}));
+socket.onclose=()=>{connected=false;starting=false;switching.clear();$('feedback').textContent='Connection to the game closed.';if(state)render();};
+socket.onmessage=event=>{
+  const message=JSON.parse(event.data);
+  if(message.t==='welcome'){mirror=message.mirror;acceptState(message.state);}
+  else if(message.t==='state')acceptState(message);
+  else if(message.t==='ack'||message.t==='nack'){
+    const request=pending.get(message.id);pending.delete(message.id);
+    if(request?.crew)switching.delete(request.crew);
+    if(message.t==='nack'){
+      starting=false;
+      if(request?.crew){const tape=$('refusal-'+request.crew);tape.textContent=message.reason;tape.hidden=false;clearTimeout(tapeTimers.get(request.crew));tapeTimers.set(request.crew,setTimeout(()=>{tape.hidden=true;},TAPE_MS));}
+      else $('feedback').textContent=message.reason;
+      render();
+    }else request?.onAck?.();
+  }else if(message.t==='voice')audio.play(message,state.stage);
+  else if(message.t==='report')report(message);
+  else if(message.t==='result')showResult(message);
+};
+}
+connect().catch(error=>{connected=false;$('feedback').textContent='Game unavailable: '+error.message;$('start').disabled=true;});
+</script></body></html>

@@ -1,5 +1,5 @@
 const SEATS = new Set(['plan', 'site', 'rules', 'facilitator']);
-export function createClients({ state, welcome, command, changed = () => {} }) {
+export function createClients({ state, welcome, command, changed = () => {}, allowControl = () => false }) {
   const clients = new Map(), connections = new Set();
   const send = (socket, message) => {
     socket.send(message);
@@ -19,7 +19,7 @@ export function createClients({ state, welcome, command, changed = () => {} }) {
       if (message.t === 'hello') {
         if (!SEATS.has(message.seat) || clients.has(socket)) return;
         const mirror = [...clients.values()].some(c => c.seat === message.seat && !c.mirror);
-        clients.set(socket, { seat: message.seat, mirror });
+        clients.set(socket, { seat: message.seat, client: message.client, mirror });
         send(socket, { t: 'welcome', v: 1, protocol: 1, seat: message.seat, mirror,
           stage: state(message.seat).stage, state: state(message.seat) });
         welcome(socket, message.seat, send);
@@ -34,7 +34,7 @@ export function createClients({ state, welcome, command, changed = () => {} }) {
       let reason;
       if (!client) reason = 'hello required';
       else if (client.mirror) reason = 'mirror';
-      else if (message.t === 'ctrl' && client.seat !== 'facilitator'
+      else if (message.t === 'ctrl' && client.seat !== 'facilitator' && !allowControl(client.seat, message.action)
         || message.t === 'cmd' && (message.seat !== client.seat || client.seat === 'facilitator')) {
         reason = 'action unavailable for seat';
       }
@@ -44,6 +44,7 @@ export function createClients({ state, welcome, command, changed = () => {} }) {
   }
   return {
     attach, broadcast,
+    siteClient: () => [...clients.values()].find(c => c.seat === 'site' && !c.mirror)?.client ?? null,
     connected: () => [...new Set([...clients.values()].filter(c => !c.mirror).map(c => c.seat))],
     sendEach(makeMessage) {
       for (const [socket, client] of clients) {

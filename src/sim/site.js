@@ -1,10 +1,13 @@
-import { CREW_IDS, EPS, HOURS_PER_DAY, activeCollapse, crewAt, emit, nearby, travelDays, voice, zoneAt } from './common.js';
+import { CREW_IDS, EPS, HOURS_PER_DAY, activeCollapse, crewAt, emit, nearby, travelDays, voice, zoneAt, usesExchanges } from './common.js';
 import { confirmDeviation, inspectProtection } from './deviations.js';
 import { inspectionText, stakeAt } from './views.js';
 
 const TARGETS = new Set(['wall', 'water', 'pipe', 'machine', 'protection', 'board', 'sky', 'ticket', 'crew']);
 export function applySite(s, cmd) {
   const truck = s.truck;
+  if (s.scenario.rules.planControlsClock && !['moveTo', 'mount', 'dismount', 'inspect', 'listen'].includes(cmd.action)) {
+    return 'action unavailable for seat';
+  }
   if (cmd.action === 'moveTo') {
     if (truck.moving || truck.dismounted) return 'mount before moving';
     if (!Number.isFinite(cmd.stationFt) || cmd.stationFt < 0 || cmd.stationFt > s.scenario.job.lengthFt) return 'invalid station';
@@ -61,6 +64,11 @@ export function applySite(s, cmd) {
   }
   if (cmd.action === 'listen') {
     const c = crewAt(s);
+    if (usesExchanges(s)) {
+      const last = c && s.lastCrewVoice?.[c.id];
+      if (last) emit(s, 'voice', last);
+      return;
+    }
     if (c?.arguing) {
       const conflict = s.conflicts.find(conflict => conflict.trailing === c.id || conflict.leader === c.id);
       voice(s, 'conflict', ['site'], [conflict.trailing, conflict.leader]);

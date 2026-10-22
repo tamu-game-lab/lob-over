@@ -14,7 +14,11 @@ export function createPacer(getSim, afterTick, {
   let currentSim, stepMs, accountedAt;
   function interval(sim) {
     if (closed || sim.done || sim.speed === 'paused') return null;
-    return fast ? FAST_MS : sim.speed === 'slow' ? SLOW_MS : FULL_MS;
+    if (fast) return FAST_MS;
+    if (sim.clock?.slowUntil === 'eventEnd') {
+      return STEP_DAYS * 1000 * (sim.speed === 'slow' ? sim.clock.secondsPerDaySlow : sim.clock.secondsPerDayFull);
+    }
+    return sim.speed === 'slow' ? SLOW_MS : FULL_MS;
   }
   function schedule() {
     clearTimer(timer);

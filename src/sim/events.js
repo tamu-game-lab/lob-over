@@ -1,4 +1,4 @@
-import { CLEARING_DAY_STEP, EPS, emit, protectionAt } from './common.js';
+import { CLEARING_DAY_STEP, EPS, emit, protectionAt, voice } from './common.js';
 import { eventDeviations } from './deviations.js';
 import { finishRain } from './rain.js';
 
@@ -30,12 +30,13 @@ export function updateEvents(s) {
       event.firedT = s.t;
       event.protection = protectionAt(s, event.stationFt)?.kind ?? null;
       event.shownCard = event.protection && event.cardWhenProtected ? event.cardWhenProtected : event.card;
-      event.endsT = event.type === 'P1' ? null : s.t + event.durationDays;
+      event.endsT = event.type === 'P1' && event.durationDays == null ? null : s.t + event.durationDays;
       if (event.type === 'A2') event.openFt = Math.max(0, s.crews.exc.pos - s.crews.back.pos);
       s.speed = 'slow';
       emit(s, 'event', { eventId: event.id, day: s.t, zone: event.zone, stationFt: event.stationFt,
         card: event.shownCard, seats: event.visibleTo });
       eventDeviations(s, event);
+      voice(s, 'event', ['site'], undefined, { eventType: event.type });
     }
     if (event.resolved || event.endsT == null || s.t < event.endsT - EPS) continue;
     if (event.type === 'A2') {
