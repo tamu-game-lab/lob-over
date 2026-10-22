@@ -33,12 +33,14 @@ Nothing tells the team whether a choice was right. The PM's voice pushes to keep
 
 ## In the headset
 
-Revised later on October 21, after the first Level 1 build (WO-L2) was tested: its warp drew a mask around the head that stuck as a window, the site was a flat band of colour under a flat sky with white blobs, and the view read as a drawing seen through a lens. Decisions K37 to K40; work orders WO-L4 and WO-L5.
+Revised October 22, after the fourth build (the tunnel removed): one site, everything in front, real scale, words you can read, days you can see. Decisions K45 to K48; work order WO-L8.
 
-- You start in your room, in full passthrough, and can see and talk to the others. Nothing is drawn but a panel within arm's reach: the day and three buttons, Ray, digging; Marcus, pipe; Dana, backfill.
-- Touch a button, or point at it and pull the trigger. The site materializes around you where you stand: a wave runs outward from your feet across the ground; just behind its front everything is drawn as glowing wire and blueprint lines over the room, and a moment later the surfaces fill in, dirt, gravel, steel, the crews, the machines, until the room is gone and the sky closes over you. About 1.5 s. You do not move; the site is built around you. Going back runs the same wave inward, and the room returns.
-- The site has to look like a site: a textured ground with relief, a real trench with spoil along it, bedding and pipe in the bottom, a gravel road with ruts, fences, cones and barriers, the trailer, the crews and their machines, a sky with sun and clouds, shadows, and haze toward the horizon. You can look anywhere; nothing frames or masks the view.
-- In the site you look and listen. Foremen talk from where they stand; when you arrive, the foreman greets you or says what is going on. The only button is Back, on your left wrist.
+- You start in your room, in full passthrough, and can see and talk to the others. Nothing is drawn but a panel within arm's reach: the day, the connection, and one button, Go to the site.
+- Touch it. The site materializes around you where you stand: a wave runs outward from your feet; just behind its front everything is glowing wire and blueprint lines over the room, then the surfaces fill in, until the room is gone and the sky closes over you. You do not move; the site is built around you.
+- You stand on the road. The trench runs across in front of you, 6 m away. The three crews work in front of you at real size: the pipe crew in the middle, the excavator to the right, the backfill loader to the left, nearer or farther as the real gaps between them change. Machines crawl as they work; you never move. The stake by each crew shows its real station. The rest of the site runs off to the horizon on both sides.
+- Look at a crew for two seconds and you have walked over to it: its foreman greets you or says what is going on, and the host treats you as standing there. Whatever anyone says shows in a speech bubble over their head while it plays. A Log button on your wrist opens a panel in front of you with the last twenty lines, the day and the clock state; grab it and leave it anywhere.
+- Each day the sun crosses the sky; at the day boundary the light dims to dusk and the new day opens with its number in front of you. When the wall falls you see it fall in front of you; when the foremen argue, they meet in front of you.
+- Back on your left wrist dissolves the site into your room.
 
 ## On the PC
 

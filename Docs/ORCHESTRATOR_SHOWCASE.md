@@ -101,6 +101,21 @@ Rules for this round:
 4. Dispatch WO-L3 (web) and WO-L4 (Unity) in parallel; WO-L5 after WO-L4 is accepted (it changes the shader WO-L4 creates). Max two rejection rounds each.
 5. At the end, run `LOB Over > Build > Sync Data`, set the Android texture compression override to ASTC through the MCP (it drifts), commit and push, and print `LEVEL1_READY_TO_BUILD` with these lines for Bryan: open Unity; `LOB Over > Build > Build and Run Quest` (if it stops on the ASTC line: File > Build Profiles > Android > Texture Compression > ASTC, then again); double-click `Play LOB Over.cmd`; put on the headset; then the five checks of WO-L5 and the Plan page.
 
+## Round 6, the tunnel and the chart (October 22)
+
+Bryan's fourth headset test still showed the grey circle. The cause is in WO-L7: the Interaction SDK's tunneling quads under the Interactions Rig's `Locomotor`, left rendering after Configure disabled their drivers, and never seen because every screenshot came from a free preview camera (K42, K43). Bryan may have turned the two objects off by hand already; WO-L7 makes Configure and Check do it. Rules 0 to 5 of Round 5 apply (no Quest build; the Editor is the proof; load the `quest-mr-rendering` skill first).
+
+1. First commit the pending documents (this section, WO-L6, WO-L7, K42 to K44, the rendering doc and skill) and push. Revert `ProjectSettings/UnityConnectSettings.asset` and `Assets/Settings/Mobile_RPAsset.asset` if the Editor has changed them again (Unity Services on, soft-shadow prefilter flags), and commit the two converted materials only if a build rewrote them.
+2. WO-L7 first, alone (it changes `play.html` and the verification camera the others depend on), verified through the head camera. Then WO-L8 (Unity) and WO-L6 (web) in parallel: disjoint folders. Max two rejection rounds each; a third only with Bryan's word.
+3. WO-L8 is judged on its head-camera screenshots against its goal sentence: three crews in front at real scale on the ground, a readable bubble, the panel in reach, a dusk frame. Reject anything that reads as small, floating, off to the side or unreadable.
+4. End with Sync Data, the ASTC override, the site republished, a push, and `ROUND6_READY_TO_BUILD` as the last line, with Bryan's steps: Build and Run Quest; `Play LOB Over.cmd` (or the Pages Level 1 with a phone as Site when there is no headset); the headset: whole room, one button, the site in front of him with the wire phase, bubbles, the log panel, dusks; the flipped chart on the Plan page.
+
+## Finishing a goal (added October 22)
+
+1. The goal's token (or the word STOPPED) is the last line of the final message, alone, and nothing is added, withdrawn or restated after it: the goal is over. Round 5 printed both a token and a stop condition and then restated the stop condition six times under the goal hook, for no change to the repo.
+2. A stop condition is something Bryan must decide or supply before work can continue. A deviation from procedure that has already been corrected by a re-run through the prescribed path (a test edit reverted and reimplemented, a CLI check re-run through the MCP, a log that no longer exists on the device) is recorded in the worklog in one line and is not a stop condition.
+3. "Verified as the rules say" means the final record passed every check through the prescribed path. The trail may contain earlier attempts; they are history, not grounds to withhold the token.
+
 ## Finish lines
 
 - First goal: `READY_FOR_PAGES` when WO-05a, WO-S1 and WO-S2 are ACCEPTED.

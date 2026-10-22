@@ -41,4 +41,6 @@ Written October 21, 2026, after two headset builds failed on compositing and loo
 
 ## Seeing the real thing before a build
 
+Every acceptance screenshot is rendered through the rig's centre eye: a camera parented to the centre eye anchor with identity local pose and the centre eye camera's field of view, so anything attached to the head (the Interaction SDK's tunneling quads, masks, panels) appears exactly as the headset shows it; a free preview camera saw the tunnel quads edge-on and three builds shipped with a grey circle (K42, K43). The Interactions Rig's `SmoothMovementTunneling` and `WallPenetrationTunneling` objects are inactive in every scene; Check Building Blocks fails while a `TunnelingEffect` renders.
+
 The Editor cannot show passthrough. For every screenshot of a passthrough state, render the eye view to an ARGB32 texture and composite it over a stand-in room image (`Monitor/out/unity/room.png`, a mid-grey wall with a 20 cm grid) using the eye buffer's alpha; the result is what the compositor would show. Review those, not the raw frame. Quest Link with "Passthrough over Link" shows the real compositor in the headset but is not required.

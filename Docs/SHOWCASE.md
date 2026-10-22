@@ -105,3 +105,11 @@ Before pasting:
 ```
 
 When it prints `LEVEL1_READY_TO_BUILD`: in Unity, `LOB Over > Build > Build and Run Quest`; double-click `Play LOB Over.cmd`; put on the headset.
+
+## Round 6 goal, the tunnel, the chart, the site in front of you, the web version (October 22)
+
+If not done already, in Unity, Play.unity: expand `[BuildingBlock] Camera Rig` > `[BuildingBlock] OVRComprehensiveInteractionRig` > `Locomotor`, select `SmoothMovementTunneling` and `WallPenetrationTunneling`, untick the checkbox at the top of the Inspector for each, save the scene. That alone removes the circle from the next build; WO-L7 makes it permanent.
+
+```
+/goal Read Docs/ORCHESTRATOR.md and Docs/ORCHESTRATOR_SHOWCASE.md (sections "Unity through the MCP", "Round 5" rules, "Round 6" and "Finishing a goal") and follow them, starting with Round 6 step 1. Run WO-L7 alone, then WO-L8 and WO-L6 in parallel, through bash Tools/astra.sh, each verified in the Editor through the head camera as the orders say (max two rejection rounds), committed and pushed. Do not build for the Quest. Finish with Sync Data, the ASTC override, the site republished, a push, and my build steps. Done when the last line of your final message is exactly ROUND6_READY_TO_BUILD or exactly STOPPED.
+```

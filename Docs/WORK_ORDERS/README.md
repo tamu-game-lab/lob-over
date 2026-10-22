@@ -26,6 +26,9 @@ One file per bounded job for Astra. The orchestrator dispatches them in order wi
 | WO-L3 | The Plan seat feels like a game: drafting board, radio console, PM portrait, sound | WO-L1 | `Monitor/web/play.html`, `Monitor/web/img/` |
 | WO-L4 | The site looks real: SiteLit shader, textures, ground, trench, props, sky, light, budget | WO-L2 | `Assets/LOBOver/`, `Tools/import_lobgame_assets.ps1` |
 | WO-L5 | The site materializes around the player (wave, wire and blueprint, no mask), watchdog, logs, preview composites | WO-L4 | `Assets/LOBOver/` |
+| WO-L6 | Level 1 on a Mac (`Play LOB Over.command`) and on GitHub Pages (browser-host Level 1, no headset) | WO-L1 | `Play LOB Over.command`, `Monitor/`, `Showcase/`, `README.md` |
+| WO-L7 | No tunnel (K42), head-camera verification (K43), chart days across and stations up (K44) | WO-L5 | `Assets/LOBOver/`, `Monitor/web/` |
+| WO-L8 | The site in front of you: one button, stage layout, real scale and grounding, gaze attention, speech bubbles, log panel, day and night, stronger wave | WO-L7 | `Assets/LOBOver/` |
 | WO-06 to WO-10 | Superseded (VR seat as a client of a LAN host); their world and verb sections are cited by WO-S3 and WO-S4 | — | — |
 | WO-07 | Quest client core (WebSocket, protocol, site-state model, HUD) | WO-06, imported assets | `Assets/LOBOver/Runtime/Client/` |
 | WO-08 | The site in VR: scene built by script, world in step with `state` | WO-07 | `Assets/LOBOver/Runtime/World/`, `Assets/LOBOver/Editor/` |
