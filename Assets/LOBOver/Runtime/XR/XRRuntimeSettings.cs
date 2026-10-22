@@ -12,7 +12,7 @@ namespace LOBOver.XR
             while (!OVRManager.isHmdPresent || OVRManager.display == null) yield return null;
             OVRManager.display.displayFrequency = TargetRefreshRate;
             OVRManager.useDynamicFoveatedRendering = false;
-            OVRManager.foveatedRenderingLevel = OVRManager.FoveatedRenderingLevel.Medium;
+            OVRManager.foveatedRenderingLevel = OVRManager.FoveatedRenderingLevel.Low; // WO-L4 / XR_RENDERING.md.
         }
     }
 }

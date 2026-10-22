@@ -42,8 +42,8 @@ namespace LOBOver.Editor
                 if (root.GetComponentInChildren<BuildingBlock>(true) != null || root.GetComponentInChildren<OVRCameraRig>(true) != null
                     || root.GetComponentsInChildren<Transform>(true).Any(t => t.name.StartsWith("[BuildingBlock]", StringComparison.Ordinal) || t.name == "OVRCameraRig"))
                     throw new InvalidOperationException("Play Scene stopped: protected block/rig under " + root.name + ". Nothing removed.");
-            // Reuse the imported presenter assets; never regenerate imported prefabs or call the old builder.
-            var assets = SiteAssetBuilder.Required<WorldAssets>(SiteAssetBuilder.Art + "WorldAssets.asset");
+            // WO-L4 owns new copies under Art; the legacy prefab directory is outside this order.
+            var assets = SitePresentationBuilder.BuildAssets();
             var dark = Material("PlayPanel", "Universal Render Pipeline/Unlit", new Color(0.035f, 0.045f, 0.06f, 1));
             var buttonMaterial = Material("PlayButton", "Universal Render Pipeline/Unlit", new Color(0.18f, 0.22f, 0.28f, 1));
             var warpMaterial = Material("Warp", "LOBOver/Warp", Color.white, false);
@@ -51,13 +51,22 @@ namespace LOBOver.Editor
             foreach (var root in replaced) Object.DestroyImmediate(root);
             var lighting = Root("Lighting");
             var sun = WorldDrawing.Group("Sun", lighting).AddComponent<Light>(); sun.type = LightType.Directional;
-            sun.transform.rotation = Quaternion.Euler(48, -35, 0); sun.intensity = 1.2f; sun.shadows = LightShadows.Soft;
+            SitePresentationBuilder.Lighting(sun);
+            foreach (var light in scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Light>(true)).Where(l => l != sun && l.enabled))
+            {
+                if (light.GetComponentInParent<BuildingBlock>(true) != null
+                    || light.GetComponentsInParent<Transform>(true).Any(t => t.name.StartsWith("[BuildingBlock]", StringComparison.Ordinal)))
+                    throw new InvalidOperationException("WO-L4: protected Building Block light would exceed the one-light budget: " + light.name);
+                light.enabled = false; EditorUtility.SetDirty(light); PrefabUtility.RecordPrefabInstancePropertyModifications(light);
+                Debug.Log("WO-L4: disabled extra scene light " + light.name + "; the site uses one directional sun.");
+            }
             var hub = Root("Hub");
             var floor = WorldDrawing.Group("TrackedFloor", hub).AddComponent<BoxCollider>();
             floor.size = new Vector3(FloorSize, 0.1f, FloorSize); floor.center = new Vector3(0, -0.05f, 0);
             var site = Root("Site"); site.gameObject.SetActive(false);
-            BuildGround(site, assets);
+            var sky = SitePresentationBuilder.Build(site, assets);
             var world = WorldDrawing.Group("SiteWorld", site).AddComponent<SiteWorld>(); world.assets = assets;
+            world.sky = sky;
             var client = Root("Client");
             var connection = client.gameObject.AddComponent<HostConnection>();
             var xr = client.gameObject.AddComponent<XRRig>(); client.gameObject.AddComponent<XRRuntimeSettings>();
@@ -95,6 +104,8 @@ namespace LOBOver.Editor
             camera.backgroundColor = Color.clear; camera.allowHDR = false; camera.nearClipPlane = 0.05f; camera.farClipPlane = 6000; camera.depth = 100;
             var desktop = preview.gameObject.AddComponent<PlayPreview>(); desktop.view = camera; desktop.rig = xr; desktop.back = back;
             xr.editorHead = camera.transform;
+            sky.observer = camera.transform;
+            sky.rig = xr;
             EditorSceneManager.MarkSceneDirty(scene);
             if (saveScene)
             {
@@ -136,24 +147,6 @@ namespace LOBOver.Editor
             var button = obj.AddComponent<CrewButton>(); button.warp = warp; button.crew = crew;
             button.click = obj.AddComponent<AudioSource>(); button.click.playOnAwake = false; button.click.spatialBlend = 0; button.click.clip = click;
             return button;
-        }
-        private static void BuildGround(Transform site, WorldAssets assets)
-        {
-            // An owned backdrop leaves the block camera's transparent clear settings untouched.
-            var sky = GameObject.CreatePrimitive(PrimitiveType.Sphere); sky.name = "SiteBackdrop";
-            sky.transform.SetParent(site, false); sky.transform.localPosition = new Vector3(500, 0, 0); sky.transform.localScale = Vector3.one * 10000;
-            Object.DestroyImmediate(sky.GetComponent<Collider>());
-            var renderer = sky.GetComponent<Renderer>(); renderer.shadowCastingMode = ShadowCastingMode.Off; renderer.receiveShadows = false;
-            renderer.sharedMaterial = Material("PlaySky", "LOBOver/PlaySky", new Color(0.65f, 0.75f, 0.85f));
-            // Existing full-scale presenter geometry (WO-08), with the road's collider top at y=0.
-            const float length = 1200, width = 200;
-            for (var side = -1; side <= 1; side += 2)
-                WorldDrawing.Box(side < 0 ? "FarBank" : "NearBank", site,
-                    new Vector3(500, -1, side * (width + WorldUnits.TrenchWidth) / 4),
-                    new Vector3(length, 2, (width - WorldUnits.TrenchWidth) / 2), assets.soil);
-            WorldDrawing.Box("Subsoil", site, new Vector3(500, -2.1f, 0), new Vector3(length, 0.2f, width), assets.soil);
-            WorldDrawing.Box("BeforeTrench", site, new Vector3(-50, -1, 0), new Vector3(100, 2, WorldUnits.TrenchWidth), assets.soil);
-            WorldDrawing.Box("Road", site, new Vector3(460, -0.015f, WorldUnits.RoadZ), new Vector3(980, 0.03f, 8), SiteAssetBuilder.Material("AccessRoad"));
         }
     }
 }

@@ -7,6 +7,8 @@ namespace LOBOver.World
         public ParticleSystem rain;
         public Transform cloudBank;
         public Transform observer;
+        public Transform dome;
+        public LOBOver.XR.XRRig rig;
         public string State { get; private set; }
         public bool Raining => rain.gameObject.activeSelf;
         private WorldAssets assets;
@@ -25,6 +27,11 @@ namespace LOBOver.World
         {
             if (State == state) return;
             State = state; var raining = state == "rain";
+            if (dome != null)
+            {
+                Shader.SetGlobalFloat("_SiteRain", raining ? 1 : 0);
+                Shader.SetGlobalFloat("_SiteCloudBank", state == "towersSouth" || raining ? 1 : 0);
+            }
             cloudBank.gameObject.SetActive(state == "towersSouth" || raining);
             rain.gameObject.SetActive(raining);
             if (raining && Application.isPlaying) rain.Play();
@@ -35,7 +42,9 @@ namespace LOBOver.World
         }
         private void LateUpdate()
         {
+            if (rig != null) observer = rig.ViewEye;
             if (observer == null) return;
+            if (dome != null) dome.position = observer.position;
             rain.transform.position = observer.position + Vector3.up * 12;
             // WO-08: a cumulus billboard bank 2 km south of the site.
             cloudBank.forward = (cloudBank.position - observer.position).normalized;
@@ -43,6 +52,7 @@ namespace LOBOver.World
         private void OnDestroy()
         {
             if (assets == null) return;
+            if (dome != null) { Shader.SetGlobalFloat("_SiteRain", 0); Shader.SetGlobalFloat("_SiteCloudBank", 0); }
             RenderSettings.fog = originalFog; RenderSettings.fogColor = originalFogColour; RenderSettings.fogDensity = originalFogDensity;
         }
     }

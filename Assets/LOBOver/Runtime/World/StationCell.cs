@@ -7,9 +7,11 @@ namespace LOBOver.World
     public sealed class StationCell : MonoBehaviour
     {
         public GameObject surface, floor, walls, pipes, wetBand, water, slump, box, shoring;
+        public GameObject spoilWindrow, collapseProps;
         public Transform nearWall, farWall, stake;
         public TextMeshPro stationText;
         public Material openMaterial, pipeMaterial, backfillMaterial, surfaceMaterial;
+        public bool debugStateChanges; // WO-L4 rejection 1: opt-in cell dumps; silent by default.
         public string State { get; private set; }
         public string Water { get; private set; }
         public string Wall { get; private set; }
@@ -39,11 +41,13 @@ namespace LOBOver.World
             surface.SetActive(!dug); floor.SetActive(dug); walls.SetActive(dug); pipes.SetActive(State == "piped");
             surface.GetComponent<Renderer>().sharedMaterial = State == "backfilled" ? backfillMaterial : surfaceMaterial;
             floor.GetComponent<Renderer>().sharedMaterial = State == "piped" ? pipeMaterial : openMaterial;
-            wetBand.SetActive(dug && Water == "seep"); water.SetActive(dug && (Water == "standing" || Wall == "slumped"));
+            wetBand.SetActive(dug && Water == "seep"); water.SetActive(dug && Water == "standing");
             slump.SetActive(dug && Wall == "slumped"); box.SetActive(dug && Protection == "box"); shoring.SetActive(dug && Protection == "shoring");
+            if (spoilWindrow != null) spoilWindrow.SetActive(dug);
+            if (collapseProps != null) collapseProps.SetActive(dug && Wall == "slumped");
             nearWall.localRotation = Quaternion.Euler(Protection == "slope" ? 30 : 0, 0, 0);
             farWall.localRotation = Quaternion.Euler(Protection == "slope" ? -30 : 0, 0, 0);
-            Debug.Log(name + " " + key, this);
+            if (debugStateChanges) Debug.Log(name + " " + key, this);
         }
     }
 }

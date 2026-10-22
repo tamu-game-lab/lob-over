@@ -95,27 +95,43 @@ namespace LOBOver.World
                 if (sample.stationFt >= LengthFt) continue;
                 var cell = Instantiate(assets.cellPrefab, generated); cell.Initialize(sample.stationFt, assets);
                 cells[(int)sample.stationFt] = cell; stakes[(int)sample.stationFt] = cell.stake;
-                var spoil = Instantiate(assets.spoil, generated); spoil.name = "Spoil_" + (int)sample.stationFt;
-                spoil.transform.localPosition = new Vector3((float)sample.stationFt * WorldUnits.MetresPerFoot + WorldUnits.CellLength / 2, 0, -3);
+                if (!assets.detailedSite)
+                {
+                    var spoil = Instantiate(assets.spoil, generated); spoil.name = "Spoil_" + (int)sample.stationFt;
+                    spoil.transform.localPosition = new Vector3((float)sample.stationFt * WorldUnits.MetresPerFoot + WorldUnits.CellLength / 2, 0, -3);
+                }
             }
+            if (assets.detailedSite)
+            {
+                var endpointStake = SiteDetailDrawing.Stake(generated, assets, out var endpointText);
+                endpointStake.localPosition += Vector3.right * (float)LengthFt * WorldUnits.MetresPerFoot;
+                endpointText.text = WorldUnits.Station(LengthFt); stakes[(int)LengthFt] = endpointStake;
+            }
+            else
+            {
             var endpoint = WorldDrawing.Box("Stake_" + (int)LengthFt, generated, new Vector3((float)LengthFt * WorldUnits.MetresPerFoot, 0.55f, 1.2f), new Vector3(0.08f, 1.1f, 0.08f), assets.timber);
             var label = WorldDrawing.Text("Station", endpoint.transform, new Vector3(0, 0.6f, 0), new Vector2(1.5f, 0.4f), 0.3f, assets.font);
             // Text cannot inherit the thin post's scale.
             label.transform.SetParent(generated, true); label.transform.localScale = Vector3.one;
             label.transform.localPosition = endpoint.transform.localPosition + Vector3.up * 0.6f; label.transform.localRotation = Quaternion.Euler(0, 180, 0);
             label.text = WorldUnits.Station(LengthFt); stakes[(int)LengthFt] = endpoint.transform;
+            }
             foreach (var zone in zones.OfType<JObject>())
             {
                 var root = WorldDrawing.Group("ZoneBoard", generated); root.transform.localPosition = new Vector3((float)zone["fromFt"] * WorldUnits.MetresPerFoot, 0, 1.8f);
                 root.transform.localRotation = Quaternion.Euler(0, 180, 0);
-                WorldDrawing.Box("Post", root.transform, new Vector3(0, 1, 0), new Vector3(0.1f, 2, 0.1f), assets.timber);
-                var face = WorldDrawing.Box("Board", root.transform, new Vector3(0, 1.8f, 0), new Vector3(1, 1.5f, 0.06f), assets.steel);
+                BoardBox("Post", root.transform, new Vector3(0, 1, 0), new Vector3(0.1f, 2, 0.1f), assets.timber);
+                var face = BoardBox("Board", root.transform, new Vector3(0, 1.8f, 0), new Vector3(1, 1.5f, 0.06f), assets.steel);
                 InspectTarget.Attach(face, "board"); var board = root.AddComponent<ZoneBoard>();
                 board.label = WorldDrawing.Text("Permit", root.transform, new Vector3(0, 1.8f, -0.05f), new Vector2(0.9f, 1.3f), 0.12f, assets.font);
+                if (assets.detailedSite) board.label.fontSharedMaterial = assets.siteText;
                 board.Initialize((int)zone["id"]); boards[board.Zone] = board;
             }
             foreach (var id in WorldUnits.CrewIds)
             { var crew = Instantiate(assets.crewPrefab, generated); crew.Initialize(id, assets); crews[id] = crew; }
         }
+        private GameObject BoardBox(string name, Transform parent, Vector3 position, Vector3 size, Material material)
+            => assets.detailedSite ? SiteDetailDrawing.Block(name, parent, position, size, material)
+                : WorldDrawing.Box(name, parent, position, size, material);
     }
 }

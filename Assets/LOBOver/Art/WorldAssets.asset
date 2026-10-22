@@ -60,6 +60,31 @@ MonoBehaviour:
   orange: {fileID: 2100000, guid: 13933468aa411cd49a34336117ed709f, type: 2}
   cloud: {fileID: 2100000, guid: 2efd093d4a6a43e4aaee95b0c7401266, type: 2}
   rain: {fileID: 2100000, guid: 6390839272bbd144fab64a5471077e35, type: 2}
+  detailedSite: 0
+  pipe: {fileID: 0}
+  fence: {fileID: 0}
+  jersey: {fileID: 0}
+  tree: {fileID: 0}
+  ground: {fileID: 0}
+  road: {fileID: 0}
+  trench: {fileID: 0}
+  bedding: {fileID: 0}
+  spoilSurface: {fileID: 0}
+  wetSoil: {fileID: 0}
+  waterSurface: {fileID: 0}
+  backfill: {fileID: 0}
+  flagging: {fileID: 0}
+  siteText: {fileID: 0}
+  cabin: {fileID: 0}
+  glass: {fileID: 0}
+  skyMaterial: {fileID: 0}
+  groundMesh: {fileID: 0}
+  horizonMesh: {fileID: 0}
+  wallNearMesh: {fileID: 0}
+  wallFarMesh: {fileID: 0}
+  stripMesh: {fileID: 0}
+  slumpMesh: {fileID: 0}
+  windrowMesh: {fileID: 0}
   wind: {fileID: 8300000, guid: 75052b4f159ab394097c924cbb1f6fa7, type: 3}
   rainfall: {fileID: 8300000, guid: 994dd2122e1909644a1591c5f8885157, type: 3}
   excavation: {fileID: 8300000, guid: c8b4d91c1c4434a48b9e3f1a46f507a4, type: 3}

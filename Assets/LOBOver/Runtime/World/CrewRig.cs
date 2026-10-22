@@ -1,7 +1,9 @@
 using System;
 using LOBOver.Sim;
+using LOBOver.XR;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace LOBOver.World
 {
@@ -19,6 +21,7 @@ namespace LOBOver.World
         public GameObject Machine => machine;
         private WorldAssets assets;
         private GameObject machine, effects;
+        private GameObject machinePerimeter;
         private Animator[] machineAnimators;
         private readonly Transform[] workers = new Transform[2]; // WO-08: two workers per machine.
         private readonly Animator[] animators = new Animator[2];
@@ -30,6 +33,11 @@ namespace LOBOver.World
         private Vector3 target, movementVelocity;
         private float statusTime;
         private bool positioned;
+        public const float ShadowMetres = 30, MachineDetailMetres = 60, DistanceCheckSeconds = 1; // WO-L4 rejection 3.
+        private XRRig rig;
+        private Renderer[] shadowRenderers;
+        private LODGroup machineLod;
+        private float nextDistanceCheck;
         private readonly Vector3[] workerTargets = new Vector3[2], workerVelocities = new Vector3[2];
         // Presentation cadence only; the mood level itself comes exclusively from SiteView.
         private const float PointPeriodSeconds = 10; // WO-08 section 3.
@@ -42,6 +50,7 @@ namespace LOBOver.World
             if (argument != null && argument.clip != null) argument.Play();
             if (Status == "working" && effects != null)
                 foreach (var effect in effects.GetComponentsInChildren<ParticleSystem>()) effect.Play();
+            nextDistanceCheck = 0;
         }
 
         public void Initialize(string id, WorldAssets source)
@@ -57,8 +66,12 @@ namespace LOBOver.World
             effects = Instantiate(assets.particles, transform); effects.name = "WorkParticles";
             particles = effects.GetComponentInChildren<ParticleSystem>();
             foreach (var effect in effects.GetComponentsInChildren<ParticleSystem>()) effect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            plate = WorldDrawing.Text("MachinePlate", transform, new Vector3(-1, 2.5f, 1), new Vector2(4, 0.5f), 0.25f, assets.font);
-            plate.transform.localRotation = Quaternion.Euler(0, 180, 0);
+            if (assets.detailedSite) SiteDetailDrawing.CrewSurroundings(transform, assets);
+            else
+            {
+                plate = WorldDrawing.Text("MachinePlate", transform, new Vector3(-1, 2.5f, 1), new Vector2(4, 0.5f), 0.25f, assets.font);
+                plate.transform.localRotation = Quaternion.Euler(0, 180, 0);
+            }
             engine = WorldDrawing.Sound(gameObject, true); argument = WorldDrawing.Sound(gameObject, true, 35);
         }
         public void Apply(CrewView view)
@@ -71,7 +84,12 @@ namespace LOBOver.World
                 WorldDrawing.Remove(machine); machine = Instantiate(item.prefab, transform); machine.name = "Machine";
                 InspectTarget.Attach(machine, "machine"); machineAnimators = machine.GetComponentsInChildren<Animator>();
                 foreach (var animator in machineAnimators) animator.applyRootMotion = false;
-                MachinePlate = view.machinePlate; plate.text = item.label;
+                if (assets.detailedSite)
+                { WorldDrawing.Remove(machinePerimeter); machinePerimeter = SiteDetailDrawing.MachinePerimeter(machine, transform, assets); }
+                MachinePlate = view.machinePlate; if (plate != null) plate.text = item.label;
+                machineLod = machine.GetComponent<LODGroup>();
+                shadowRenderers = GetComponentsInChildren<Renderer>(true);
+                nextDistanceCheck = 0;
             }
             var next = new Vector3((float)view.stationFt * WorldUnits.MetresPerFoot, 0, 0);
             if (view.status == "demobilized") next += new Vector3(-WorldUnits.DemobBackMetres, 0, WorldUnits.RoadZ);
@@ -83,6 +101,7 @@ namespace LOBOver.World
             {
                 Status = view.status; statusTime = 0; Debug.Log(name + " " + Status, this);
                 var working = Status == "working";
+                if (machinePerimeter != null) machinePerimeter.SetActive(working);
                 foreach (var animator in machineAnimators)
                 {
                     animator.speed = working ? 1 : 0;
@@ -120,6 +139,12 @@ namespace LOBOver.World
         private void Update()
         {
             if (!positioned) return;
+            if (assets.detailedSite && Time.unscaledTime >= nextDistanceCheck)
+            {
+                nextDistanceCheck = Time.unscaledTime + DistanceCheckSeconds;
+                if (rig == null) rig = FindFirstObjectByType<XRRig>();
+                if (rig != null) RefreshDistancePresentation(rig.ViewEye);
+            }
             statusTime += Time.deltaTime;
             // A continuous target must not restart a tween on every frame. Four damping periods
             // settle a state change within the WO's half-second presentation interval.
@@ -135,6 +160,16 @@ namespace LOBOver.World
                 if (facing.sqrMagnitude > 0.001f) workers[i].rotation = Quaternion.LookRotation(facing);
             }
             ApplyAnimations();
+        }
+        public void RefreshDistancePresentation(Transform head)
+        {
+            if (head == null || assets == null || !assets.detailedSite) return;
+            var distanceSquared = (transform.position - head.position).sqrMagnitude;
+            var mode = distanceSquared <= ShadowMetres * ShadowMetres ? ShadowCastingMode.On : ShadowCastingMode.Off;
+            shadowRenderers ??= GetComponentsInChildren<Renderer>(true);
+            foreach (var renderer in shadowRenderers)
+                if (renderer != null && !(renderer is ParticleSystemRenderer) && renderer.shadowCastingMode != mode) renderer.shadowCastingMode = mode;
+            if (machineLod != null) machineLod.ForceLOD(distanceSquared <= MachineDetailMetres * MachineDetailMetres ? 0 : 1);
         }
         public void SnapPose()
         {

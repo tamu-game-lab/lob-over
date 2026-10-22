@@ -1,0 +1,95 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3417f87f8925feb428e7002229267c23, type: 3}
+  m_Name: PlayWorldAssets
+  m_EditorClassIdentifier: LOBOver.World::LOBOver.World.WorldAssets
+  cellPrefab: {fileID: 5865613310693595669, guid: b0c66279470138549b601f58b67528a0, type: 3}
+  crewPrefab: {fileID: 2722033055038518159, guid: cce0d020b89b66d46b9839418e17cc17, type: 3}
+  worker: {fileID: 6268553399656544311, guid: 991f446e6a294a141afd6510cf36f581, type: 3}
+  particles: {fileID: 6187384833197665777, guid: c5c77bf8a0494ec4c94c1826f51c85f2, type: 3}
+  spoil: {fileID: 1477506735956429234, guid: dc89ae922726ac6429241a05c62a630a, type: 3}
+  barrier: {fileID: 5304139473914669313, guid: c93a4da83e1f32846b203d4b96cfbaa7, type: 3}
+  cone: {fileID: 5085340550371971490, guid: 89e2669f4fde1054cb089f091b33a476, type: 3}
+  machines:
+  - crew: exc
+    plate: small
+    label: Excavator Small
+    prefab: {fileID: 7556309673623081247, guid: 7ee1d46bc42ea6b4bb6b18a54f6b5264, type: 3}
+  - crew: exc
+    plate: standard
+    label: Excavator Standard
+    prefab: {fileID: 8805087163089248780, guid: e001257c5c4b80d49beded0bc092a838, type: 3}
+  - crew: exc
+    plate: large
+    label: Excavator Large
+    prefab: {fileID: 5245623647832041292, guid: 62cc58cd0d23c604d85be8edb6f95c77, type: 3}
+  - crew: pipe
+    plate: standard
+    label: Crane Standard
+    prefab: {fileID: 696838508352428468, guid: 0cfd084d8cd487b4a93db3bee62adc6a, type: 3}
+  - crew: pipe
+    plate: large
+    label: Crane Heavy
+    prefab: {fileID: 8261228347265725385, guid: b2d87910d15ccff4192634d7579df38f, type: 3}
+  - crew: back
+    plate: small
+    label: Backfill Small
+    prefab: {fileID: 98128618555961522, guid: 8daf885769025bc4e9c2b1ac402021e2, type: 3}
+  - crew: back
+    plate: standard
+    label: Backfill Standard
+    prefab: {fileID: 2383856251302219326, guid: e020e7b435c89034b944b9ff198706eb, type: 3}
+  - crew: back
+    plate: large
+    label: Backfill Large
+    prefab: {fileID: 5368200592911345425, guid: 7756acd54272b74418129a1309e41086, type: 3}
+  font: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  ink: {fileID: 2100000, guid: c646c7cbfa716214eaeb902e4aed8703, type: 2}
+  soil: {fileID: 2100000, guid: 5f65f05de5a0f8148bd1b9d364770b7f, type: 2}
+  timber: {fileID: 2100000, guid: 63c10e682c8fede4ab9329844e47f96c, type: 2}
+  steel: {fileID: 2100000, guid: 7087373e68d2e874da24ff754cda73c9, type: 2}
+  orange: {fileID: 2100000, guid: 9590331cce83f3f40b90f2876c9e4ecf, type: 2}
+  cloud: {fileID: 2100000, guid: 2efd093d4a6a43e4aaee95b0c7401266, type: 2}
+  rain: {fileID: 2100000, guid: 79fc4864bc606d248b65e58ec9c4da37, type: 2}
+  detailedSite: 1
+  pipe: {fileID: 8001036211137899898, guid: 0651e55aed71d6b4b8703ef9e99dc2d2, type: 3}
+  fence: {fileID: 5709266048857824404, guid: 3a0e6e07beb2ab946974c87a04676146, type: 3}
+  jersey: {fileID: 1599805548007879253, guid: 855132d375f29cb4493352874c128ffb, type: 3}
+  tree: {fileID: 5884343537044468503, guid: dcff95a3ad60b404bb5ae92c22799bc0, type: 3}
+  ground: {fileID: 2100000, guid: 51d694fc626df5945a7d113aec59a82b, type: 2}
+  road: {fileID: 2100000, guid: cc043930b79d8724aabb360c2de8a922, type: 2}
+  trench: {fileID: 2100000, guid: 1b0fab70853cddf469376ca7ff430e1f, type: 2}
+  bedding: {fileID: 2100000, guid: 2ecbd284178756a4cb64c470de8d3e4d, type: 2}
+  spoilSurface: {fileID: 2100000, guid: 22fa2757fd1c00747a9a89a7089bab93, type: 2}
+  wetSoil: {fileID: 2100000, guid: 3591ba71d7eb53644bae8251e5087ebf, type: 2}
+  waterSurface: {fileID: 2100000, guid: cdd33332e68d6564bb7adc06c405959f, type: 2}
+  backfill: {fileID: 2100000, guid: 338ab64e241c20841a9f0284666cd3b0, type: 2}
+  flagging: {fileID: 2100000, guid: 57d71568c99d47a4c9e6e56b963b9548, type: 2}
+  siteText: {fileID: 2100000, guid: ef72d3074667f5c49b04d040bf0ea4a5, type: 2}
+  cabin: {fileID: 2100000, guid: 1e88881dc3dc3da4eb4712a3d17d1505, type: 2}
+  glass: {fileID: 2100000, guid: 85247d911b04faf42ae806f7e29bac6d, type: 2}
+  skyMaterial: {fileID: 2100000, guid: bb545300934c1a942babde0f840581ed, type: 2}
+  groundMesh: {fileID: 4300000, guid: db5167e2d7fe6da41a7ac4c59c607764, type: 2}
+  horizonMesh: {fileID: 4300000, guid: a6d9c5c98188bd04d95c9bf9e092a369, type: 2}
+  wallNearMesh: {fileID: 4300000, guid: 9dd1e0a64e166164f91292917d3e6f82, type: 2}
+  wallFarMesh: {fileID: 4300000, guid: fb49ac6933f092d4c9d82638962e3aef, type: 2}
+  stripMesh: {fileID: 4300000, guid: 5cb9c4251d736814690881ee87dceb02, type: 2}
+  slumpMesh: {fileID: 4300000, guid: d6bebabf486803a42873a626f6d9fd5b, type: 2}
+  windrowMesh: {fileID: 4300000, guid: 3cb37ff9977941c449455077745d52d8, type: 2}
+  wind: {fileID: 8300000, guid: 75052b4f159ab394097c924cbb1f6fa7, type: 3}
+  rainfall: {fileID: 8300000, guid: 994dd2122e1909644a1591c5f8885157, type: 3}
+  excavation: {fileID: 8300000, guid: c8b4d91c1c4434a48b9e3f1a46f507a4, type: 3}
+  dozer: {fileID: 8300000, guid: 1f58aae51871c9d4c9e3645a9c020fef, type: 3}
+  idle: {fileID: 8300000, guid: 589dc44178a8784478f0390a3c52e740, type: 3}
+  conflict: {fileID: 8300000, guid: a3c2cda64c419fa4ba786c2222932c0d, type: 3}
+  collapse: {fileID: 8300000, guid: eaea48f1f4d362540ba6885fd98e4cd8, type: 3}
+  pipeSetdown: {fileID: 8300000, guid: 890d0ca81f263d84fb45e63cef0c22bb, type: 3}

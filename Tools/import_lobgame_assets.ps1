@@ -10,6 +10,7 @@ $folders = @(
   '3D_Models\constructionWorkers_Anims_01', '3D_Models\constructionWorkers_Anims_02', '3D_Models\constructionWorkers_Anims_03',
   '3D_Models\Workers', '3D_Models\a-pile-of-sand', '3D_Models\Construction Assets',
   '3D_Models\trafic-cone', '3D_Models\water-barriers', '3D_Models\road-barrier-collection',
+  '3D_Models\Tree', '3D_Models\sophiaImports', '3D_Models\traffic-props', '3D_Models\construction-site-barrier',
   'Audio\Construction', 'PM'
 )
 $files = @('Resources\SiteAudioBank.asset', 'Resources\SiteAudioBank.asset.meta')
