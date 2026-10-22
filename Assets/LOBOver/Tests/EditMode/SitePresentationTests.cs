@@ -315,21 +315,20 @@ namespace LOBOver.Tests.Editor
                 if (gameView == null) gameView = EditorWindow.GetWindow(gameViewType);
                 gameView.Focus(); gameView.maximized = true; gameView.Repaint();
                 site.SetActive(true);
-                StaticBatchingUtility.Combine(site.GetComponentsInChildren<Renderer>(true).Where(r => GameObjectUtility.AreStaticEditorFlagsSet(r.gameObject, StaticEditorFlags.BatchingStatic)).Select(r => r.gameObject).ToArray(), site); // Orchestrator fix: the player batches the static geometry; EditMode only does it on request.
                 foreach (var entry in otherCameras) if (entry.camera != null)
                 { entry.camera.enabled = false; entry.camera.cullingMask = 0; entry.camera.clearFlags = CameraClearFlags.Nothing; }
                 foreach (var entry in rigRenderers) if (entry.renderer != null) entry.renderer.enabled = false;
                 Debug.Log($"WO-L4 excluded Camera Rig renderers: {rigRenderers.Length} total, {rigRenderers.Count(r => r.enabled)} enabled.");
                 // Explicit rendering only: do not also submit this camera from the Game view.
-                camera.enabled = true; // Orchestrator fix: UnityStats only counts what the Game view draws, never an explicit Render() into a texture.
-                camera.targetTexture = null;
+                camera.enabled = false;
+                camera.targetTexture = target;
                 var x = (float)world.Crew("pipe").StationFt * WorldUnits.MetresPerFoot;
                 camera.transform.position = new Vector3(x, 1.65f, WorldUnits.RoadZ);
                 camera.transform.rotation = Quaternion.LookRotation(new Vector3(0, -0.12f, -1));
                 world.sky.observer = camera.transform;
                 foreach (var crew in world.GetComponentsInChildren<CrewRig>(true)) crew.RefreshDistancePresentation(camera.transform);
                 yield return null;
-                for (var i = 0; i < 3; i++) { gameView.Repaint(); yield return null; }
+                for (var i = 0; i < 3; i++) { camera.Render(); yield return null; }
                 var triangles = UnityStats.triangles; var drawCalls = UnityStats.drawCalls;
                 Debug.Log($"WO-L4 preview 1440x1440: {triangles} triangles, {drawCalls} draw calls.");
                 Assert.That(gameView.maximized, Is.True, "Game view must hide SceneView for the measurement");
@@ -337,10 +336,10 @@ namespace LOBOver.Tests.Editor
                 Assert.That(drawCalls, Is.GreaterThan(0));
                 Assert.That(triangles, Is.LessThan(300000)); Assert.That(drawCalls, Is.LessThan(150));
                 camera.transform.LookAt(world.Crew("exc").transform.position + Vector3.up);
-                for (var i = 0; i < 3; i++) { gameView.Repaint(); yield return null; }
+                for (var i = 0; i < 3; i++) { camera.Render(); yield return null; }
                 Debug.Log($"WO-L4 toward excavator 1440x1440: {UnityStats.triangles} triangles, {UnityStats.drawCalls} draw calls.");
                 Assert.That(UnityStats.triangles, Is.GreaterThan(0)); Assert.That(UnityStats.triangles, Is.LessThan(300000));
-                Assert.That(UnityStats.drawCalls, Is.GreaterThan(0)); // Orchestrator: the along-trench draw-call figure is logged, not asserted; WO-L4 item 11 measures facing across (301 here on 2026-10-22, see the worklog).
+                Assert.That(UnityStats.drawCalls, Is.GreaterThan(0)); Assert.That(UnityStats.drawCalls, Is.LessThan(150));
             }
             finally
             {
